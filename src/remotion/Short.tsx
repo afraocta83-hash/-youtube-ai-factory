@@ -19,7 +19,7 @@ const palette = [
   ["#283149", "#404b69", "#f73859"]
 ];
 
-const CartoonCharacter: React.FC<{ accent: string; mood: number }> = ({ accent, mood }) => {
+const CartoonCharacter: React.FC<{ accent: string; mood?: number }> = ({ accent, mood = 0 }) => {
   const frame = useCurrentFrame();
   const bob = Math.sin(frame / 8) * 9;
   const mouth = Math.abs(Math.sin(frame / 3)) * 9 + 3;
@@ -52,7 +52,7 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
       <div style={{ position: "absolute", top: 82, left: 64, right: 64, fontSize: 34, fontWeight: 800, letterSpacing: 3, opacity: .8 }}>LERRY ANIMASI</div>
       <div style={{ position: "absolute", top: 160, left: 70, right: 70, fontSize: 52, lineHeight: 1.1, fontWeight: 900, textAlign: "center" }}>{title}</div>
       <div style={{ position: "absolute", top: 440, left: 0, right: 0, display: "flex", justifyContent: "center", transform: `scale(${scale})` }}>
-        <CartoonCharacter accent={colors[2]} />
+        <CartoonCharacter accent={colors[2]} mood={index} />
       </div>
       <div style={{ position: "absolute", bottom: 250, left: 72, right: 72, padding: "30px 28px", borderRadius: 28, background: "rgba(7,12,27,.84)", border: "3px solid rgba(255,255,255,.2)", fontSize: 46, fontWeight: 800, lineHeight: 1.2, textAlign: "center" }}>{caption}</div>
       <div style={{ position: "absolute", bottom: 112, left: 72, right: 72, display: "flex", justifyContent: "space-between", fontSize: 26, opacity: .75 }}>
