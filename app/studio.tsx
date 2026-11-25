@@ -22,12 +22,12 @@ export default function Studio(){
  }
  function copy(){if(result)navigator.clipboard?.writeText(JSON.stringify(result,null,2));}
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">PRODUSER AI • GEMINI</span><h2 style={{marginTop:12}}>Mulai dari satu prompt</h2><p>Lo cukup kasih topik. Tim AI mengembangkan naskah, adegan, prompt visual, dan metadata.</p></div></div>
+  <div className="studioHead"><div><span className="status">PRODUSER AI • GEMINI</span><h2 style={{marginTop:12}}>Masukkan cerita buatan lo</h2><p>Tempel cerita final buatan lo. AI hanya memecahnya menjadi storyboard, arahan visual, durasi, dan metadata. Cerita tidak boleh ditulis ulang.</p></div></div>
   <label htmlFor="storyPrompt">Ide / prompt cerita</label>
-  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={12000} placeholder="Tempel cerita lengkap buatan lo di sini. AI hanya mengubahnya menjadi storyboard dan paket produksi..." rows={3}/>
-  <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang mengembangkan...":"Buat paket produksi →"}</button></div>
+  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={12000} placeholder="Tempel cerita lengkap yang sudah lo tulis. AI tidak akan menambah atau mengubah alur cerita..." rows={3}/>
+  <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang menyusun storyboard...":"Buat storyboard Shorts →"}</button></div>
   {error&&<p className="error" role="alert">{error}</p>}
-  {busy&&<p className="muted">Produser sedang menyusun cerita, storyboard, arahan visual, dan metadata. Tunggu proses selesai.</p>}
+  {busy&&<p className="muted">Tim produksi sedang membagi cerita lo menjadi adegan visual. Cerita asli tetap dipertahankan.</p>}
   {result&&<div className="productionResult">
    <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
    <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
@@ -39,7 +39,7 @@ export default function Studio(){
    <h3>Wajib diverifikasi sebelum produksi final</h3><ul>{result.factCheckNotes.map((x,i)=><li key={i}>{x}</li>)}</ul>
    <h3>Query sumber sejarah</h3><ul>{result.sourceQueries.map((x,i)=><li key={i}>{x}</li>)}</ul>
    <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
-   <p className="muted">Ini paket pra-produksi. Aset gambar, audio, MP4, dan upload belum dibuat oleh tombol ini.</p>
+   <p className="muted">Storyboard siap. Mesin render Remotion menghasilkan video kartun template 9:16 melalui GitHub Actions. Render saat ini belum menyertakan suara TTS atau gambar AI per adegan. Upload tetap menunggu persetujuan owner.</p>
   </div>}
  </section>;
 }
