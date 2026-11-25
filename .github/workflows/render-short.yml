@@ -27,7 +27,7 @@ jobs:
       - name: Validate story and Shorts package
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
-          QC_URL: https://youtube-ai-factory-mauve.vercel.app/api/quality-check
+          QC_URL: https://youtube-ai-factory-afraocta83-9700.vercel.app/api/quality-check
         run: |
           node <<'NODE'
           (async () => {
@@ -49,7 +49,7 @@ jobs:
       - name: Generate Indonesian narration with Gemini TTS
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
-          VOICE_URL: https://youtube-ai-factory-mauve.vercel.app/api/voice
+          VOICE_URL: https://youtube-ai-factory-afraocta83-9700.vercel.app/api/voice
         run: |
           node <<'NODE'
           (async () => {
