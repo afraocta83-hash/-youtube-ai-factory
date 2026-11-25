@@ -30,19 +30,19 @@ const schema = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const prompt = typeof body?.prompt === "string" ? body.prompt.trim() : "";
-    if (!prompt || prompt.length > 700) return NextResponse.json({ error: "Masukkan ide cerita maksimal 700 karakter." }, { status: 400 });
+    const prompt = typeof body?.story === "string" ? body.story.trim() : (typeof body?.prompt === "string" ? body.prompt.trim() : "");
+    if (!prompt || prompt.length > 12000) return NextResponse.json({ error: "Masukkan cerita buatan owner maksimal 12.000 karakter." }, { status: 400 });
     const key = process.env.GEMINI_API_KEY;
     if (!key) return NextResponse.json({ error: "GEMINI_API_KEY belum tersedia di environment Production." }, { status: 503 });
     const model = (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim();
-    const instruction = `Kamu adalah tim produksi YouTube Shorts animasi keluarga Indonesia. Pemilik hanya memberi topik; tim mengembangkan seluruh detail. Buat paket produksi lengkap dalam Bahasa Indonesia untuk topik: "${prompt}". Target 60-90 detik, vertikal 9:16, ramah keluarga, hook kuat, alur jelas dan ending memuaskan. Jika topik sejarah/fakta, jangan mengarang tanggal, kutipan, tokoh, atau klaim. Bedakan fakta terverifikasi dari rekonstruksi dramatis. Jika belum punya bukti sumber, tulis catatan verifikasi dan query sumber yang harus dicek, jangan berpura-pura telah melakukan riset. Tulis naskah narasi/dialog lengkap. Buat 6-10 adegan dengan durasi total sesuai target. Setiap imagePrompt rinci, konsisten gaya animasi 2D sinematik, komposisi vertikal, tanpa teks dalam gambar. Jangan memaksakan karakter Lerry/Ayah jika tidak relevan. Buat metadata YouTube, thumbnail prompt, catatan fact-check dan checklist QC. Output harus sesuai JSON schema.`;
+    const instruction = `Kamu adalah kru produksi, BUKAN PENULIS CERITA. Cerita berikut ditulis dan dimiliki owner. DILARANG mengarang, menambah, menghapus, memperbaiki, mengubah urutan, atau memparafrasekan plot, dialog, fakta, dan ending. Pertahankan teks cerita persis sebagai nilai script: ${JSON.stringify(prompt)}. Tugasmu hanya memecah cerita yang sama menjadi 6-10 adegan visual, menentukan durasi, arahan kamera/gerak, prompt gambar, musik/efek, subtitle yang diambil verbatim dari teks cerita (jangan menambah kata), serta metadata. Jika ada detail visual yang tidak disebut dalam cerita, gunakan interpretasi visual netral dan tandai sebagai interpretasi, jangan jadikan fakta cerita. Untuk sejarah, tandai klaim yang perlu diverifikasi; jangan mengarang sumber atau tanggal. Format vertikal 9:16, gaya animasi 2D konsisten. synopsis harus ringkasan netral tanpa mengubah alur. hook hanya boleh berupa kutipan persis dari cerita. Output JSON sesuai schema.`;
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         systemInstruction: { parts: [{ text: "You are a careful Indonesian animation production team. Return valid structured JSON only." }] },
         contents: [{ role: "user", parts: [{ text: instruction }] }],
-        generationConfig: { responseMimeType: "application/json", responseSchema: schema, temperature: 0.7, maxOutputTokens: 12000 }
+        generationConfig: { responseMimeType: "application/json", responseSchema: schema, temperature: 0.2, maxOutputTokens: 12000 }
       }),
       signal: AbortSignal.timeout(55000)
     });
