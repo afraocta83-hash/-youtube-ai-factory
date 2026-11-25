@@ -14,7 +14,8 @@
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "@remotion/cli": "^4.0.409",
-    "remotion": "^4.0.409"
+    "remotion": "^4.0.409",
+    "@supabase/supabase-js": "^2.57.0"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
