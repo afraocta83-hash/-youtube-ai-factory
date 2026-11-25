@@ -1,0 +1,41 @@
+name: Render Lerry Shorts
+
+on:
+  workflow_dispatch:
+    inputs:
+      production_json:
+        description: "JSON paket produksi dari dashboard (maksimal 60 KB)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  render:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Install dependencies
+        run: npm ci
+      - name: Save production package
+        env:
+          PRODUCTION_JSON: ${{ inputs.production_json }}
+        run: |
+          node -e 'const fs=require("fs"); const p=JSON.parse(process.env.PRODUCTION_JSON); if(!Array.isArray(p.scenes)||p.scenes.length<3) throw new Error("Storyboard tidak valid"); const seconds=p.scenes.reduce((n,s)=>n+Number(s.seconds||0),0); if(seconds<15||seconds>60) throw new Error("Durasi Shorts harus 15-60 detik"); fs.writeFileSync("production.json",JSON.stringify({workingTitle:p.workingTitle||p.title||"Lerry Animasi",scenes:p.scenes},null,2));'
+      - name: Render MP4 1080x1920
+        run: npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --props=production.json --codec=h264 --crf=20
+      - name: Upload MP4 artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lerry-animasi-short
+          path: out/lerry-animasi-short.mp4
+          if-no-files-found: error
+          retention-days: 7
