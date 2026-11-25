@@ -1,5 +1,6 @@
 "use client";
 import { useState } from "react";
+import SupabasePanel from "./supabase-panel";
 
 type Production = {
  workingTitle:string; hook:string; synopsis:string; script:string; durationSeconds:number;
@@ -41,5 +42,6 @@ export default function Studio(){
    <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
    <p className="muted">Storyboard siap. Untuk merender MP4 Shorts 9:16, buka <a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">GitHub Actions → Render Lerry Shorts</a>, lalu masukkan paket JSON hasil produksi. Render versi awal memakai karakter kartun template; suara TTS dan gambar AI per adegan belum tersambung. Upload tetap menunggu persetujuan owner.</p>
   </div>}
+  <SupabasePanel production={result as unknown as Record<string, unknown> | null}/>
  </section>;
 }
