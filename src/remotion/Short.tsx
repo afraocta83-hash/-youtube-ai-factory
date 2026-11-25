@@ -22,7 +22,9 @@ const palette = [
 const CartoonCharacter: React.FC<{ accent: string; mood: number }> = ({ accent, mood }) => {
   const frame = useCurrentFrame();
   const bob = Math.sin(frame / 8) * 9;
-  const mouth = Math.abs(Math.sin(frame / 3)) * 9 + 3;\n  const blink = Math.sin(frame / 47) > 0.96 ? 5 : 18;\n  const wave = Math.sin(frame / 10) * 13;
+  const mouth = Math.abs(Math.sin(frame / 3)) * 9 + 3;
+  const blink = Math.sin(frame / 47) > 0.96 ? 5 : 18;
+  const wave = Math.sin(frame / 10) * 13;
   return (
     <svg viewBox="0 0 420 500" width="72%" style={{ overflow: "visible", transform: `translateY(${bob}px)` }}>
       <ellipse cx="210" cy="466" rx="125" ry="22" fill="#000" opacity=".2" />
@@ -43,7 +45,8 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
   const colors = palette[index % palette.length];
   const opacity = interpolate(frame, [0, 12, Math.max(13, scene.seconds * 30 - 12), scene.seconds * 30], [0, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
   const scale = interpolate(frame, [0, scene.seconds * 30], [0.94, 1.04], { extrapolateRight: "clamp" });
-  const caption = scene.subtitle || scene.dialogue || scene.narration || "";\n  const visual = scene.visual || "Adegan cerita";
+  const caption = scene.subtitle || scene.dialogue || scene.narration || "";
+  const visual = scene.visual || "Adegan cerita";
   return (
     <AbsoluteFill style={{ background: `linear-gradient(155deg,${colors[0]},${colors[1]})`, opacity, overflow: "hidden", color: "white" }}>
       <div style={{ position: "absolute", top: 82, left: 64, right: 64, fontSize: 34, fontWeight: 800, letterSpacing: 3, opacity: .8 }}>LERRY ANIMASI</div>
@@ -62,7 +65,8 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
 export const LerryShort: React.FC<LerryShortProps> = ({ workingTitle, scenes, voiceFile }) => {
   let cursor = 0;
   return (
-    <AbsoluteFill style={{ backgroundColor: "#10152b", fontFamily: "Arial, sans-serif" }}>\n      {voiceFile ? <Audio src={staticFile(voiceFile)} volume={1} /> : null}
+    <AbsoluteFill style={{ backgroundColor: "#10152b", fontFamily: "Arial, sans-serif" }}>
+      {voiceFile ? <Audio src={staticFile(voiceFile)} volume={1} /> : null}
       {scenes.map((scene, index) => {
         const from = cursor;
         const duration = Math.max(1, Math.round(scene.seconds * 30));
