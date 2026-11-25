@@ -14,7 +14,7 @@ export default function Studio(){
  async function generate(){
   setError("");setResult(null);setBusy(true);
   try{
-   const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({prompt})});
+   const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({story:prompt})});
    const data=await res.json();if(!res.ok)throw new Error(data.error||"Gagal membuat paket produksi.");
    setResult(data.production);
   }catch(e){setError(e instanceof Error?e.message:"Terjadi kesalahan.");}
@@ -24,8 +24,8 @@ export default function Studio(){
  return <section className="card studio">
   <div className="studioHead"><div><span className="status">PRODUSER AI • GEMINI</span><h2 style={{marginTop:12}}>Mulai dari satu prompt</h2><p>Lo cukup kasih topik. Tim AI mengembangkan naskah, adegan, prompt visual, dan metadata.</p></div></div>
   <label htmlFor="storyPrompt">Ide / prompt cerita</label>
-  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={700} placeholder="Contoh: Bikin cerita sejarah motor pertama..." rows={3}/>
-  <div className="studioActions"><span className="muted">{prompt.length}/700 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang mengembangkan...":"Buat paket produksi →"}</button></div>
+  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={12000} placeholder="Tempel cerita lengkap buatan lo di sini. AI hanya mengubahnya menjadi storyboard dan paket produksi..." rows={3}/>
+  <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang mengembangkan...":"Buat paket produksi →"}</button></div>
   {error&&<p className="error" role="alert">{error}</p>}
   {busy&&<p className="muted">Produser sedang menyusun cerita, storyboard, arahan visual, dan metadata. Tunggu proses selesai.</p>}
   {result&&<div className="productionResult">
