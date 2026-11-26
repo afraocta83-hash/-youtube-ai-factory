@@ -26,8 +26,7 @@ Create one or more API keys at https://console.groq.com/keys and add these varia
 
 The producer tries keys in order. It switches to the next configured key only when Groq rejects the current key with HTTP 401 or 403. It does not multiply requests when the provider is rate-limited or unavailable.
 - `GROQ_MODEL`: `openai/gpt-oss-120b`, plain configuration value.
-- `OWNER_PASSWORD`: Sensitive/Secret, unique random password at least 24 characters.
-- `GITHUB_ACTIONS_TOKEN`: existing Sensitive/Secret with Actions: write permission.
+- `- `GITHUB_ACTIONS_TOKEN`: existing Sensitive/Secret with Actions: write permission.
 
 Redeploy the Preview after adding variables. Netlify and Vercel both require a new deploy for changed environment variables to take effect. Never paste API keys or owner passwords into chat or commit them to GitHub.
 
