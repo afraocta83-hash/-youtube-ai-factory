@@ -42,6 +42,8 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install requests edge-tts piper-tts
           npm install
+          npm run test:motion-stack
+          npm run typecheck
           command -v edge-tts
           command -v piper
           command -v ffmpeg
@@ -131,6 +133,13 @@ jobs:
           p.durationSeconds=finalDuration;
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
           NODE
+      - name: Render optional Lottie + Three.js integration smoke test
+        run: |
+          mkdir -p out/motion-stack
+          npx remotion render src/remotion/index.ts MotionStackSmokeTest out/motion-stack/motion-stack-smoke.mp4 --codec=h264 --crf=24 --concurrency=1 --gl=swangle
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 out/motion-stack/motion-stack-smoke.mp4 | grep -qx '640x360'
+          ffmpeg -v error -i out/motion-stack/motion-stack-smoke.mp4 -f null -
+          test -s out/motion-stack/motion-stack-smoke.mp4
       - name: Render AI-directed scenes with local Remotion engine
         run: |
           mkdir -p out
@@ -239,5 +248,6 @@ jobs:
             out/production-qc.json
             out/mp4-metadata.json
             out/qc/**
+            out/motion-stack/motion-stack-smoke.mp4
           if-no-files-found: error
           retention-days: 7
