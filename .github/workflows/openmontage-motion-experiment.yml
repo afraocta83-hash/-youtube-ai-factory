@@ -6,6 +6,9 @@ on:
       - experiment/openmontage-video-engine
     paths:
       - "src/remotion/**"
+      - "app/api/**"
+      - "package.json"
+      - "tsconfig.json"
       - ".github/workflows/openmontage-motion-experiment.yml"
   workflow_dispatch:
 
@@ -25,6 +28,10 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: TypeScript check
+        run: npm run typecheck
+      - name: Build Next.js application
+        run: npm run build
       - name: Verify Remotion compositions
         run: npx remotion compositions src/remotion/index.ts
       - name: Render five-action showcase
