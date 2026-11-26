@@ -1,11 +1,9 @@
 import { NextResponse } from "next/server";
-import { isOwnerRequest } from "../../../lib/owner-auth";
 
 export const runtime = "nodejs";
 
 type Scene={seconds?:number;imagePrompt?:string;narration?:string;dialogue?:string;subtitle?:string};
 export async function POST(req:Request){
-  if(!isOwnerRequest(req)) return NextResponse.json({error:"Login owner diperlukan untuk menjalankan pemeriksaan kualitas."},{status:401});
   try{
     const p=await req.json(),issues:string[]=[],warnings:string[]=[];
     const story=typeof p.story==="string"?p.story:typeof p.script==="string"?p.script:"";
