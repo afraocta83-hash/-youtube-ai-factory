@@ -289,12 +289,12 @@ Working branch: `fix/lerry-end-to-end-production`. No changes to `main`, product
 - Added a non-production car-story fixture. Pushes on this isolated repair branch run the actual TTS → Remotion → FFmpeg → QC workflow and upload an artifact named `lerry-e2e-fixture`. This does not publish or deploy anything.
 
 ## Verified evidence
-- E2E package-to-MP4 run #93: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904174744
+- E2E package-to-MP4 run #13: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904174744
 - Artifact ID: `15157720882`; artifact name `lerry-e2e-fixture`; retained by GitHub until 2026-12-03.
 - Edge TTS succeeded for all four scenes; per-scene durations were 4.18s, 4.25s, 3.60s and 4.73s.
 - Remotion render, MP4 metadata checks, full FFmpeg decode, frame extraction, contact sheet, thumbnail, YouTube metadata and QC report all passed.
 - Independently downloaded and inspected MP4: H.264, AAC, 1080x1920, yuv420p, 30 fps, 20.011 seconds; full decode passed.
-- Build-check run #94: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45903650829 — TypeScript, Next.js production build and Remotion smoke render passed.
+- Build-check run #96: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45903650829 — TypeScript, Next.js production build and Remotion smoke render passed.
 - Build-check run for owner-story API and pre-render QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342657 — passed.
 - E2E render for the owner-story API/QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342569 — passed.
 - Latest visual differentiation and exact ordered-narration fixture validations have separate Actions runs pending at the time this status note was written; do not treat those later changes as verified until their runs complete.
