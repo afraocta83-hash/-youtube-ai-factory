@@ -8,7 +8,7 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
 ## Non-negotiable project rules
 
 - This project makes YouTube Shorts only: vertical 9:16, 1080x1920, 30 fps, 15–60 seconds.
-- The owner supplies the story. Preserve the story, plot order, dialogue, facts and ending. AI is a production crew, not the story author.
+- The owner supplies the final story. Preserve the story, plot order, dialogue, facts and ending. AI is a production crew, not the story author.
 - Do not invent missing plot events or dialogue. If the supplied story cannot fit 15–60 seconds without cutting or rewriting, stop and ask the owner which material to prioritize.
 - Never upload or schedule to YouTube. The owner must inspect the MP4 and explicitly approve any publishing step.
 - Free-first. Do not add paid providers, billing, credits, subscriptions or new API keys without explicit owner approval.
@@ -23,7 +23,7 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
    - Any proposed adaptation must be shown to the owner for approval; never silently rewrite it.
 
 2. **Storyboard**
-   - Use the existing Gemini endpoint only to divide the locked story into 4–10 scenes.
+   - Use the Groq GPT-OSS 120B endpoint once to divide the locked story into 4–6 scenes. Request strict JSON Schema, low reasoning effort, and cap completion tokens at 3,200.
    - Total scene duration must be 15–60 seconds.
    - Each scene needs: purpose, visual direction, camera/motion direction, narration/dialogue copied from the story, subtitle copied from the story, sound cue and image prompt.
    - Do not add facts. Mark visual interpretation separately from story facts.
@@ -37,7 +37,7 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
    - Keep text, captions and important faces inside platform-safe areas. Do not bake captions into generated images.
 
 4. **Voice and sound**
-   - Use the configured Gemini TTS endpoint only while it remains available within the owner's existing quota.
+   - Use Edge TTS with the Indonesian Ardi voice as the primary engine and Piper Indonesian voice as automatic fallback. Do not require a Groq key or paid TTS service.
    - Preserve the approved words. Do not let TTS improvise or paraphrase.
    - Prefer per-scene audio files and measure actual durations before setting Remotion scene lengths. If only one continuous audio track is supported, validate that the audio and scene timing do not drift.
    - Music and sound effects must be licensed or generated through an explicitly approved free route. Silence is preferable to unlicensed music.
@@ -50,7 +50,7 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
    - Calculate total frames from validated scene durations; never rely on a fixed placeholder duration.
 
 6. **Pre-render quality gate**
-   - Run structural QC before rendering: story present, 4–10 scenes, 15–60 seconds, scene order, narration/subtitle presence, valid visual prompts, title/description, and no unsupported factual claims.
+   - Run structural QC before rendering: story present, 4–6 scenes, 15–60 seconds, scene order, narration/subtitle presence, valid visual prompts, title/description, and no unsupported factual claims.
    - Render still frames for the opening, middle of each scene, scene cuts and ending.
    - Inspect the stills for blank frames, missing assets, text overflow, safe-area violations, character inconsistency, visual repetition and abrupt transitions.
    - Stop the full render on critical issues. Record warnings; do not mark a warning as passed.
