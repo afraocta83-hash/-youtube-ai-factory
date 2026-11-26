@@ -21,6 +21,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    env:
+      GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
     timeout-minutes: 25
     steps:
       - uses: actions/checkout@v4
@@ -36,9 +38,8 @@ jobs:
       - name: Next.js production build
         run: npm run build
       - name: Evaluate storyboard agent with Promptfoo (optional, one Groq request)
-        if: ${{ secrets.GROQ_API_KEY != '' }}
+        if: ${{ env.GROQ_API_KEY != '' }}
         env:
-          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
           PROMPTFOO_DISABLE_TELEMETRY: "true"
         run: npx --yes promptfoo@latest eval -c promptfooconfig.yaml --no-cache --no-progress-bar
       - name: Render local Remotion MP4 smoke test
