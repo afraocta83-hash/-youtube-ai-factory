@@ -57,12 +57,12 @@ jobs:
           let total=0;
           for(const [i,s] of p.scenes.entries()){
             const seconds=Number(s.seconds);
-            if(!Number.isInteger(seconds)||seconds<2||seconds>20) throw new Error('Durasi adegan '+(i+1)+' tidak valid.');
+            if(!Number.isInteger(seconds)||seconds<4||seconds>12) throw new Error('Durasi adegan '+(i+1)+' tidak valid.');
             total+=seconds;
             if(typeof s.imagePrompt!=='string'||s.imagePrompt.trim().length<25) throw new Error('Prompt visual adegan '+(i+1)+' kurang jelas.');
             if(!String(s.narration||s.dialogue||'').trim()) throw new Error('Narasi/dialog adegan '+(i+1)+' kosong.');
           }
-          if(total<15||total>60) throw new Error('Durasi Shorts harus 15-60 detik.');
+          if(total<20||total>60) throw new Error('Durasi Shorts harus 20-60 detik.');
           fs.mkdirSync('public',{recursive:true});
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
           console.log('OWNER-APPROVED PACKAGE QC PASS',{scenes:p.scenes.length,total});
@@ -109,7 +109,7 @@ jobs:
             console.log('SCENE TTS PASS',{scene:i+1,engine,file:scene.voiceFile,seconds:Number(duration.toFixed(2)),sceneSeconds:scene.seconds,bytes:fs.statSync(wav).size});
           }
           const finalDuration=p.scenes.reduce((sum,scene)=>sum+Number(scene.seconds||0),0);
-          if(finalDuration<15||finalDuration>60) throw new Error('Durasi setelah menyesuaikan audio harus tetap 15-60 detik; revisi storyboard sebelum render.');
+          if(finalDuration<20||finalDuration>60) throw new Error('Durasi setelah menyesuaikan audio harus tetap 20-60 detik; revisi storyboard sebelum render.');
           p.durationSeconds=finalDuration;
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
           NODE
