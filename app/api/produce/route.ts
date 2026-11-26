@@ -71,7 +71,7 @@ export async function POST(request: Request) {
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
     p.idea=idea; p.script=p.story; p.ownerStory=p.story; p.durationSeconds=total;
-    p.qcChecklist=["Ide owner dikembangkan menjadi cerita baru oleh AI.","Alur cerita, dialog, dan narasi konsisten antaradegan.","Jumlah adegan 4-6 dan durasi 15-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
+    p.qcChecklist=["Ide owner dikembangkan menjadi cerita baru oleh AI.","Alur cerita, dialog, dan narasi konsisten antaradegan.","Jumlah adegan 4-6 dan durasi 20-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
     return NextResponse.json({ok:true,provider:"groq",model,usage:data?.usage||null,production:p});
   } catch(error) {
     return NextResponse.json({error:error instanceof Error?error.message:"Terjadi kesalahan saat membuat cerita."},{status:502});
