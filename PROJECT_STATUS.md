@@ -1,13 +1,13 @@
 # LERRY ANIMASI — Project Status
 
 Last updated: 2026-11-26
-Current stage: free-first Groq/local-first pipeline implemented; renderer CI previously verified; owner login throttling added; live Groq and owner-session render acceptance pending
+Current stage: free-first pipeline and renderer CI verified; Groq primary/backup key selection added in code; live owner login, Groq generation, and dashboard-to-render acceptance still pending
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Latest functional code commit: `b7fc2ab0dfba0afdcb017b9c8527e3e9255f60a9` (best-effort owner login throttling)
+Latest code commits: `875a6cad9da019bde3a05dd03841304af2e530c3` (Groq key fallback) and `9c036cd45aa4faf4231800f7dcd0e20683f3b17f` (homepage status copy); these commits are awaiting Preview build verification.
 Latest full renderer verification before this change: [run #85](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45851262617)
-Latest verification of login-throttling change: [run #87](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45853996339) — in progress at time of this report; TypeScript, Next.js build, API/QC smoke tests and Remotion composition verification passed; MP4 render and FFmpeg checks still running.
-Preview for functional code commit: https://youtube-ai-factory-p3879p550-afraocta83-9700.vercel.app — deployment `dpl_CUDV6kU8YaDis842e73u27NjoEMK`, READY.
+Latest verification of the previous login-throttling code: [run #87](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45853996339) — completed successfully. This run predates the new Groq fallback commits.
+Last verified Preview before the latest code changes: https://youtube-ai-factory-3cb9qzg77-afraocta83-9700.vercel.app — deployment `dpl_23xpknxM7yR5DUoQeJ5Q9kJSq4UY`, READY. New code commits are awaiting their own Preview deployment.
 Main remains isolated; no merge or Production deployment has been made.
 
 ## Safety boundary
@@ -60,7 +60,7 @@ Main remains isolated; no merge or Production deployment has been made.
 - Run #85 artifact: `lerry-openmontage-motion-showcase` (ID `15132863861`, expires 2026-12-03).
 - Run #85 deliberately used an offline fixture because `GROQ_API_KEY` and `OWNER_PASSWORD` are not configured in GitHub Actions. It proves renderer and security preflight work, not live AI generation.
 - Latest Edge/Piper engine run: [run #4](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45851073085), successful. Both Indonesian TTS engines generated and verified audio. Artifact `lerry-indonesian-tts-test` (ID `15134057074`, expires 2026-12-03).
-- Login throttling commit `b7fc2ab`: run #87 is in progress. At last check, dependency audit, TypeScript, Next.js build, API/QC smoke tests, deterministic audio fixture and Remotion composition verification passed; the render and FFmpeg checks had not yet completed.
+- Login throttling commit `b7fc2ab`: run #87 completed successfully. Dependency audit, TypeScript, Next.js build, QC acceptance/rejection tests, Remotion composition verification, two MP4 renders, FFmpeg decode, H.264 1080×1920 30fps output, audio stream and non-silent audio check passed.\n- Run #87 explicitly skipped live Groq and owner login because GitHub Actions `GROQ_API_KEY` and `OWNER_PASSWORD` secrets were empty; renderer used an offline fixture. The new Groq fallback code has not yet been built/tested.
 - The CI fixture audio is deterministic test audio, not actual production narration.
 
 ## Security hardening
@@ -84,7 +84,7 @@ Main remains isolated; no merge or Production deployment has been made.
 - Character rig is stylized 2D, not production-grade 3D.
 - Subtitle timing is estimated; phoneme alignment and lip-sync are not implemented.
 - Research/fact-check source retrieval is not automatic. Suggested search queries are not proof.
-- Live Groq generation and authenticated dashboard-to-GitHub dispatch still need account secrets and a real owner story.
+- Live Groq generation and authenticated dashboard-to-GitHub dispatch still need a successful owner login and a real owner story. Vercel Preview secrets are present by metadata, but their values and provider permissions remain unverified. GitHub Actions CI secrets are separately absent.
 - Login throttling is best-effort per runtime instance, not globally coordinated.
 - YouTube publishing remains manual and approval-gated.
 
