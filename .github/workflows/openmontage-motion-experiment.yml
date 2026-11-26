@@ -119,56 +119,25 @@ jobs:
             console.log('QC API PASS: valid package accepted; changed story, missing owner story and invented subtitle rejected.');
           })().catch(error=>{console.error(error);process.exit(1);});
           NODE
-      - name: Generate a real Gemini TTS smoke sample
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_TTS_MODEL: gemini-3.8-flash-tts
+      - name: Generate deterministic local audio fixture (CI only)
         run: |
           mkdir -p out
           node <<'NODE'
-          (async () => {
-            const fs = require('node:fs');
-            const key = process.env.GEMINI_API_KEY;
-            if (!key) throw new Error('GEMINI_API_KEY missing.');
-            const model = process.env.GEMINI_TTS_MODEL;
-            const production = JSON.parse(fs.readFileSync('production-smoke.json','utf8'));
-            const spoken = production.scenes.map(s => [s.narration,s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\\n');
-            if (!spoken.trim()) throw new Error('Validated storyboard contains no narration/dialogue.');
-            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: {'content-type':'application/json'},
-              body: JSON.stringify({
-                contents: [{parts:[{text:spoken,speechMetadata:{style:'Narator kartun Shorts Indonesia yang hangat, jelas, ekspresif, tempo alami, artikulasi bersih.'}}]}],
-                generationConfig: {
-                  responseModalities: ['AUDIO'],
-                  speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
-                }
-              }),
-              signal: AbortSignal.timeout(55000)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error('Gemini TTS failed: ' + (data.error?.message || response.status));
-            const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data);
-            if (!part) throw new Error('Gemini returned no audio payload.');
-            const raw = Buffer.from(part.inlineData.data, 'base64');
-            if (raw.length < 1024) throw new Error('Gemini audio payload is unexpectedly small.');
-            const mime = part.inlineData.mimeType || 'audio/pcm;rate=24000';
-            let audio = raw;
-            if (!mime.includes('wav')) {
-              const rate = Number((mime.match(/rate=(\\d+)/) || [])[1] || 24000);
-              const channels = Number((mime.match(/channels=(\\d+)/) || [])[1] || 1);
-              const header = Buffer.alloc(44);
-              header.write('RIFF',0); header.writeUInt32LE(36 + raw.length,4); header.write('WAVE',8);
-              header.write('fmt ',12); header.writeUInt32LE(16,16); header.writeUInt16LE(1,20);
-              header.writeUInt16LE(channels,22); header.writeUInt32LE(rate,24);
-              header.writeUInt32LE(rate * channels * 2,28); header.writeUInt16LE(channels * 2,32);
-              header.writeUInt16LE(16,34); header.write('data',36); header.writeUInt32LE(raw.length,40);
-              audio = Buffer.concat([header, raw]);
-            }
-            fs.writeFileSync('out/tts-smoke.wav', audio);
-            console.log('LIVE GEMINI TTS PASS', {model, mimeType:mime, bytes:audio.length});
-          })().catch(error => { console.error(error); process.exit(1); });
+          const fs=require('node:fs');
+          const rate=24000, seconds=8, samples=rate*seconds;
+          const data=Buffer.alloc(samples*2);
+          for(let i=0;i<samples;i++){
+            const envelope=Math.min(1,i/1200,(samples-i)/1200);
+            const value=Math.sin(2*Math.PI*440*i/rate)*0.16*envelope;
+            data.writeInt16LE(Math.max(-32768,Math.min(32767,Math.round(value*32767))),i*2);
+          }
+          const header=Buffer.alloc(44);
+          header.write('RIFF',0);header.writeUInt32LE(36+data.length,4);header.write('WAVE',8);
+          header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);
+          header.writeUInt16LE(1,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(rate*2,28);
+          header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);header.write('data',36);header.writeUInt32LE(data.length,40);
+          fs.writeFileSync('out/tts-smoke.wav',Buffer.concat([header,data]));
+          console.log('LOCAL AUDIO FIXTURE READY (CI renderer test only; not production narration).');
           NODE
       - name: Verify Remotion compositions
         run: npx remotion compositions src/remotion/index.ts
