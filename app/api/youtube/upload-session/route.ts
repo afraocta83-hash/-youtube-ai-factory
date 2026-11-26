@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       headers: { Authorization: "Bearer " + token, "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": "video/mp4" },
       body: JSON.stringify({ snippet: { title, description, tags, categoryId: "27", defaultLanguage: "id" }, status: { privacyStatus, selfDeclaredMadeForKids: false } }),
       cache: "no-store"
-    });
+    }));
     if (!response.ok) return NextResponse.json({ error: "YouTube menolak sesi upload: " + (await response.text()).slice(0, 500) }, { status: 502 });
     const uploadUrl = response.headers.get("location");
     if (!uploadUrl) return NextResponse.json({ error: "YouTube tidak mengembalikan URL upload." }, { status: 502 });
