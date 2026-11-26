@@ -48,14 +48,14 @@ export async function POST(request: Request) {
     const model = (process.env.GROQ_MODEL || MODEL_DEFAULT).trim();
     const prompt = [
       "Kamu adalah ruang penulis dan sutradara animasi YouTube Shorts berbahasa Indonesia.",
-      "Owner hanya memberi IDE, bukan cerita final. Kembangkan ide menjadi cerita orisinal yang utuh, menarik, mudah dipahami anak dan keluarga, tanpa menyalin karya atau karakter berhak cipta.",
-      "Buat cerita singkat dengan awal yang menarik, konflik/pertanyaan, penjelasan atau penyelesaian yang memuaskan, dan penutup. Hindari klaim faktual yang tidak pasti; bila topiknya edukasi sains/teknologi, tandai hal yang perlu verifikasi pada factCheckNotes dan sourceQueries. Jangan mengarang sumber.",
+      "OWNER MEMBERIKAN CERITA FINAL. DILARANG menulis ulang, memperluas, mempersingkat, mengubah alur, menambah tokoh, kejadian, dialog, atau fakta. Field story wajib sama persis dengan cerita owner. Tugasmu hanya membagi cerita tersebut menjadi 4-6 adegan sesuai urutan, membuat arahan visual/aksi/durasi, subtitle yang diambil dari teks cerita, metadata, dan catatan verifikasi.",
+      "Jangan menambahkan narasi baru. narration tiap adegan harus berupa kutipan persis yang berurutan dari cerita owner; jangan parafrase. Jika tidak ada dialog dalam cerita owner, dialogue wajib string kosong. Subtitle harus berupa kutipan pendek dari narration adegan. Hindari klaim faktual tambahan; tandai hal yang perlu diverifikasi pada factCheckNotes dan sourceQueries tanpa mengarang sumber.",
       "PENTING: setiap objek scenes WAJIB memuat SEMUA properti berikut: number (integer), seconds (integer), visual (string), action (idle, walk, run, surprised, point), narration (string), dialogue (string), sound (string), imagePrompt (string), subtitle (string). narration tidak boleh dihilangkan; isi dengan narasi adegan. Jika tidak ada dialog karakter, dialogue tetap wajib diisi sebagai string kosong.",
       "Buat 4-6 adegan, durasi tiap adegan bilangan bulat 4-8 detik, total 20-48 detik. Ini penting karena setiap adegan akan dibuat sebagai klip AI terpisah dengan durasi 4-12 detik. Narasi/dialog/subtitle harus ditulis sebagai naskah final yang konsisten dengan story. Setiap adegan punya aksi visual, prompt gambar konkret, efek suara, dan subtitle singkat.",
       "Sebelum mengirim JSON, periksa satu per satu bahwa SETIAP adegan memiliki kesembilan properti wajib: number, seconds, visual, action, narration, dialogue, sound, imagePrompt, subtitle. Output hanya JSON valid sesuai schema.",
       "Bertindak sebagai art director untuk animasi kartun 2D Lerry. JANGAN meminta visual 3D atau fotorealistis: renderer saat ini membuat animasi 2D berbasis SVG/vector. Karakter utama wajib selalu identik: kepala putih bulat besar tanpa hidung dan tanpa rambut, mata kartun hitam dengan alis ekspresif, tubuh ramping seperti stickman, kaus biru polos, lengan dan kaki hitam, tangan hitam seperti sarung tangan, sepatu hitam, outline hitam tebal. Jangan ubah bentuk kepala, wajah, proporsi, identitas, atau warna kaus. Variasi hanya ekspresi, pose, aksi, latar dan properti adegan. Setiap adegan harus punya komposisi latar berbeda yang sesuai cerita; tulis visual dan imagePrompt sebagai arahan latar 2D sederhana yang dapat dibuat dengan bentuk vektor, bukan janji gambar AI khusus. Pilih lokasi konkret (mis. kota/jalan, rumah/kamar, sekolah, alam, perpustakaan, bengkel, luar angkasa) dan 1-3 properti utama yang relevan. Setiap adegan menyebut ukuran shot, sudut kamera, gerakan kamera sederhana, pencahayaan, aksi tunggal yang terbaca, dan detail latar. Hindari teks di dalam gambar, watermark, karakter ganda, anatomi cacat, dan perubahan desain tokoh. Vertikal 9:16. action hanya idle, walk, run, surprised, point.",
       "Judul YouTube menarik tetapi tidak menyesatkan. Deskripsi dan hashtag relevan. thumbnailPrompt mendeskripsikan satu thumbnail yang jelas, tanpa teks kecil. Output hanya JSON sesuai schema.",
-      "IDE OWNER:", idea
+      "CERITA FINAL OWNER (JANGAN DIUBAH):", ownerStory
     ].join("\n\n");
 
     const requestBody = JSON.stringify({ model, messages:[{role:"user",content:prompt}], response_format:{type:"json_schema",json_schema:{name:"lerry_shorts_production",strict:true,schema:productionSchema}}, reasoning_effort:"low", include_reasoning:false, temperature:0.7, max_completion_tokens:4200, stream:false });
@@ -88,7 +88,7 @@ export async function POST(request: Request) {
 
     const p=await withAgentSpan("storyboard.validate", { "agent.name": "Storyboard QC Agent", "agent.scene_schema": "lerry-shorts-v1" }, async () => JSON.parse(raw!));
     if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error("Storyboard harus berisi 4-6 adegan.");
-    if(typeof p.story!=="string"||p.story.trim().length<80) throw new Error("Cerita hasil AI terlalu pendek atau kosong.");
+    if(typeof p.story!=="string"||p.story!==ownerStory) throw new Error("AI mengubah cerita owner. Storyboard ditolak agar alur asli tetap terjaga.");
     let total=0;
     for(const [i,s] of p.scenes.entries()){
       if(!Number.isInteger(Number(s.seconds))||s.seconds<4||s.seconds>12) throw new Error(`Durasi adegan ${i+1} tidak valid.`);
@@ -96,11 +96,11 @@ export async function POST(request: Request) {
       if(typeof s.imagePrompt!=="string"||s.imagePrompt.trim().length<25) throw new Error(`Prompt visual adegan ${i+1} kurang jelas.`);
       if(!String(s.subtitle||"").trim()) throw new Error(`Subtitle adegan ${i+1} kosong.`);
       if(!["idle","walk","run","surprised","point"].includes(String(s.action||""))) throw new Error(`Aksi karakter adegan ${i+1} tidak didukung renderer.`);
-      if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);
+      if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);\n      if(s.narration&&!ownerStory.includes(s.narration.trim())) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli dari cerita owner.`);\n      if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
-    p.idea=idea; p.script=p.story; p.ownerStory=p.story; p.durationSeconds=total;
-    p.qcChecklist=["Ide owner dikembangkan menjadi cerita baru oleh AI.","Alur cerita, dialog, dan narasi konsisten antaradegan.","Jumlah adegan 4-6 dan durasi 20-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
+    p.idea=ownerStory; p.script=ownerStory; p.ownerStory=ownerStory; p.durationSeconds=total;
+    p.qcChecklist=["Cerita owner dipertahankan tanpa penulisan ulang.","Narasi adegan menggunakan kutipan asli dan urutan cerita dipertahankan.","Jumlah adegan 4-6 dan durasi 20-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
     recentRequests.set(ip, now);
     return NextResponse.json({ok:true,provider,model:provider==="groq"?model:"Langflow Flow",usage:data?.usage||null,production:p});
   } catch(error) {
