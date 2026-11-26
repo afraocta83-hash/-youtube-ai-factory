@@ -64,7 +64,8 @@ jobs:
           const raw=process.env.PRODUCTION_JSON||fs.readFileSync('fixtures/e2e-test-story.json','utf8');
           const p=JSON.parse(raw);
           if(process.env.GITHUB_EVENT_NAME==='push') console.log('RUNNING NON-PRODUCTION E2E TEST FIXTURE');
-          if(!p.ownerStory||p.script!==p.ownerStory) throw new Error('Cerita hasil AI tidak cocok dengan naskah produksi.');
+          if(!p.ownerStory||p.script!==p.ownerStory||p.story!==p.ownerStory) throw new Error('Cerita produksi harus sama persis dengan cerita owner.');
+          let narrationCursor=0;
           if(p.script.trim().length<80) throw new Error('Cerita terlalu pendek.');
           if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error('Storyboard harus 4-6 adegan.');
           let total=0;
@@ -75,12 +76,16 @@ jobs:
             if(typeof s.imagePrompt!=='string'||s.imagePrompt.trim().length<25) throw new Error('Prompt visual adegan '+(i+1)+' kurang jelas.');
             if(!String(s.subtitle||'').trim()) throw new Error('Subtitle adegan '+(i+1)+' kosong.');
             if(!['idle','walk','run','surprised','point'].includes(s.action)) throw new Error('Aksi karakter adegan '+(i+1)+' tidak valid.');
-            if(!String(s.narration||s.dialogue||'').trim()) throw new Error('Narasi/dialog adegan '+(i+1)+' kosong.');
+            const narration=String(s.narration||'').trim();
+            const at=narration?p.ownerStory.indexOf(narration,narrationCursor):-1;
+            if(at<0) throw new Error('Narasi adegan '+(i+1)+' bukan kutipan asli berurutan dari cerita owner.');
+            narrationCursor=at+narration.length;
+            if(!narration.includes(String(s.subtitle||'').trim())) throw new Error('Subtitle adegan '+(i+1)+' bukan kutipan dari narasi.');
           }
           if(total<20||total>60) throw new Error('Durasi Shorts harus 20-60 detik.');
           fs.mkdirSync('public',{recursive:true});
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
-          console.log('OWNER-APPROVED PACKAGE QC PASS',{scenes:p.scenes.length,total});
+          console.log('STORY PACKAGE QC PASS',{scenes:p.scenes.length,total,storyLocked:true,narrationOrder:true,subtitleExcerpts:true});
           NODE
       - name: Generate Indonesian narration with Edge TTS and Piper fallback
         run: |
