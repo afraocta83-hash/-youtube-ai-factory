@@ -10,7 +10,7 @@ This repository turns owner-authored Indonesian stories into short vertical cart
 - No YouTube upload is performed. Owner reviews and approves the MP4 and metadata separately.
 
 ## Owner setup
-1. Add `GROQ_API_KEY` and `OWNER_PASSWORD` as Vercel Preview Secrets. Owner password must be at least 24 characters.
+1. Add `GROQ_API_KEY` as the primary Vercel Preview Secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403). Add `OWNER_PASSWORD` as a Vercel Preview Secret; it must be at least 24 characters.
 2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side Vercel Secret with Actions: write permission.
 3. Open the Preview app, sign in with the owner password, and paste the final story.
 4. Generate the storyboard and inspect the locked story, narration, subtitles and metadata.
@@ -21,7 +21,7 @@ This repository turns owner-authored Indonesian stories into short vertical cart
 Detailed setup: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
 
 ## Free-first architecture
-- Groq is the only LLM provider key required by the app.
+- Groq is the only LLM provider required by the app. One primary key is sufficient; up to two optional backup keys are supported.
 - Edge TTS is primary; Piper is the local fallback. Neither requires a paid TTS API key.
 - Remotion and FFmpeg run in GitHub Actions.
 - The last 10 storyboards are stored in browser localStorage on the current device. No Supabase/database/OTP setup is required.
