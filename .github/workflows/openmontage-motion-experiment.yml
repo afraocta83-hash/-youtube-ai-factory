@@ -45,8 +45,57 @@ jobs:
           if [ -n "$GEMINI_API_KEY" ]; then
             echo "GEMINI_API_KEY is configured (value hidden)."
           else
-            echo "::warning::GEMINI_API_KEY is not configured in GitHub Actions secrets; live TTS render will need it."
+            echo "::error::GEMINI_API_KEY is required for the live TTS smoke test."
+            exit 1
           fi
+      - name: Generate a real Gemini TTS smoke sample
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_TTS_MODEL: gemini-2.5-flash-tts
+        run: |
+          mkdir -p out
+          node <<'NODE'
+          (async () => {
+            const fs = require('node:fs');
+            const key = process.env.GEMINI_API_KEY;
+            if (!key) throw new Error('GEMINI_API_KEY missing.');
+            const model = process.env.GEMINI_TTS_MODEL;
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {'content-type':'application/json'},
+              body: JSON.stringify({
+                contents: [{parts:[{text:'Say in Indonesian with a clear, friendly cartoon narrator voice: Halo, ini tes suara Lerry Animasi.'}]}],
+                generationConfig: {
+                  responseModalities: ['AUDIO'],
+                  speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
+                }
+              }),
+              signal: AbortSignal.timeout(55000)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error('Gemini TTS failed: ' + (data.error?.message || response.status));
+            const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data);
+            if (!part) throw new Error('Gemini returned no audio payload.');
+            const raw = Buffer.from(part.inlineData.data, 'base64');
+            if (raw.length < 1024) throw new Error('Gemini audio payload is unexpectedly small.');
+            const mime = part.inlineData.mimeType || 'audio/pcm;rate=24000';
+            let audio = raw;
+            if (!mime.includes('wav')) {
+              const rate = Number((mime.match(/rate=(\\d+)/) || [])[1] || 24000);
+              const channels = Number((mime.match(/channels=(\\d+)/) || [])[1] || 1);
+              const header = Buffer.alloc(44);
+              header.write('RIFF',0); header.writeUInt32LE(36 + raw.length,4); header.write('WAVE',8);
+              header.write('fmt ',12); header.writeUInt32LE(16,16); header.writeUInt16LE(1,20);
+              header.writeUInt16LE(channels,22); header.writeUInt32LE(rate,24);
+              header.writeUInt32LE(rate * channels * 2,28); header.writeUInt16LE(channels * 2,32);
+              header.writeUInt16LE(16,34); header.write('data',36); header.writeUInt32LE(raw.length,40);
+              audio = Buffer.concat([header, raw]);
+            }
+            fs.writeFileSync('out/tts-smoke.wav', audio);
+            console.log('LIVE GEMINI TTS PASS', {model, mimeType:mime, bytes:audio.length});
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
       - name: TypeScript check
         run: npm run typecheck
       - name: Build Next.js application
@@ -84,7 +133,9 @@ jobs:
             const invented={...base,scenes:base.scenes.map((s,i)=>i===0?{...s,subtitle:'Dialog baru yang tidak ada di cerita.'}:s)};
             const inventedResult=await qc(invented);
             assert.equal(inventedResult.passed,false,'Invented subtitle must fail QC');
-            console.log('QC API PASS: valid package accepted; changed story and invented subtitle rejected.');
+            const missingOwner=await qc(({ownerStory,...rest})=>rest)(base);
+            assert.equal(missingOwner.passed,false,'Missing owner story must fail QC');
+            console.log('QC API PASS: valid package accepted; changed story, missing owner story and invented subtitle rejected.');
           })().catch(error=>{console.error(error);process.exit(1);});
           NODE
       - name: Verify Remotion compositions
@@ -140,12 +191,18 @@ jobs:
           verify('out/motion-metadata.json',15,false);
           verify('out/short-metadata.json',16,true);
           NODE
+          test -s out/tts-smoke.wav
+          ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration -of json out/tts-smoke.wav > out/tts-metadata.json
+          node -e "const m=require('./out/tts-metadata.json'); if(!m.streams.some(s=>s.codec_name==='pcm_s16le')) throw Error('TTS WAV is not PCM audio'); if(Number(m.format.duration)<0.5) throw Error('TTS audio is too short'); console.log('LIVE TTS WAV PASS',m.format.duration+'s')"
+          ffmpeg -v error -i out/tts-smoke.wav -f null -
           ffmpeg -v error -i out/openmontage-motion-showcase.mp4 -f null -
           ffmpeg -v error -i out/lerry-short-smoke.mp4 -f null -
       - name: Upload experiment artifact
         uses: actions/upload-artifact@v4
         with:
           name: lerry-openmontage-motion-showcase
-          path: out/*.mp4
+          path: |
+            out/*.mp4
+            out/tts-smoke.wav
           if-no-files-found: error
           retention-days: 7
