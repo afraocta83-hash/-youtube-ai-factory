@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
 import { LerryShort, LerryShortProps } from "./Short";
+import { SceneMotionShowcase } from "./experiments/SceneMotionShowcase";
 
 const defaultProps: LerryShortProps = {
   workingTitle: "Lerry Animasi",
@@ -12,16 +13,26 @@ const defaultProps: LerryShortProps = {
 };
 
 export const RemotionRoot: React.FC = () => (
-  <Composition
-    id="LerryShort"
-    component={LerryShort}
-    width={1080}
-    height={1920}
-    fps={30}
-    durationInFrames={Math.max(450, defaultProps.scenes.reduce((n, s) => n + s.seconds, 0) * 30)}
-    defaultProps={defaultProps}
-    calculateMetadata={({ props }) => ({
-      durationInFrames: Math.max(450, Math.min(1800, props.scenes.reduce((n, s) => n + Math.max(1, s.seconds), 0) * 30))
-    })}
-  />
+  <>
+    <Composition
+      id="LerryShort"
+      component={LerryShort}
+      width={1080}
+      height={1920}
+      fps={30}
+      durationInFrames={Math.max(450, defaultProps.scenes.reduce((n, s) => n + s.seconds, 0) * 30)}
+      defaultProps={defaultProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: Math.max(450, Math.min(1800, props.scenes.reduce((n, s) => n + Math.max(1, s.seconds), 0) * 30))
+      })}
+    />
+    <Composition
+      id="SceneMotionShowcase"
+      component={SceneMotionShowcase}
+      width={1080}
+      height={1920}
+      fps={30}
+      durationInFrames={450}
+    />
+  </>
 );
