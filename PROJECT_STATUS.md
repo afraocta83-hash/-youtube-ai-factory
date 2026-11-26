@@ -1,13 +1,13 @@
 # LERRY ANIMASI — Project Status
 
 Last updated: 2026-11-26
-Current stage: free-first pipeline and renderer CI verified; Groq primary/backup key selection added in code; live owner login, Groq generation, and dashboard-to-render acceptance still pending
+Current stage: Groq primary/backup key fallback deployed to Preview; CI renderer run #88 passed; live owner login, live Groq generation, and dashboard-to-render acceptance still pending
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Latest code commits: `875a6cad9da019bde3a05dd03841304af2e530c3` (Groq key fallback) and `9c036cd45aa4faf4231800f7dcd0e20683f3b17f` (homepage status copy); these commits are awaiting Preview build verification.
+Latest functional commits: `875a6cad9da019bde3a05dd03841304af2e530c3` (Groq key fallback) and `9c036cd45aa4faf4231800f7dcd0e20683f3b17f` (homepage status copy). Setup documentation commits: `615c1d3be28ee639608c370fda1f61b55c90a7e8` and `a6c1aa9bd01d85b5a361401f3875a44ddab5a6b1`.
 Latest full renderer verification before this change: [run #85](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45851262617)
-Latest verification of the previous login-throttling code: [run #87](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45853996339) — completed successfully. This run predates the new Groq fallback commits.
-Last verified Preview before the latest code changes: https://youtube-ai-factory-3cb9qzg77-afraocta83-9700.vercel.app — deployment `dpl_23xpknxM7yR5DUoQeJ5Q9kJSq4UY`, READY. New code commits are awaiting their own Preview deployment.
+Latest renderer verification of the Groq fallback code: [run #88](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45862675017) — completed successfully. It passed TypeScript, Next.js build, QC tests, Remotion, MP4 render, FFmpeg decode, and artifact upload. Live Groq/login remained skipped because the separate GitHub Actions secrets were empty.
+Latest verified Preview: https://youtube-ai-factory-47r2iw54f-afraocta83-9700.vercel.app — deployment `dpl_7jmjM3cNc32eviQtV8gPfD8MZnkf`, READY, built from `a6c1aa9`.
 Main remains isolated; no merge or Production deployment has been made.
 
 ## Safety boundary
@@ -60,7 +60,7 @@ Main remains isolated; no merge or Production deployment has been made.
 - Run #85 artifact: `lerry-openmontage-motion-showcase` (ID `15132863861`, expires 2026-12-03).
 - Run #85 deliberately used an offline fixture because `GROQ_API_KEY` and `OWNER_PASSWORD` are not configured in GitHub Actions. It proves renderer and security preflight work, not live AI generation.
 - Latest Edge/Piper engine run: [run #4](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45851073085), successful. Both Indonesian TTS engines generated and verified audio. Artifact `lerry-indonesian-tts-test` (ID `15134057074`, expires 2026-12-03).
-- Login throttling commit `b7fc2ab`: run #87 completed successfully. Dependency audit, TypeScript, Next.js build, QC acceptance/rejection tests, Remotion composition verification, two MP4 renders, FFmpeg decode, H.264 1080×1920 30fps output, audio stream and non-silent audio check passed.\n- Run #87 explicitly skipped live Groq and owner login because GitHub Actions `GROQ_API_KEY` and `OWNER_PASSWORD` secrets were empty; renderer used an offline fixture. The new Groq fallback code has not yet been built/tested.
+- Login throttling commit `b7fc2ab`: run #87 passed.\n- Groq fallback commit `875a6cad`: run #88 passed dependency audit, TypeScript, Next.js build, QC acceptance/rejection, Remotion compositions, two MP4 renders, FFmpeg decode, H.264 1080×1920 30fps output, audio stream, non-silent audio (-28 dB), and artifact upload. The 15-second motion showcase and 16-second Short smoke render were verified.\n- Run #88 explicitly skipped live Groq and owner login because GitHub Actions `GROQ_API_KEY` and `OWNER_PASSWORD` secrets were empty; it used an offline fixture. The Vercel Preview secrets are separate.
 - The CI fixture audio is deterministic test audio, not actual production narration.
 
 ## Security hardening
