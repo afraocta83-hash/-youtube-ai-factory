@@ -12,8 +12,8 @@ This repository turns a short owner idea into an Indonesian animated YouTube Sho
 - One Groq request per idea; strict JSON Schema; low reasoning effort; maximum completion budget 4,200 tokens.
 
 ## Owner setup
-1. Add `GROQ_API_KEY` as the primary Vercel Preview Secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403). Add `OWNER_PASSWORD` as a Vercel Preview Secret; keep it private.
-2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side Vercel Secret with Actions: write permission.
+1. Add `GROQ_API_KEY` as the primary hosting Preview secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403). Add `OWNER_PASSWORD` as a Vercel Preview Secret; keep it private.
+2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side hosting secret with Actions: write permission.
 3. Open the Preview app and sign in with the owner password.
 4. Enter a short idea, generate the story and storyboard, then inspect all scenes and metadata.
 5. Only when satisfied, press **Saya setujui — mulai render MP4**.
