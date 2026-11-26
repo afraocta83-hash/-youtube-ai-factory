@@ -37,7 +37,7 @@ jobs:
       - name: Install project, TTS and FFmpeg dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg libespeak-ng1 fonts-dejavu-core
+          sudo apt-get install -y ffmpeg libespeak-ng1
           python -m pip install --upgrade pip
           python -m pip install requests edge-tts piper-tts
           npm install
@@ -191,13 +191,7 @@ jobs:
             aspectRatio:'9:16',
             visibility:'private'
           },null,2));
-          const words=String(p.title||p.workingTitle||'LERRY ANIMASI').trim().split(/\s+/);
-          const lines=[];let line='';
-          for(const word of words){const next=(line+' '+word).trim();if(next.length>22&&line){lines.push(line);line=word;}else line=next;}
-          if(line)lines.push(line);
-          fs.writeFileSync('out/thumbnail-title.txt',lines.slice(0,3).join('\n'));
-          NODE
-          ffmpeg -y -v error -ss 2 -i out/lerry-animasi-short.mp4 -frames:v 1 -vf "drawbox=x=36:y=ih*0.68:w=iw-72:h=ih*0.27:color=black@0.58:t=fill,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=out/thumbnail-title.txt:fontcolor=white:fontsize=64:line_spacing=16:x=(w-text_w)/2:y=h*0.73" -q:v 2 out/thumbnail.jpg
+          ffmpeg -y -v error -ss 1 -i out/lerry-animasi-short.mp4 -frames:v 1 -q:v 2 out/thumbnail.jpg
           test -s out/thumbnail.jpg
           test -s out/youtube-metadata.json
           ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 out/thumbnail.jpg | grep -qx '1080x1920'
