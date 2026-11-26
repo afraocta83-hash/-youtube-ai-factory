@@ -37,7 +37,8 @@ jobs:
           const seconds = p.scenes.reduce((n,s) => n + Number(s.seconds || 0), 0);
           if (seconds < 15 || seconds > 60) throw new Error('Durasi wajib 15-60 detik.');
           if (!p.script || p.script.length < 40) throw new Error('Cerita asli owner wajib disertakan.');
-          const qc = await fetch(process.env.QC_URL, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(p)});
+          if (!p.ownerStory || p.script !== p.ownerStory) throw new Error('Naskah tidak cocok persis dengan cerita asli owner. Produksi dihentikan.');
+          const qc = await fetch(process.env.QC_URL, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...p, ownerStory:p.ownerStory})});
           const q = await qc.json();
           if (!qc.ok || !q.passed) throw new Error('QC gagal: ' + JSON.stringify(q.issues || q));
           fs.mkdirSync('public', {recursive:true});
