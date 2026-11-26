@@ -38,18 +38,14 @@ jobs:
         run: |
           npm audit --audit-level=moderate
           npm ls next postcss
-      - name: Check optional storyboard provider configuration
+      - name: Check optional FreeLLM provider configuration
         env:
           FREELLM_BASE_URL: ${{ secrets.FREELLM_BASE_URL }}
-          FREELLM_API_KEY: ${{ secrets.FREELLM_API_KEY }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
           if [ -n "$FREELLM_BASE_URL" ]; then
-            echo "FreeLLM endpoint is configured (values hidden)."
-          elif [ -n "$GEMINI_API_KEY" ]; then
-            echo "Gemini fallback is configured (value hidden)."
+            echo "FreeLLM endpoint is configured (value hidden)."
           else
-            echo "::warning::No live storyboard provider configured; renderer CI will use its clearly labeled offline fixture."
+            echo "::warning::FreeLLM is not configured; renderer CI will use its clearly labeled offline fixture. Gemini is intentionally not used in this test."
           fi
       - name: TypeScript check
         run: npm run typecheck
@@ -60,8 +56,6 @@ jobs:
           FREELLM_BASE_URL: ${{ secrets.FREELLM_BASE_URL }}
           FREELLM_API_KEY: ${{ secrets.FREELLM_API_KEY }}
           FREELLM_MODEL: ${{ vars.FREELLM_MODEL }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
         run: |
           npm start > /tmp/lerry-next.log 2>&1 &
           ready=0
