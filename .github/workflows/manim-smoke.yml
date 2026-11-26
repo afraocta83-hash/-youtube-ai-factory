@@ -9,6 +9,10 @@ on:
       - ".github/workflows/manim-smoke.yml"
   workflow_dispatch:
 
+concurrency:
+  group: lerry-manim-${{ github.ref }}
+  cancel-in-progress: true
+
 permissions:
   contents: read
 
