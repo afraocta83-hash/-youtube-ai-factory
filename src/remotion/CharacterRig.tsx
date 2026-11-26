@@ -47,8 +47,10 @@ export const CharacterRig: React.FC<CharacterRigProps> = ({
           <path d="M378 445 Q440 470 450 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${rightArm} 378 445)`} />
           <circle cx="450" cy="540" r="16" fill="#ffd8b5" transform={`rotate(${rightArm} 378 445)`} />
         </g>
-        <path d="M235 590 L235 650 Q235 680 255 680 L280 680 L280 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 257 590)`} />
-        <path d="M320 590 L320 650 Q320 680 340 680 L365 680 L365 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 343 590)`} />
+        <path d="M220 590 L220 650 Q220 680 240 680 L265 680 L265 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 242 590)`} />
+        <path d="M335 590 L335 650 Q335 680 355 680 L380 680 L380 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 358 590)`} />
+        <ellipse cx="245" cy="680" rx="25" ry="12" fill="#182338" transform={`rotate(${leftLeg} 242 590)`} />
+        <ellipse cx="360" cy="680" rx="25" ry="12" fill="#182338" transform={`rotate(${rightLeg} 358 590)`} />
         <path d="M220 220 Q205 95 300 88 Q395 95 385 220 L370 390 Q300 430 230 390Z" fill="#ffd8b5" stroke="#27364a" strokeWidth="12" />
         <path d="M210 220 Q188 90 300 70 Q412 88 390 220 Q365 165 310 160 Q265 205 210 220Z" fill="#27364a" />
         <g transform={`translate(0 0) scale(1 ${eyeScale * blinkScale})`}>
