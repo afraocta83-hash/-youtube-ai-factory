@@ -1,63 +1,58 @@
 # Lerry Animasi — Project Status
 
 Last updated: 2026-11-26
-Current stage: isolated engine experiment / integration hardening
+Current stage: end-to-end synthetic smoke passed; visual/audio acceptance and product integration remain
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
+Branch comparison at update: 69 commits ahead, 0 behind
+Main HEAD at update: `db295ed51181d8ff969fe2ebea96891b4394cb45`
 
 ## Safety boundary
-- `main` is unchanged by this experiment.
-- Dashboard and office visuals are not being redesigned.
-- No YouTube upload or publishing is performed.
-- No paid image/video provider is enabled.
-- No production merge or Vercel deployment has been authorized.
+- All experiment changes remain isolated on `experiment/openmontage-video-engine`.
+- `main` remains at the recorded base commit; no merge was performed.
+- Dashboard and office visuals were not redesigned.
+- No YouTube upload or publishing was performed.
+- No paid image/video provider was enabled.
+- No production Vercel deployment was performed.
 
-## Confirmed working
-- Remotion can render a 1080×1920, 30 fps, 15-second H.264 MP4 in GitHub Actions.
-- FFmpeg/ffprobe verification and artifact upload succeeded in run [45819903887](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45819903887).
-- A second render with the first articulated rig succeeded in run [45820510692](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45820510692); its MP4 was inspected.
-- TypeScript check, Next.js build, Remotion composition listing, render, MP4 verification and artifact upload all passed together in run [45820602185](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45820602185).
-- Story generation API now restores the exact owner story as canonical `script` and carries it as `ownerStory`.
-- Generated narration/dialogue/subtitle lines must be exact excerpts of the owner's story or the generation is rejected.
-- Studio presentation remains unchanged; the copied production JSON includes the canonical `ownerStory` field for render-time checks.
-- QC is checked server-side and again in the render workflow; no new dashboard/office visual components were added.
-- Render workflow rejects a package if `script` and `ownerStory` differ.
-- CI now includes TypeScript checking and a Next.js production build.
-
-## Current in-progress verification
-- Latest known run at this update: [45821849638](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45821849638), for commit `34690ad8944d69ed43a3d90c1e6292b36ce73c61`.
-- The latest run is queued/pending. Do not mark the final rig accepted until it completes and its MP4 is inspected.
-- TypeScript check, Next.js production build, QC API integration test, Remotion composition check, two MP4 renders, FFmpeg decode checks and artifact upload all passed in run [45823031346](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823031346).
-- The artifact from [run 45823031346](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823031346) contains a 15-second motion showcase and a 16-second LerryShort renderer smoke MP4. The LerryShort MP4 is H.264 1080×1920 at 30 fps with an AAC audio stream.
-- The same `CharacterRig` is now used by both the motion showcase and the production `LerryShort` composition. Per-scene actions (`idle`, `walk`, `run`, `surprised`, `point`) are included in the storyboard schema and mapped to character animation.
-- Full-body rig integration passed TypeScript, Next.js build, QC API tests, Remotion composition listing, render, FFmpeg verification and artifact upload in [run 45823844373](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823844373).
-- After visual review, the leg stance was widened and shoe shapes added in commit `9a1eeee6f95766a7b210e52bd0ea245dfd114518`; this last polish commit still needs its own render verification.
-- Visual frame inspection confirmed the one-frame black transitions are fixed. The run pose is improved but remains proof-of-concept, not production art.
-- `npm audit --audit-level=moderate` passed after overriding PostCSS to 8.5.33; the resolved tree shows Next.js 15.5.29 using PostCSS 8.5.33.
-- A visual review of the earlier rig showed the legs overlapped/one leg was hidden. The limb layering, spacing, hands and blinking were revised afterward and require a fresh artifact review.
+## Confirmed working — latest end-to-end run
+- Full workflow passed in [run 45830819113](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45830819113), commit `a33e2bc979656b60c81d7fe335fbc14faf771a34`.
+- Dependency audit passed with zero vulnerabilities; TypeScript, Next.js production build, Remotion composition listing, QC, rendering, FFmpeg verification and artifact upload all passed.
+- Live storyboard generation through `/api/produce` succeeded using `gemini-3.5-flash-lite`: 4 scenes, 30 seconds total, with `script` and `ownerStory` preserved exactly.
+- QC negative tests passed: changed owner story, missing owner story and invented subtitle are rejected.
+- Live TTS succeeded using `gemini-3.8-flash-tts`; the response was a valid 24 kHz mono PCM WAV.
+- The generated storyboard package was saved and rendered with its generated narration audio; the final LerryShort MP4 is H.264, 1080×1920, 30 fps, 30.016 seconds, AAC audio, and passed full FFmpeg decode.
+- The final MP4 soundtrack is non-silent (mean volume approximately -21.8 dB); the generated narration file is 16.58 seconds, shorter than the 30-second video.
+- The motion showcase is H.264, 1080×1920, 30 fps, 15 seconds and passed FFmpeg decode.
+- Artifact: `lerry-openmontage-motion-showcase`, ID `15122602232`, expires 2026-12-03.
+- The artifact was downloaded and inspected at multiple frames. The character rig and backgrounds render, but some vector backdrop categories do not match the story scene precisely. Visual quality remains proof-of-concept.
+- The QC endpoint now requires `ownerStory`; a missing source story can no longer pass merely as a warning.
+- The TTS integration was migrated from the unavailable `gemini-2.5-flash-tts` Developer API target to `gemini-3.8-flash-tts`. Storyboard generation uses `gemini-3.5-flash-lite` to reduce capacity pressure.
 
 ## Known gaps — not production-ready yet
-1. Scene art still uses gradient/template backgrounds; the scene `visual`/`imagePrompt` fields do not yet create unique illustrated backgrounds or props.
-2. The shared full-body rig is integrated and tested, but character design and acting quality remain proof-of-concept and need owner visual acceptance.
-3. Live TTS has not been tested because the GitHub Actions secret `GEMINI_API_KEY` is missing. Once added, the current workflow generates one combined TTS track; there is no per-scene audio segmentation, lip-sync, or precise subtitle/audio timing.
-4. Automated QC checks text/package structure, not actual visual quality, audio clarity, subtitle safe areas, lip-sync, or factual accuracy.
-5. The normal dashboard flow still requires manually sending the production JSON to GitHub Actions to render. It is not yet a one-click or unattended factory.
-6. The existing Vercel deployment is protected by Vercel Authentication. The render workflow now runs QC locally and calls the stable Gemini 2.5 Flash TTS model directly; it requires the missing GitHub Actions secret `GEMINI_API_KEY`.
-7. Supabase storage is optional and not confirmed configured.
-8. YouTube publishing remains intentionally manual and approval-gated.
+1. Scene art is still template/vector scenery selected by simple keywords. The `imagePrompt` does not yet generate unique scene illustrations, props, or consistent character reference sheets.
+2. The character is a simple code-drawn rig. Actions exist, but acting, body mechanics, expressions and scene interaction are not production-grade.
+3. TTS currently produces one combined narration track. It is not split per scene or per character; the 16.58-second smoke narration does not fill the 30-second test video.
+4. Subtitle timing is scene-based/static, not aligned to spoken words. No lip-sync is implemented.
+5. QC validates package structure and text integrity; it does not yet judge visual continuity, subtitle safe areas, narration clarity, lip-sync, factual accuracy or copyright.
+6. The dashboard still requires manual transfer of the production JSON to GitHub Actions. It is not a one-click or unattended factory.
+7. The end-to-end test used a synthetic test story, not a final story supplied and approved by the owner.
+8. Supabase storage/configuration is not confirmed.
+9. The Vercel deployment and protected dashboard were not revalidated in this run.
+10. YouTube publishing remains manual and approval-gated.
 
 ## Next task queue
-- [x] Complete latest CI run and fix the observed build/QC/render issues.
-- [x] Confirm dependency audit returns zero moderate/high vulnerabilities.
-- [ ] Confirm the new QC API smoke test passes and the LerryShort renderer produces a 16-second MP4 with an audio stream.
-- [ ] Add `GEMINI_API_KEY` under GitHub repository Settings → Secrets and variables → Actions before a real TTS render; never paste the key into chat.
-- [ ] Inspect the latest MP4 at multiple frames; verify walk/run/point/surprised poses and no limb intersections.
-- [ ] Add render acceptance checks for duration, dimensions, frame rate, audio stream and file integrity.
-- [ ] Re-run visual smoke test after the latest leg/foot polish commit.
-- [ ] Build scene-specific visual composition from the story's `imagePrompt`, using free/local assets first.
-- [ ] Split narration by scene and align subtitle timing; add audio/lip-sync checks.
-- [ ] Connect a reliable dashboard-to-render handoff without exposing credentials in the browser.
-- [ ] Run an end-to-end production test with an owner-provided story and review the resulting MP4.
+- [x] Confirm current Gemini TTS model and generate real audio.
+- [x] Run live storyboard generation and verify exact owner-story preservation.
+- [x] Enforce ownerStory in structural QC and test negative cases.
+- [x] Render the generated storyboard with its real narration audio.
+- [x] Verify MP4 codec, dimensions, frame rate, duration, audio stream, non-silence and full decode.
+- [ ] Improve scene-specific free/local vector illustration so the visual category matches each scene more accurately.
+- [ ] Improve rig acting and add scene interaction/props; obtain owner visual acceptance.
+- [ ] Split narration per scene and align subtitle timing; add audio/lip-sync checks.
+- [ ] Run an end-to-end test using an owner-provided final story and review the MP4 with the owner.
+- [ ] Verify Supabase storage and the protected Vercel dashboard separately.
+- [ ] Implement secure dashboard-to-render handoff without exposing credentials in the browser.
 - [ ] Only after acceptance, ask for separate authorization to merge or deploy.
 
 ## Acceptance rule
