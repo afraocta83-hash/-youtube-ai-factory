@@ -1,0 +1,76 @@
+name: Test Indonesian TTS Engines
+
+on:
+  push:
+    branches:
+      - experiment/openmontage-video-engine
+    paths:
+      - .github/workflows/test-tts-engines.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  test-edge-and-piper:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install audio tools and TTS engines
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libespeak-ng1
+          python -m pip install --upgrade pip
+          python -m pip install edge-tts piper-tts
+
+      - name: Generate Indonesian sample with Edge TTS
+        run: |
+          mkdir -p out/tts-test
+          edge-tts --voice id-ID-ArdiNeural --rate="+0%" --text "Halo, ini pengujian suara Edge TTS untuk Lerry Animasi. Mesin ini membuat narasi Bahasa Indonesia." --write-media out/tts-test/edge-tts.mp3
+          test -s out/tts-test/edge-tts.mp3
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 out/tts-test/edge-tts.mp3
+
+      - name: Download Indonesian Piper voice
+        run: |
+          BASE="https://huggingface.co/rhasspy/piper-voices/resolve/main/id/id_ID/news_tts/medium"
+          curl -fL "$BASE/id_ID-news_tts-medium.onnx" -o /tmp/id_ID-news_tts-medium.onnx
+          curl -fL "$BASE/id_ID-news_tts-medium.onnx.json" -o /tmp/id_ID-news_tts-medium.onnx.json
+          test -s /tmp/id_ID-news_tts-medium.onnx
+          test -s /tmp/id_ID-news_tts-medium.onnx.json
+
+      - name: Generate Indonesian sample with Piper
+        run: |
+          printf '%s\n' "Halo, ini pengujian suara Piper TTS untuk Lerry Animasi. Mesin ini berjalan secara lokal tanpa API berbayar." | piper --model /tmp/id_ID-news_tts-medium.onnx --output_file out/tts-test/piper-tts.wav
+          test -s out/tts-test/piper-tts.wav
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 out/tts-test/piper-tts.wav
+
+      - name: Verify both audio outputs
+        run: |
+          for f in out/tts-test/edge-tts.mp3 out/tts-test/piper-tts.wav; do
+            ffmpeg -v error -i "$f" -f null -
+          done
+          node <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          for (const file of ['out/tts-test/edge-tts.mp3','out/tts-test/piper-tts.wav']) {
+            const seconds=Number(cp.execFileSync('ffprobe',['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',file],{encoding:'utf8'}).trim());
+            if (!fs.existsSync(file) || fs.statSync(file).size<1000 || !Number.isFinite(seconds) || seconds<=0) throw new Error('Audio tidak valid: '+file);
+            console.log('TTS AUDIO PASS', {file,bytes:fs.statSync(file).size,durationSeconds:Number(seconds.toFixed(2))});
+          }
+          NODE
+
+      - name: Upload TTS test samples
+        uses: actions/upload-artifact@v4
+        with:
+          name: lerry-indonesian-tts-test
+          path: out/tts-test/*
+          if-no-files-found: error
+          retention-days: 7
