@@ -30,7 +30,7 @@ function pruneExpired(now: number) {
 export async function POST(request: Request) {
   const expected = process.env.OWNER_PASSWORD || "";
   if (expected.length < 24) {
-    return NextResponse.json({ error: "OWNER_PASSWORD belum diatur. Tambahkan password owner minimal 24 karakter di Vercel Preview." }, { status: 503 });
+    return NextResponse.json({ error: "OWNER_PASSWORD belum diatur. Tambahkan password owner minimal 24 karakter pada hosting Preview." }, { status: 503 });
   }
 
   const now = Date.now();
