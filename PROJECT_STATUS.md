@@ -286,7 +286,7 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - Made the owner story the source of truth: input is 80–3000 characters; AI must return the exact story and narration must be exact, ordered excerpts. Subtitles must be excerpts from the matching narration. The API rejects rewritten story or paraphrased narration.
 - Strengthened pre-render QC for story lock, ordered narration, subtitles, actions, duration and visual prompts.
 - Extended `.github/workflows/render-short.yml` to generate representative mid-scene frames, a contact sheet, thumbnail, YouTube metadata, MP4 metadata and `production-qc.json`. Artifact includes the MP4 and inspection materials.
-- Added a non-production car-story fixture. Pushes on this isolated repair branch run the actual TTS → Remotion → FFmpeg → QC workflow and upload an artifact named `lerry-e2e-fixture`. This does not publish or deploy anything.
+- Added a non-production car-story fixture. Pushes on the repair branch and working experiment branch run the actual TTS → Remotion → FFmpeg → QC workflow and upload an artifact named `lerry-e2e-fixture`. This does not publish or deploy anything.
 
 ## Verified evidence
 - E2E package-to-MP4 run #13: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904174744
@@ -303,7 +303,9 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - TTS engine check #14 on the merged experiment commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905651107 — passed.
 - TTS engine check #15 on the current experiment commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905817846 — both Edge TTS and Piper generated Indonesian audio and passed file verification.
 - Post-merge build-check #117: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905650859 — passed TypeScript, Next.js production build and Remotion smoke render.
-- Full E2E fixture run #26 on the current experiment branch is running; add its result when complete.
+- Full E2E fixture run #26 on the merged experiment branch: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905817822 — passed story lock, ordered narration/subtitle excerpts, Edge TTS, Remotion, FFmpeg decode, clean thumbnail, metadata, contact sheet, QC and artifact upload.
+- Final merged-branch build-check #118: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905817806 — passed TypeScript, Next.js production build and Remotion smoke render.
+- Final merged-branch E2E artifact ID: `15157568762`, expires 2026-12-03 22:37 UTC. MP4 independently rechecked: H.264/AAC, 1080x1920, yuv420p, 30 fps, 31.019 seconds; full FFmpeg decode passed.
 - Final E2E artifact ID: `15157887255`, name `lerry-e2e-fixture`, size 2.83 MB, retained until 2026-12-03 22:32 UTC. The downloaded MP4 was independently inspected: H.264/AAC, 1080x1920, yuv420p, 30 fps, 31.019 seconds; full FFmpeg decode passed. The thumbnail was opened and visually checked; it is a clean representative frame without duplicate text overlays.
 - Per-scene Edge TTS durations: 5.33s, 4.42s, 7.49s and 11.74s. The renderer expanded scene lengths to 6s, 5s, 8s and 12s respectively, avoiding clipped narration.
 
