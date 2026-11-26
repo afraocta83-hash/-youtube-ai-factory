@@ -42,8 +42,11 @@ jobs:
           mkdir -p .cache/piper
           curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx" -o .cache/piper/id_ID-news_tts-medium.onnx
           curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx.json" -o .cache/piper/id_ID-news_tts-medium.onnx.json
-          test -s .cache/piper/id_ID-news_tts-medium.onnx
-          test -s .cache/piper/id_ID-news_tts-medium.onnx.json
+          if test -s .cache/piper/id_ID-news_tts-medium.onnx && test -s .cache/piper/id_ID-news_tts-medium.onnx.json; then
+            echo "PIPER_FALLBACK_READY"
+          else
+            echo "::warning::Piper fallback download unavailable; Edge TTS remains primary."
+          fi
       - name: Validate owner-approved package
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
@@ -96,6 +99,7 @@ jobs:
             if(!edgeReady){
               engine='piper-tts';
               try{fs.rmSync(wav,{force:true});}catch{}
+              if(!fs.existsSync(model)||!fs.existsSync(model+'.json')) throw new Error('Edge TTS gagal dan model Piper fallback tidak tersedia pada runner.');
               const piper=run('piper',['--model',model,'--output_file',wav],{input:spoken});
               if(piper.status!==0) fail('Edge dan Piper gagal pada adegan '+(i+1),piper);
             }
