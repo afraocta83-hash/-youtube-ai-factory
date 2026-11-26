@@ -1,0 +1,50 @@
+description: "Lerry storyboard agent regression test — one low-cost Groq request"
+prompts:
+  - |
+    You are the Lerry Shorts storyboard agent. Return ONLY valid JSON.
+    Create a family-friendly Indonesian YouTube Shorts production package for this idea: {{idea}}
+    Output an object with:
+    - story: a coherent Indonesian story of at least 80 characters
+    - scenes: 4 to 6 scene objects
+    Each scene must include number (integer), seconds (integer 4-8), visual (string), action (one of idle, walk, run, surprised, point), narration (non-empty string), dialogue (string), sound (string), imagePrompt (string of at least 25 characters), subtitle (string).
+    The total scene duration must be 20 to 60 seconds.
+    Also include title, description, hashtags (array), thumbnailPrompt, factCheckNotes (array), sourceQueries (array).
+    Do not omit narration from any scene. Output JSON only, no markdown fences.
+providers:
+  - id: openai:chat:openai/gpt-oss-120b
+    label: Groq GPT-OSS 120B
+    config:
+      apiBaseUrl: https://api.groq.com/openai/v1
+      apiKeyEnvar: GROQ_API_KEY
+      max_completion_tokens: 2200
+      reasoning_effort: low
+      temperature: 0.2
+      response_format:
+        type: json_object
+      maxRetries: 1
+tests:
+  - vars:
+      idea: "Sejarah motor pertama dan bagaimana mesin pembakaran membuat kendaraan roda dua bergerak."
+    assert:
+      - type: is-json
+      - type: javascript
+        value: |
+          const p = JSON.parse(output);
+          const validActions = ["idle", "walk", "run", "surprised", "point"];
+          const scenes = p.scenes;
+          Array.isArray(scenes) &&
+          scenes.length >= 4 && scenes.length <= 6 &&
+          typeof p.story === "string" && p.story.trim().length >= 80 &&
+          scenes.every((s) =>
+            Number.isInteger(s.number) &&
+            Number.isInteger(s.seconds) && s.seconds >= 4 && s.seconds <= 8 &&
+            typeof s.visual === "string" && s.visual.length > 0 &&
+            validActions.includes(s.action) &&
+            typeof s.narration === "string" && s.narration.trim().length > 0 &&
+            typeof s.dialogue === "string" &&
+            typeof s.sound === "string" &&
+            typeof s.imagePrompt === "string" && s.imagePrompt.trim().length >= 25 &&
+            typeof s.subtitle === "string"
+          ) &&
+          scenes.reduce((sum, s) => sum + s.seconds, 0) >= 20 &&
+          scenes.reduce((sum, s) => sum + s.seconds, 0) <= 60;
