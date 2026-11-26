@@ -28,11 +28,11 @@ The producer tries keys in order. It switches to the next configured key only wh
 - `GROQ_MODEL`: `openai/gpt-oss-120b`, plain configuration value.
 - `- `GITHUB_ACTIONS_TOKEN`: existing Sensitive/Secret with Actions: write permission.
 
-Redeploy the Preview after adding variables. Netlify and Vercel both require a new deploy for changed environment variables to take effect. Never paste API keys or owner passwords into chat or commit them to GitHub.
+Redeploy the Preview after adding variables. Netlify and Vercel both require a new deploy for changed environment variables to take effect. Never paste API keys into chat or commit them to GitHub.
 
-## Supabase removal
+## Supabase and login removal
 
-The first version no longer requires Supabase. Owner login uses a signed, HttpOnly, SameSite cookie; the signing key is the owner password. Recent storyboards are stored locally in the browser on the current device (maximum 10). This removes database setup, email OTP and Supabase API keys. Local history does not sync across devices and can be lost if browser data is cleared.
+The app has no owner login or Supabase dependency. Recent storyboards are stored locally in the browser on the current device (maximum 10). Local history does not sync across devices and can be lost if browser data is cleared. Render dispatch remains behind a manual approval button and has a basic per-IP cooldown; public access means the preview URL should not be widely shared until stronger abuse protection is added.
 
 ## Token controls
 
@@ -46,14 +46,14 @@ The first version no longer requires Supabase. Owner login uses a signed, HttpOn
 
 ## Free production pipeline
 
-1. Owner login.
+1. User submits an idea; no owner login is required.
 2. Groq creates storyboard + YouTube metadata.
 3. Server validates the story, scene count and Agnes-compatible clip durations.
 4. Edge TTS creates Indonesian narration; Piper is fallback.
-5. After explicit owner approval, GitHub Actions starts a temporary Docker instance of the MIT-licensed Agnes Video Generator.
+5. After explicit user approval, GitHub Actions starts a temporary Docker instance of the MIT-licensed Agnes Video Generator.
 6. Agnes creates each 4–12 second 720p scene clip; FFmpeg crops/upscales, burns subtitles, mixes Indonesian narration and joins the clips into a vertical MP4.
 7. FFmpeg/ffprobe validates H.264, 1080x1920, 30 fps, audio and duration.
-8. Owner downloads/reviews the artifact and separately approves any YouTube publishing.
+8. User downloads/reviews the artifact and separately approves any YouTube publishing.
 
 ### Agnes AI key (required for video rendering)
 
