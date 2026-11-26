@@ -85,7 +85,7 @@ export default function Studio(){
  return <section className="card studio">
   <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ GPT-OSS 120B</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
   {!authChecked?<p className="muted">Memeriksa sesi owner...</p>:!authenticated?<div className="ownerLogin">
-   <h3>Login owner</h3><p className="muted">Masukkan password owner yang dipasang sebagai Secret <code>OWNER_PASSWORD</code> di Vercel Preview.</p>
+   <h3>Login owner</h3><p className="muted">Masukkan password owner yang dipasang sebagai Secret <code>OWNER_PASSWORD</code> di hosting Preview.</p>
    <label htmlFor="ownerPassword">Password owner</label><input id="ownerPassword" type="password" value={ownerPassword} onChange={e=>setOwnerPassword(e.target.value)} placeholder="Password owner" autoComplete="current-password"/>
    <div className="studioActions"><button onClick={login} disabled={authBusy||!ownerPassword}>{authBusy?"Memeriksa...":"Masuk ke studio →"}</button></div>
   </div>:<>
