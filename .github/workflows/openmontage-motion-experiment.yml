@@ -38,15 +38,18 @@ jobs:
         run: |
           npm audit --audit-level=moderate
           npm ls next postcss
-      - name: Check Gemini TTS secret availability
+      - name: Check optional storyboard provider configuration
         env:
+          FREELLM_BASE_URL: ${{ secrets.FREELLM_BASE_URL }}
+          FREELLM_API_KEY: ${{ secrets.FREELLM_API_KEY }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: |
-          if [ -n "$GEMINI_API_KEY" ]; then
-            echo "GEMINI_API_KEY is configured (value hidden)."
+          if [ -n "$FREELLM_BASE_URL" ]; then
+            echo "FreeLLM endpoint is configured (values hidden)."
+          elif [ -n "$GEMINI_API_KEY" ]; then
+            echo "Gemini fallback is configured (value hidden)."
           else
-            echo "::error::GEMINI_API_KEY is required for the live TTS smoke test."
-            exit 1
+            echo "::warning::No live storyboard provider configured; renderer CI will use its clearly labeled offline fixture."
           fi
       - name: TypeScript check
         run: npm run typecheck
@@ -54,7 +57,11 @@ jobs:
         run: npm run build
       - name: Smoke-test QC and storyboard API (live provider with offline CI fallback)
         env:
+          FREELLM_BASE_URL: ${{ secrets.FREELLM_BASE_URL }}
+          FREELLM_API_KEY: ${{ secrets.FREELLM_API_KEY }}
+          FREELLM_MODEL: ${{ vars.FREELLM_MODEL }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_MODEL: ${{ vars.GEMINI_MODEL }}
         run: |
           npm start > /tmp/lerry-next.log 2>&1 &
           ready=0
