@@ -83,7 +83,7 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ GPT-OSS 120B</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + AGNES VIDEO</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
   {!authChecked?<p className="muted">Memeriksa sesi owner...</p>:!authenticated?<div className="ownerLogin">
    <h3>Login owner</h3><p className="muted">Masukkan password owner yang dipasang sebagai Secret <code>OWNER_PASSWORD</code> di hosting Preview.</p>
    <label htmlFor="ownerPassword">Password owner</label><input id="ownerPassword" type="password" value={ownerPassword} onChange={e=>setOwnerPassword(e.target.value)} placeholder="Password owner" autoComplete="current-password"/>
@@ -108,7 +108,7 @@ export default function Studio(){
     <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Memeriksa QC & mengirim render...":"Saya setujui — mulai render MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
-    <p className="muted">Persetujuan tombol ini hanya memulai render. Setelah MP4 selesai, lo wajib menonton dan memeriksa hasilnya. Tidak ada upload YouTube otomatis.</p>
+    <p className="muted">Persetujuan tombol ini memulai pembuatan klip AI Agnes dan penyatuan MP4. Setelah MP4 selesai, lo wajib menonton dan memeriksa hasilnya. Tidak ada upload YouTube otomatis.</p>
    </div>}
   </>}
   {error&&<p className="error" role="alert">{error}</p>}
