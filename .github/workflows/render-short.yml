@@ -14,7 +14,7 @@ permissions:
 jobs:
   produce:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -24,47 +24,85 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
-      - name: Validate story and Shorts package
+      - name: Validate story and Shorts package locally
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
-          QC_URL: https://youtube-ai-factory-afraocta83-9700.vercel.app/api/quality-check
         run: |
           node <<'NODE'
-          (async () => {
-          const fs = require('fs');
-          const p = JSON.parse(process.env.PRODUCTION_JSON);
-          if (!Array.isArray(p.scenes) || p.scenes.length < 4 || p.scenes.length > 10) throw new Error('Storyboard harus 4-10 adegan.');
-          const seconds = p.scenes.reduce((n,s) => n + Number(s.seconds || 0), 0);
-          if (seconds < 15 || seconds > 60) throw new Error('Durasi wajib 15-60 detik.');
-          if (!p.script || p.script.length < 40) throw new Error('Cerita asli owner wajib disertakan.');
-          if (!p.ownerStory || p.script !== p.ownerStory) throw new Error('Naskah tidak cocok persis dengan cerita asli owner. Produksi dihentikan.');
-          const qc = await fetch(process.env.QC_URL, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({...p, ownerStory:p.ownerStory})});
-          const q = await qc.json();
-          if (!qc.ok || !q.passed) throw new Error('QC gagal: ' + JSON.stringify(q.issues || q));
-          fs.mkdirSync('public', {recursive:true});
-          p.voiceFile = 'voice.wav';
-          fs.writeFileSync('production.json', JSON.stringify(p, null, 2));
-          console.log('QC PASS', q.score, 'Durasi', seconds, 'detik');
-          })().catch(e => { console.error(e); process.exit(1); });
+          (() => {
+            const fs = require('fs');
+            const p = JSON.parse(process.env.PRODUCTION_JSON);
+            if (!p.ownerStory || p.script !== p.ownerStory) throw new Error('Naskah tidak cocok persis dengan cerita asli owner.');
+            if (p.script.trim().length < 40) throw new Error('Cerita asli owner terlalu pendek atau kosong.');
+            if (!Array.isArray(p.scenes) || p.scenes.length < 4 || p.scenes.length > 10) throw new Error('Storyboard harus 4-10 adegan.');
+            let total = 0;
+            for (const [index, scene] of p.scenes.entries()) {
+              const seconds = Number(scene.seconds);
+              if (!Number.isFinite(seconds) || seconds <= 0) throw new Error('Durasi adegan ' + (index + 1) + ' tidak valid.');
+              total += seconds;
+              if (typeof scene.imagePrompt !== 'string' || scene.imagePrompt.trim().length < 20) throw new Error('Prompt visual adegan ' + (index + 1) + ' terlalu pendek.');
+              for (const field of ['narration', 'dialogue', 'subtitle']) {
+                const line = typeof scene[field] === 'string' ? scene[field].trim() : '';
+                if (line && !p.ownerStory.includes(line)) throw new Error('Teks ' + field + ' adegan ' + (index + 1) + ' bukan kutipan persis dari cerita owner.');
+              }
+            }
+            if (total < 15 || total > 60) throw new Error('Durasi total wajib 15-60 detik.');
+            const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\\n');
+            if (!spoken.trim()) throw new Error('Narasi/dialog kosong; TTS tidak dapat dibuat.');
+            if (spoken.length > 8000) throw new Error('Teks suara lebih dari 8.000 karakter.');
+            p.voiceFile = 'voice.wav';
+            fs.writeFileSync('production.json', JSON.stringify(p, null, 2));
+            console.log('PACKAGE QC PASS', {scenes:p.scenes.length, durationSeconds:total, ownerStoryExact:true});
+          })();
           NODE
       - name: Generate Indonesian narration with Gemini TTS
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
-          VOICE_URL: https://youtube-ai-factory-afraocta83-9700.vercel.app/api/voice
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_TTS_MODEL: gemini-2.5-flash-preview-tts
         run: |
           node <<'NODE'
           (async () => {
-          const fs = require('fs');
-          const p = JSON.parse(process.env.PRODUCTION_JSON);
-          const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\n');
-          if (!spoken.trim()) throw new Error('Narasi/dialog kosong. Isi audio script dari cerita owner terlebih dahulu.');
-          if (spoken.length > 8000) throw new Error('Teks suara lebih dari 8.000 karakter.');
-          const r = await fetch(process.env.VOICE_URL, {method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({text:spoken,voiceName:'Kore',style:'Narator kartun Shorts Indonesia, ekspresif, jelas, tempo hidup, artikulasi bersih.'})});
-          const data = await r.json();
-          if (!r.ok || !data.audioBase64) throw new Error('Gemini TTS gagal: ' + (data.error || r.status));
-          fs.writeFileSync('public/voice.wav', Buffer.from(data.audioBase64,'base64'));
-          console.log('Audio narasi berhasil dibuat.');
-          })().catch(e => { console.error(e); process.exit(1); });
+            const fs = require('fs');
+            const p = JSON.parse(process.env.PRODUCTION_JSON);
+            const key = process.env.GEMINI_API_KEY;
+            if (!key) throw new Error('GitHub Actions secret GEMINI_API_KEY belum diset. Tambahkan di Settings > Secrets and variables > Actions.');
+            const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\\n');
+            const model = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {'content-type':'application/json'},
+              body: JSON.stringify({
+                contents: [{parts:[{text:'Say in Indonesian with this direction: Narator kartun Shorts Indonesia, ekspresif, jelas, tempo hidup, artikulasi bersih.\\n\\n' + spoken}]}],
+                generationConfig: {
+                  responseModalities: ['AUDIO'],
+                  speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
+                }
+              }),
+              signal: AbortSignal.timeout(55000)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error('Gemini TTS gagal: ' + (data.error?.message || response.status));
+            const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data);
+            if (!part) throw new Error('Gemini tidak mengembalikan audio.');
+            const raw = Buffer.from(part.inlineData.data, 'base64');
+            const mime = part.inlineData.mimeType || 'audio/pcm;rate=24000';
+            let audio = raw;
+            if (!mime.includes('wav')) {
+              const rate = Number((mime.match(/rate=(\\d+)/) || [])[1] || 24000);
+              const header = Buffer.alloc(44);
+              header.write('RIFF',0); header.writeUInt32LE(36 + raw.length,4); header.write('WAVE',8);
+              header.write('fmt ',12); header.writeUInt32LE(16,16); header.writeUInt16LE(1,20);
+              header.writeUInt16LE(1,22); header.writeUInt32LE(rate,24); header.writeUInt32LE(rate * 2,28);
+              header.writeUInt16LE(2,32); header.writeUInt16LE(16,34); header.write('data',36);
+              header.writeUInt32LE(raw.length,40);
+              audio = Buffer.concat([header, raw]);
+            }
+            fs.mkdirSync('public', {recursive:true});
+            fs.writeFileSync('public/voice.wav', audio);
+            console.log('TTS PASS', {model, mimeType:mime, bytes:audio.length});
+          })().catch(error => { console.error(error); process.exit(1); });
           NODE
       - name: Render MP4 vertical 1080x1920
         run: npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --props=production.json --codec=h264 --crf=20
@@ -80,8 +118,8 @@ jobs:
           node <<'NODE'
           const fs = require('fs');
           const meta = JSON.parse(fs.readFileSync('out/mp4-metadata.json', 'utf8'));
-          const video = meta.streams.find((stream) => stream.codec_type === 'video');
-          const audio = meta.streams.find((stream) => stream.codec_type === 'audio');
+          const video = meta.streams.find(stream => stream.codec_type === 'video');
+          const audio = meta.streams.find(stream => stream.codec_type === 'audio');
           if (!video || video.codec_name !== 'h264') throw new Error('Video H.264 tidak ditemukan.');
           if (video.width !== 1080 || video.height !== 1920) throw new Error('Resolusi harus 1080x1920 (9:16).');
           const [num, den] = video.r_frame_rate.split('/').map(Number);
@@ -89,7 +127,7 @@ jobs:
           if (!audio) throw new Error('Audio narration track tidak ditemukan.');
           const duration = Number(meta.format.duration);
           if (duration < 15 || duration > 60) throw new Error('Durasi harus 15-60 detik.');
-          console.log('SHORTS MP4 PASS', {codec: video.codec_name, width: video.width, height: video.height, fps: num / den, duration, audio: true});
+          console.log('SHORTS MP4 PASS', {codec:video.codec_name, width:video.width, height:video.height, fps:num/den, duration, audio:true});
           NODE
           ffmpeg -v error -i out/lerry-animasi-short.mp4 -f null -
       - name: Upload finished Shorts
