@@ -76,11 +76,18 @@ def create_clip(scene: dict, index: int, title: str, out_path: Path) -> int:
     image_prompt = str(scene.get("imagePrompt") or "").strip()
     action = str(scene.get("action") or "idle").strip()
     prompt = (
-        "Create a polished family-friendly animated cartoon video, vertical 9:16, "
-        "720p, smooth cinematic camera movement, clear readable composition. "
-        "This is one shot from the same LERRY ANIMASI story. Keep the main character "
-        "design consistent with the story description; do not add text, captions, "
-        "logos, watermarks, or UI. "
+        "Create a premium 3D animated family-film shot, vertical 9:16, source 720p. "
+        "Use polished feature-animation art direction: expressive character acting, "
+        "refined facial details, physically based materials, detailed textures, "
+        "soft global illumination, cinematic key/fill/rim lighting, rich but natural "
+        "color grading, atmospheric depth, clean silhouettes, and deliberate camera "
+        "composition. Avoid flat vector art, cheap plastic surfaces, flicker, warped "
+        "anatomy, extra fingers, duplicate characters, blurry faces, and visual noise. "
+        "This is one shot in the same LERRY ANIMASI film. Match the exact character "
+        "appearance, clothing, proportions, palette, props, and environment described "
+        "in the story and repeat those details consistently. Use a clear shot size and "
+        "one purposeful camera move; keep the subject readable throughout. No text, "
+        "captions, logos, watermarks, or UI. "
         f"Story title: {title}. Scene {index + 1}. "
         f"Visual direction: {visual}. Detailed scene prompt: {image_prompt}. "
         f"Character action: {action}. Ambient sound cue: {scene.get('sound', '')}. "
@@ -192,7 +199,7 @@ def prepare_scene(
         "-map", "0:v:0", "-map", "1:a:0",
         "-af", "apad",
         "-t", str(duration),
-        "-c:v", "libx264", "-preset", "veryfast", "-crf", "20",
+        "-c:v", "libx264", "-preset", "medium", "-crf", "17", "-profile:v", "high", "-level", "4.2",
         "-pix_fmt", "yuv420p", "-r", "30",
         "-c:a", "aac", "-b:a", "160k",
         "-movflags", "+faststart",
