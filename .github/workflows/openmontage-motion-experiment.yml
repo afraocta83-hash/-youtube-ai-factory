@@ -48,7 +48,21 @@ jobs:
       - name: Verify MP4
         run: |
           test -s out/openmontage-motion-showcase.mp4
-          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 out/openmontage-motion-showcase.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/openmontage-motion-showcase.mp4 > out/mp4-metadata.json
+          node <<'NODE'
+          const fs = require('fs');
+          const meta = JSON.parse(fs.readFileSync('out/mp4-metadata.json', 'utf8'));
+          const video = meta.streams.find((stream) => stream.codec_type === 'video');
+          if (!video) throw new Error('Video stream tidak ditemukan.');
+          if (video.codec_name !== 'h264') throw new Error('Codec harus H.264.');
+          if (video.width !== 1080 || video.height !== 1920) throw new Error('Resolusi harus 1080x1920 (9:16).');
+          const [num, den] = video.r_frame_rate.split('/').map(Number);
+          if (num / den !== 30) throw new Error('Frame rate harus 30 fps.');
+          const duration = Number(meta.format.duration);
+          if (duration < 15 || duration > 60) throw new Error('Durasi harus 15-60 detik.');
+          console.log('MP4 PASS', {codec: video.codec_name, width: video.width, height: video.height, fps: num / den, duration});
+          NODE
+          ffmpeg -v error -i out/openmontage-motion-showcase.mp4 -f null -
       - name: Upload experiment artifact
         uses: actions/upload-artifact@v4
         with:
