@@ -1,3 +1,15 @@
+# LERRY — Update 2026-11-27
+
+Current working branch: `experiment/openmontage-video-engine`.
+
+- Removed the external Agnes Docker video engine from the approved render workflow.
+- The render workflow now creates Indonesian narration with Edge TTS/Piper and renders the video locally with Remotion.
+- `AGNES_API_KEY` is no longer required by the current workflow.
+- Updated the build check to render and technically validate a local 1080x1920, 30 fps H.264 MP4 smoke artifact.
+- This is a template-driven Remotion renderer with the existing 2D character rig, not generated 3D AI footage.
+- The branch push should trigger the build-check workflow. A successful build check is not yet proof that the owner-facing live dashboard dispatch works.
+- No changes to `main`, no Production deployment, and no YouTube upload.
+
 # LERRY ANIMASI — Project Status
 
 Last updated: 2026-11-27
