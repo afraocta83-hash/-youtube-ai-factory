@@ -59,7 +59,7 @@ jobs:
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_TTS_MODEL: gemini-2.5-flash-preview-tts
+          GEMINI_TTS_MODEL: gemini-2.5-flash-tts
         run: |
           node <<'NODE'
           (async () => {
@@ -68,7 +68,7 @@ jobs:
             const key = process.env.GEMINI_API_KEY;
             if (!key) throw new Error('GitHub Actions secret GEMINI_API_KEY belum diset. Tambahkan di Settings > Secrets and variables > Actions.');
             const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\n');
-            const model = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
+            const model = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-tts';
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
             const response = await fetch(url, {
               method: 'POST',
