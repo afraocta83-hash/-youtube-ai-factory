@@ -136,10 +136,38 @@ jobs:
           console.log('SHORTS MP4 PASS',{width:video.width,height:video.height,fps:n/d,duration,audio:true});
           NODE
           ffmpeg -v error -i out/lerry-animasi-short.mp4 -f null -
+      - name: Prepare upload-ready thumbnail and YouTube metadata
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync('production.json','utf8'));
+          const tags=(p.hashtags||[]).map(x=>String(x).replace(/^#/,'').trim()).filter(Boolean);
+          fs.writeFileSync('out/youtube-metadata.json',JSON.stringify({
+            title:p.title||p.workingTitle,
+            description:p.description||'',
+            tags,
+            hashtags:(p.hashtags||[]),
+            category:'Education',
+            language:'id',
+            aspectRatio:'9:16',
+            visibility:'private'
+          },null,2));
+          const words=String(p.title||p.workingTitle||'LERRY ANIMASI').trim().split(/\\s+/);
+          const lines=[];let line='';
+          for(const word of words){const next=(line+' '+word).trim();if(next.length>22&&line){lines.push(line);line=word;}else line=next;}
+          if(line)lines.push(line);
+          fs.writeFileSync('out/thumbnail-title.txt',lines.slice(0,3).join('\\n'));
+          NODE
+          ffmpeg -y -v error -ss 2 -i out/lerry-animasi-short.mp4 -frames:v 1 -vf "drawbox=x=36:y=ih*0.68:w=iw-72:h=ih*0.27:color=black@0.58:t=fill,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=out/thumbnail-title.txt:fontcolor=white:fontsize=64:line_spacing=16:x=(w-text_w)/2:y=h*0.73" -q:v 2 out/thumbnail.jpg
+          test -s out/thumbnail.jpg
+          test -s out/youtube-metadata.json
       - name: Upload finished Shorts
         uses: actions/upload-artifact@v4
         with:
           name: lerry-animasi-short
-          path: out/lerry-animasi-short.mp4
+          path: |
+            out/lerry-animasi-short.mp4
+            out/thumbnail.jpg
+            out/youtube-metadata.json
           if-no-files-found: error
           retention-days: 7
