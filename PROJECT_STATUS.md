@@ -1,20 +1,22 @@
 # LERRY ANIMASI — Project Status
 
 Last updated: 2026-11-27
-Current stage: Idea-first pipeline implementation pushed to the experiment branch; Preview build and updated CI verification are pending.
-Latest change set:
-- `50d72def`: producer accepts a short idea and generates story, dialogue, storyboard and metadata.
-- `db66df0`: render API validates generated package and only runs after explicit owner approval.
-- `70988e84`: render workflow accepts AI-created story packages and keeps MP4 technical QC.
-- `54844b9f`: structural QC updated for AI-generated stories.
-- `f76cc0f4`: dashboard stops auto-rendering; owner must inspect draft and explicitly approve render.
-- `655724b5`: CI smoke tests updated for idea-to-story behavior.
-- Additional commits update homepage, README, AGENTS, production rules and project skill.
+Current stage: Idea-first flow implemented on the experiment branch; CI run #95 passed; Preview deployment is READY. Live Groq generation and authenticated owner-to-render flow still require a real owner-session test.
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main` (untouched; no merge or Production deployment).
-New flow: short owner idea → AI-generated story/dialogue/storyboard/metadata → owner review → explicit render approval → Edge TTS/Piper → Remotion/FFmpeg MP4 QC → owner watches final MP4 → separate YouTube approval/upload.
-Important: YouTube OAuth upload is not implemented. The current renderer still uses vector backdrops and a basic 2D character rig; it does not generate bespoke AI artwork per scene or full 3D animation.
-Verification status: changes have been pushed, but no green CI run or READY Preview for this change set has yet been confirmed. Live Groq generation and authenticated render dispatch remain unverified. Do not call the new pipeline production-ready.
+
+## Latest implementation and verification
+- Producer accepts a 5-500 character idea and asks Groq GPT-OSS 120B to create the story, hook, dialogue, narration, 4-6 scene storyboard, visual prompts, sound cues, thumbnail prompt and YouTube metadata. The result is saved as the generated story, not an owner-supplied script.
+- Dashboard no longer dispatches render automatically. Owner reviews the generated story, scenes and metadata, then separately presses **Saya setujui — mulai render MP4**.
+- Before dispatch, dashboard calls deterministic structural QC. GitHub render workflow validates the package, runs Edge TTS with Piper fallback, renders Remotion MP4 and runs FFmpeg/ffprobe technical checks.
+- After MP4 render, owner must watch and inspect the artifact. YouTube upload is still manual; OAuth upload integration is not implemented.
+- CI run #95: [successful](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45871656913). TypeScript, Next build, updated QC smoke tests, Remotion compositions, MP4 rendering, FFmpeg decode, 1080×1920 H.264, 30 fps, 16-second Short smoke render, audio stream and non-silent audio passed.
+- CI run #95 did **not** test live Groq: GitHub Actions secrets `GROQ_API_KEY` and `OWNER_PASSWORD` are empty in that separate CI environment, so the workflow used an explicitly labelled offline fixture. This is not evidence of live AI generation.
+- Preview deployment READY: `dpl_AGBdape5C66Xprmq3hNGkLqspcFd`, commit `717d5fadc28654b5e3dd5805e90d73a787754ab1`, URL https://youtube-ai-factory-39m57ffmb-afraocta83-9700.vercel.app. Homepage HTTP 200; `/api/auth/session` HTTP 200 and correctly reports unauthenticated when no owner cookie is present. Runtime error/warning logs: none found for the checked 30-minute window.
+- Vercel Preview environment metadata lists `OWNER_PASSWORD`, `GROQ_API_KEY`, `GROQ_API_KEY2`, `GROQ_API_KEY3`, and `GITHUB_ACTIONS_TOKEN` for the experiment branch. Their secret values and provider/token permissions were not exposed or validated.
+- Current renderer limitation: scene prompts are used with existing vector backdrops and a basic 2D character rig. Bespoke AI artwork per scene, full 3D animation, phoneme-aligned subtitles/lip-sync, automated fact research and YouTube OAuth upload are not implemented.
+- Run #94 failed because the old smoke test still asserted the previous owner-authored-story QC contract. The CI tests were updated for idea-first behavior; run #95 then passed.
+- No merge to `main`, Production deployment, or YouTube publishing has occurred.
 
 # LERRY ANIMASI — Project Status
 
