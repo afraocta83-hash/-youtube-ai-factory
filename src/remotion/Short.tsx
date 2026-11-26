@@ -1,5 +1,6 @@
 import React from "react";
 import { CharacterRig, type CharacterAction } from "./CharacterRig";
+import { SceneBackdrop } from "./SceneBackdrop";
 import { AbsoluteFill, Sequence, useCurrentFrame, interpolate, Audio, staticFile } from "remotion";
 
 export type ShortScene = {
@@ -29,7 +30,8 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
   const caption = scene.subtitle || scene.dialogue || scene.narration || "";
   const visual = scene.visual || "Adegan cerita";
   return (
-    <AbsoluteFill style={{ background: `linear-gradient(155deg,${colors[0]},${colors[1]})`, opacity, overflow: "hidden", color: "white" }}>
+    <AbsoluteFill style={{ background: colors[0], opacity, overflow: "hidden", color: "white" }}>
+      <SceneBackdrop description={visual} index={index} />
       <div style={{ position: "absolute", top: 82, left: 64, right: 64, fontSize: 34, fontWeight: 800, letterSpacing: 3, opacity: .8 }}>LERRY ANIMASI</div>
       <div style={{ position: "absolute", top: 160, left: 70, right: 70, fontSize: 52, lineHeight: 1.1, fontWeight: 900, textAlign: "center" }}>{title}</div>
       <div style={{ position: "absolute", top: 330, left: 0, right: 0, height: 900, display: "flex", justifyContent: "center", transform: `scale(${scale})` }}>
