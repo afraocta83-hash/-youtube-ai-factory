@@ -1,7 +1,7 @@
 # Lerry Animasi — Project Status
 
 Last updated: 2026-11-26
-Current stage: Preview READY; Edge/Piper engine tests passed; renderer showcase and MP4 QC passed with offline CI fixture; live FreeLLM and owner-story render remain blocked
+Current stage: Groq integration and Supabase removal committed; Preview build and live provider test pending
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
 Latest reviewed code commit: `71e98c54ae5fc53e2a42f2d3bbd2c465e98b65d6`
@@ -13,14 +13,14 @@ Main remains isolated; no merge or Production deployment has been made.
 - Dashboard/office design was not redesigned; this pass only corrected inaccurate readiness labels.
 - No paid image/video provider was enabled.
 
-## FreeLLM integration — code added, service not yet connected
+## Groq LLM and owner access — current implementation
 
-- Added an OpenAI-compatible FreeLLM provider path to `app/api/produce/route.ts`.
-- FreeLLM is preferred when `FREELLM_BASE_URL` is configured; Gemini remains a fallback when its key exists.
-- Added `FREELLM_BASE_URL`, optional `FREELLM_API_KEY`, and `FREELLM_MODEL=free-smart` to `.env.example`.
-- Added `docs/FREELLM_SETUP.md` with deployment and Vercel Preview configuration steps.
-- Upstream project reviewed: https://github.com/Devansh-365/freellm (MIT). It is gateway software, not a free shared API key.
-- **Not yet connected/tested:** no FreeLLM gateway URL or upstream provider credentials have been configured. The gateway must be deployed separately and supplied with provider credentials the owner controls. No public GitHub secrets were copied.
+- Replaced the FreeLLM/Gemini storyboard path with Groq Chat Completions using `openai/gpt-oss-120b`.
+- One LLM request per story; strict JSON Schema; low reasoning effort; reasoning output disabled; maximum completion budget 3,200 tokens.
+- Added password-only owner login with a signed HttpOnly SameSite cookie using `OWNER_PASSWORD` (minimum 24 characters).
+- Supabase removed from the runtime path. The last 10 storyboard packages are stored in browser localStorage on the current device only; no cloud sync.
+- `GROQ_API_KEY` is required as a Vercel Preview Secret. It has not yet been provided/configured, so live storyboard generation remains unverified.
+- No public GitHub secrets were copied. `GITHUB_ACTIONS_TOKEN` remains server-side and is required for render dispatch.
 - FreeLLM currently covers storyboard generation only. The render workflow now uses Edge TTS as the primary Indonesian narration engine and Piper as automatic fallback; neither requires a Gemini API key. Edge/Piper generation tests and the renderer smoke showcase have passed, but an owner-story render remains unverified.
 - No Production deployment or merge to `main`.
 
@@ -32,11 +32,11 @@ Main remains isolated; no merge or Production deployment has been made.
 - Latest Preview built from `experiment/openmontage-video-engine`, commit `71e98c54ae5fc53e2a42f2d3bbd2c465e98b65d6`.
 - Vercel build log confirms Next.js compilation, type validation, static generation, serverless function creation and deployment completion.
 - Vercel Preview environment metadata confirms:
-  - `NEXT_PUBLIC_SUPABASE_URL` exists.
-  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` exists, scoped to `experiment/openmontage-video-engine`.
+  - Supabase environment variables are no longer required by the app.
+  
   - `GITHUB_ACTIONS_TOKEN` exists as a Sensitive/Secret, scoped to the experiment branch.
-  - `FREELLM_BASE_URL` and `FREELLM_API_KEY` are not configured in Preview, so live storyboard generation is not available.
-  - `GEMINI_API_KEY` is absent from Preview. The renderer CI was explicitly changed not to invoke the Gemini fallback.
+  - `GROQ_API_KEY` and `OWNER_PASSWORD` are not yet configured in Preview; live storyboard generation and owner login cannot pass until they are added as Secrets.
+  
 - Production metadata has its own Supabase and Gemini variables. Secret values were not copied or exposed.
 - Presence of the GitHub token metadata does not prove its contents or Actions write permission; a real authenticated dispatch is still required.
 - Supabase project URL: https://ppgkyqqhthfdmvbeihvm.supabase.co
@@ -61,8 +61,8 @@ Main remains isolated; no merge or Production deployment has been made.
 - Workflow QC requires exact equality of owner story and script, 4–10 scenes, 15–60 seconds, image prompts, and narration/dialogue/subtitles quoted verbatim from the owner story.
 - Workflow generates per-scene WAV files using Edge TTS with Piper fallback, renders with Remotion, then validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
 - Output artifact: `lerry-animasi-short`, retained for 7 days.
-- `app/api/render/route.ts` validates a Supabase owner session, reads server-side `GITHUB_ACTIONS_TOKEN`, then dispatches the workflow on the experiment branch.
-- `app/api/produce/route.ts` prefers FreeLLM when `FREELLM_BASE_URL` is configured and falls back to Gemini when `GEMINI_API_KEY` exists. If neither is configured, live storyboard generation returns 503. The route preserves exact owner story and rejects invented spoken/subtitle text.
+- `app/api/render/route.ts` validates the signed owner session, reads server-side `GITHUB_ACTIONS_TOKEN`, then dispatches the workflow on the experiment branch.
+- `app/api/produce/route.ts` uses Groq GPT-OSS 120B with strict JSON Schema and one request per story. The route preserves exact owner story and rejects invented spoken/subtitle text.
 - `src/remotion/SceneBackdrop.tsx` uses deterministic vector backdrops; it does not create unique AI scene artwork.
 - `src/remotion/CharacterRig.tsx` is a stylized code-drawn 2D rig, not production-grade 3D character animation.
 - Subtitle reveal is estimated from audio duration; phoneme alignment and lip-sync are not implemented.
@@ -70,7 +70,7 @@ Main remains isolated; no merge or Production deployment has been made.
 ## Remaining blockers before acceptance
 1. Configure a valid FreeLLM gateway and its upstream provider credentials for Preview, or explicitly approve an alternative storyboard provider. The FreeLLM code path is not live until those values are configured.
 2. Run the production `render-short.yml` workflow with a user-approved owner story; the isolated engine test and renderer smoke showcase do not prove full dashboard-to-MP4 acceptance.
-3. Execute `supabase/schema.sql` in the intended Supabase project, then test email OTP login, RLS, save/read and private storage.
+3. Add `GROQ_API_KEY` and `OWNER_PASSWORD` to Vercel Preview Secrets, redeploy, then test owner login and one live story.
 4. Verify `GITHUB_ACTIONS_TOKEN` by a real dispatch using an authenticated owner session. Do not use a fake owner story as final acceptance.
 5. Use an owner-supplied final story for the first end-to-end render; inspect narration, timing, visual continuity, codec, dimensions, duration and full MP4 decode.
 6. Improve visual specificity, character acting, subtitle timing and QC after owner review.
@@ -83,8 +83,8 @@ Main remains isolated; no merge or Production deployment has been made.
 - [x] Add the Supabase publishable key to the experiment Preview environment.
 - [x] Redeploy after the Preview key was added.
 - [x] Correct misleading static readiness labels in the dashboard.
-- [ ] Connect and test the FreeLLM gateway for storyboard generation.
-- [ ] Execute Supabase schema and test auth/RLS/storage.
+- [ ] Configure Groq API key and owner password in Vercel Preview, then run one live storyboard test.
+- [x] Remove Supabase dependency; replace cloud history with local browser history and password-only owner login.
 - [x] Verify Edge/Piper TTS Actions tests and renderer showcase/MP4 QC.
 - [ ] Verify authenticated GitHub Actions dispatch and live per-scene narration with an owner story.
 - [ ] Render and inspect an owner-approved final story.
