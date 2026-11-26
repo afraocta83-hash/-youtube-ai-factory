@@ -3,6 +3,7 @@ import { NextResponse } from "next/server";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const MODEL_DEFAULT = "openai/gpt-oss-120b";
+const recentRequests = new Map<string, number>();
 
 const productionSchema = {
   type: "object", additionalProperties: false,
@@ -23,6 +24,16 @@ const productionSchema = {
 };
 
 export async function POST(request: Request) {
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try { if (new URL(origin).host !== new URL(request.url).host) return NextResponse.json({error:"Origin tidak diizinkan."},{status:403}); }
+    catch { return NextResponse.json({error:"Origin tidak valid."},{status:403}); }
+  }
+  const ip = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+  for (const [key, stamp] of recentRequests) if (now - stamp > 10 * 60 * 1000) recentRequests.delete(key);
+  const last = recentRequests.get(ip);
+  if (last && now - last < 15 * 1000) return NextResponse.json({error:"Tunggu 15 detik sebelum membuat cerita berikutnya."},{status:429});
   const apiKeys = [...new Set([process.env.GROQ_API_KEY,process.env.GROQ_API_KEY2,process.env.GROQ_API_KEY3].map(k=>k?.trim()).filter((k):k is string=>Boolean(k)))];
   if (!apiKeys.length) return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret pada hosting Preview." }, { status: 503 });
 
@@ -70,6 +81,7 @@ export async function POST(request: Request) {
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
     p.idea=idea; p.script=p.story; p.ownerStory=p.story; p.durationSeconds=total;
     p.qcChecklist=["Ide owner dikembangkan menjadi cerita baru oleh AI.","Alur cerita, dialog, dan narasi konsisten antaradegan.","Jumlah adegan 4-6 dan durasi 20-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
+    recentRequests.set(ip, now);
     return NextResponse.json({ok:true,provider:"groq",model,usage:data?.usage||null,production:p});
   } catch(error) {
     return NextResponse.json({error:error instanceof Error?error.message:"Terjadi kesalahan saat membuat cerita."},{status:502});
