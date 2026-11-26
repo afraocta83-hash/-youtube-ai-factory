@@ -9,6 +9,35 @@ const BRANCH=process.env.GITHUB_RENDER_BRANCH||"experiment/openmontage-video-eng
 
 const recentDispatches = new Map<string, number>();
 
+export async function GET(request:Request){
+  const token=process.env.GITHUB_ACTIONS_TOKEN;
+  if(!token) return NextResponse.json({error:"Token GitHub Actions belum tersedia di server."},{status:503});
+  const since=Number(new URL(request.url).searchParams.get("since")||0);
+  if(!Number.isFinite(since)||since<=0) return NextResponse.json({error:"Parameter waktu render tidak valid."},{status:400});
+  const headers={Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28"};
+  try{
+    const runsResponse=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?branch=${encodeURIComponent(BRANCH)}&event=workflow_dispatch&per_page=10`,{headers,cache:"no-store",signal:AbortSignal.timeout(10000)});
+    if(!runsResponse.ok) return NextResponse.json({error:`Tidak dapat membaca status render GitHub (${runsResponse.status}).`},{status:502});
+    const runs=await runsResponse.json();
+    const run=(runs.workflow_runs||[]).find((item:any)=>new Date(item.created_at).getTime()>=since-60000);
+    if(!run) return NextResponse.json({state:"queued",message:"Menunggu GitHub Actions memulai render."});
+    const result:any={state:run.status==="completed"?(run.conclusion==="success"?"success":"failed"):"running",status:run.status,conclusion:run.conclusion,runUrl:run.html_url,runId:run.id};
+    if(run.status==="completed"&&run.conclusion==="success"){
+      const artifactsResponse=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/runs/${run.id}/artifacts`,{headers,cache:"no-store",signal:AbortSignal.timeout(10000)});
+      if(artifactsResponse.ok){
+        const payload=await artifactsResponse.json();
+        const artifact=(payload.artifacts||[]).find((item:any)=>item.name==="lerry-animasi-short"&&!item.expired);
+        if(artifact){
+          const download=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/artifacts/${artifact.id}/zip`,{headers,redirect:"manual",signal:AbortSignal.timeout(10000)});
+          const url=download.headers.get("location");
+          if(url) result.downloadUrl=url;
+        }
+      }
+    }
+    return NextResponse.json(result);
+  }catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Gagal membaca status render."},{status:502});}
+}
+
 export async function POST(request:Request){
   const origin = request.headers.get("origin");
   if (origin) {
