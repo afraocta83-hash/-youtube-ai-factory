@@ -41,7 +41,7 @@ export default function Studio(){
  }
  function copy(){if(result)navigator.clipboard?.writeText(JSON.stringify(result,null,2));}
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">PRODUSER AI • GEMINI</span><h2 style={{marginTop:12}}>Masukkan cerita buatan lo</h2><p>Tempel cerita final. AI hanya memecahnya menjadi storyboard, arahan visual, durasi, dan metadata. Cerita asli tidak boleh ditulis ulang.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • FREELLM</span><h2 style={{marginTop:12}}>Masukkan cerita buatan lo</h2><p>Tempel cerita final. AI hanya memecahnya menjadi storyboard, arahan visual, durasi, dan metadata. Cerita asli tidak boleh ditulis ulang.</p></div></div>
   <label htmlFor="storyPrompt">Cerita final owner</label>
   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={12000} placeholder="Tempel cerita lengkap yang sudah lo tulis. AI tidak akan menambah atau mengubah alur cerita..." rows={5}/>
   <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang menyusun storyboard...":"Buat storyboard Shorts →"}</button></div>
@@ -60,7 +60,7 @@ export default function Studio(){
    <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Mengirim job render...":"Render MP4 sekali klik →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
    {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
-   <p className="muted">Render memerlukan secret GITHUB_ACTIONS_TOKEN di Vercel (izin Actions: write) dan GEMINI_API_KEY di GitHub Actions. Tombol ini hanya memulai render; tidak mengunggah video ke YouTube.</p>
+   <p className="muted">Render memerlukan sesi owner Supabase dan secret GITHUB_ACTIONS_TOKEN di Vercel dengan izin GitHub Actions: write. Narasi MP4 memakai Edge TTS dengan Piper sebagai fallback. Tombol ini hanya memulai render; tidak mengunggah video ke YouTube.</p>
   </div>}
   <SupabasePanel production={result as unknown as Record<string, unknown> | null}/>
  </section>;
