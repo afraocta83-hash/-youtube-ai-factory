@@ -29,7 +29,7 @@ jobs:
       - name: Install project, TTS and FFmpeg dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y ffmpeg libespeak-ng1
+          sudo apt-get install -y ffmpeg libespeak-ng1 fonts-dejavu-core
           python -m pip install --upgrade pip
           python -m pip install requests edge-tts piper-tts
           npm install
@@ -63,6 +63,8 @@ jobs:
             if(!Number.isInteger(seconds)||seconds<4||seconds>12) throw new Error('Durasi adegan '+(i+1)+' tidak valid.');
             total+=seconds;
             if(typeof s.imagePrompt!=='string'||s.imagePrompt.trim().length<25) throw new Error('Prompt visual adegan '+(i+1)+' kurang jelas.');
+            if(!String(s.subtitle||'').trim()) throw new Error('Subtitle adegan '+(i+1)+' kosong.');
+            if(!['idle','walk','run','surprised','point'].includes(s.action)) throw new Error('Aksi karakter adegan '+(i+1)+' tidak valid.');
             if(!String(s.narration||s.dialogue||'').trim()) throw new Error('Narasi/dialog adegan '+(i+1)+' kosong.');
           }
           if(total<20||total>60) throw new Error('Durasi Shorts harus 20-60 detik.');
@@ -125,7 +127,7 @@ jobs:
       - name: Verify MP4, video and narration
         run: |
           test -s out/lerry-animasi-short.mp4
-          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/lerry-animasi-short.mp4 > out/mp4-metadata.json
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate,pix_fmt -show_entries format=duration -of json out/lerry-animasi-short.mp4 > out/mp4-metadata.json
           node <<'NODE'
           const fs=require('fs');
           const meta=JSON.parse(fs.readFileSync('out/mp4-metadata.json','utf8'));
@@ -134,12 +136,32 @@ jobs:
           if(!video||video.codec_name!=='h264'||video.width!==1080||video.height!==1920) throw new Error('Format video tidak sesuai 1080x1920 H.264.');
           const [n,d]=video.r_frame_rate.split('/').map(Number);
           if(n/d!==30) throw new Error('Frame rate bukan 30 fps.');
-          if(!audio) throw new Error('Audio narasi tidak ditemukan.');
+          if(!audio||audio.codec_name!=='aac') throw new Error('Audio narasi AAC tidak ditemukan.');
+          if(video.pix_fmt!=='yuv420p') throw new Error('Pixel format harus yuv420p agar kompatibel luas.');
           const duration=Number(meta.format.duration);
           if(duration<15||duration>60) throw new Error('Durasi Shorts di luar 15-60 detik.');
           console.log('SHORTS MP4 PASS',{width:video.width,height:video.height,fps:n/d,duration,audio:true});
           NODE
           ffmpeg -v error -i out/lerry-animasi-short.mp4 -f null -
+      - name: Capture representative frames and build visual contact sheet
+        run: |
+          mkdir -p out/qc
+          node <<'NODE'
+          const fs=require('fs');
+          const cp=require('child_process');
+          const p=JSON.parse(fs.readFileSync('production.json','utf8'));
+          let cursor=0;
+          for(let i=0;i<p.scenes.length;i++){
+            const seconds=Number(p.scenes[i].seconds)||1;
+            const at=cursor+Math.min(seconds/2,Math.max(0,seconds-0.25));
+            const out='out/qc/scene-'+String(i+1).padStart(2,'0')+'-mid.png';
+            const r=cp.spawnSync('ffmpeg',['-y','-v','error','-ss',String(at),'-i','out/lerry-animasi-short.mp4','-frames:v','1','-vf','scale=270:480',out],{encoding:'utf8'});
+            if(r.status!==0||!fs.existsSync(out)||fs.statSync(out).size<1000) throw new Error('Frame QC gagal pada adegan '+(i+1)+': '+(r.stderr||r.error?.message||r.status));
+            cursor+=seconds;
+          }
+          NODE
+          ffmpeg -y -v error -pattern_type glob -i 'out/qc/scene-*-mid.png' -vf "tile=3x2:padding=12:margin=12:color=white" -frames:v 1 out/qc/contact-sheet.jpg
+          test -s out/qc/contact-sheet.jpg
       - name: Prepare upload-ready thumbnail and YouTube metadata
         run: |
           node <<'NODE'
@@ -165,6 +187,39 @@ jobs:
           ffmpeg -y -v error -ss 2 -i out/lerry-animasi-short.mp4 -frames:v 1 -vf "drawbox=x=36:y=ih*0.68:w=iw-72:h=ih*0.27:color=black@0.58:t=fill,drawtext=fontfile=/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf:textfile=out/thumbnail-title.txt:fontcolor=white:fontsize=64:line_spacing=16:x=(w-text_w)/2:y=h*0.73" -q:v 2 out/thumbnail.jpg
           test -s out/thumbnail.jpg
           test -s out/youtube-metadata.json
+          ffprobe -v error -select_streams v:0 -show_entries stream=width,height -of csv=s=x:p=0 out/thumbnail.jpg | grep -qx '1080x1920'
+      - name: Write production QC report
+        run: |
+          node <<'NODE'
+          const fs=require('fs');
+          const p=JSON.parse(fs.readFileSync('production.json','utf8'));
+          const meta=JSON.parse(fs.readFileSync('out/mp4-metadata.json','utf8'));
+          const video=meta.streams.find(s=>s.codec_type==='video');
+          const audio=meta.streams.find(s=>s.codec_type==='audio');
+          const report={
+            status:'PASS',
+            pipeline:'owner-approved-package -> Edge TTS/Piper -> Remotion -> FFmpeg -> MP4 QC',
+            generatedAt:new Date().toISOString(),
+            story:{title:p.workingTitle,characters:p.ownerStory.length,scenes:p.scenes.length},
+            output:{file:'lerry-animasi-short.mp4',bytes:fs.statSync('out/lerry-animasi-short.mp4').size,durationSeconds:Number(meta.format.duration),width:video.width,height:video.height,fps:eval(video.r_frame_rate),videoCodec:video.codec_name,pixelFormat:video.pix_fmt,audioCodec:audio.codec_name},
+            checks:{
+              ownerStoryPreserved:p.script===p.ownerStory,
+              allScenesNarrated:p.scenes.every(s=>String(s.narration||s.dialogue||'').trim().length>0),
+              allScenesHaveSubtitles:p.scenes.every(s=>String(s.subtitle||'').trim().length>0),
+              allScenesHaveVisualDirections:p.scenes.every(s=>String(s.imagePrompt||'').trim().length>=25),
+              allSceneAudioExists:p.scenes.every(s=>s.voiceFile&&fs.existsSync('public/'+s.voiceFile)),
+              mp4DecodePassed:true,
+              representativeFramesCaptured:fs.readdirSync('out/qc').filter(f=>f.endsWith('-mid.png')).length===p.scenes.length,
+              contactSheetExists:fs.existsSync('out/qc/contact-sheet.jpg'),
+              thumbnailExists:fs.existsSync('out/thumbnail.jpg'),
+              youtubeMetadataExists:fs.existsSync('out/youtube-metadata.json')
+            },
+            limitations:['QC ini memeriksa struktur, file, codec, decode dan frame representatif; pemeriksaan artistik subjektif tetap perlu ditinjau owner.','Visual adegan menggunakan komposisi vektor 2D yang tersedia; bukan gambar AI khusus per adegan.','Fakta eksternal tidak diverifikasi otomatis.']
+          };
+          if(Object.values(report.checks).some(v=>v!==true)) throw new Error('Production QC report contains failed checks: '+JSON.stringify(report.checks));
+          fs.writeFileSync('out/production-qc.json',JSON.stringify(report,null,2));
+          console.log('PRODUCTION QC PASS',JSON.stringify(report,null,2));
+          NODE
       - name: Upload finished Shorts
         uses: actions/upload-artifact@v4
         with:
@@ -173,5 +228,8 @@ jobs:
             out/lerry-animasi-short.mp4
             out/thumbnail.jpg
             out/youtube-metadata.json
+            out/production-qc.json
+            out/mp4-metadata.json
+            out/qc/**
           if-no-files-found: error
           retention-days: 7
