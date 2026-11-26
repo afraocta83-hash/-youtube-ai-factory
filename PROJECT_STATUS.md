@@ -277,7 +277,7 @@ A feature is not complete because code exists. It is complete only when its work
 
 # LERRY — End-to-end production repair 2026-11-27
 
-Working branch: `fix/lerry-end-to-end-production`. No changes to `main`, production deployment, or YouTube publishing.
+Implementation branch `fix/lerry-end-to-end-production` was merged into `experiment/openmontage-video-engine` via PR #1 (merge commit `7652616779c87780413696582b8a5ff515fa43b9`). `main`, production deployment and YouTube publishing remain untouched.
 
 ## Implemented
 - Restored the locked Lerry mascot design in `src/remotion/CharacterRig.tsx`: round white head, no nose/hair, expressive eyes and brows, slim body, blue shirt, black limbs/hands/shoes, bold outline.
@@ -299,7 +299,9 @@ Working branch: `fix/lerry-end-to-end-production`. No changes to `main`, product
 - E2E render for the owner-story API/QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342569 — passed.
 - Exact-story E2E run #22: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904641904 — passed story lock, ordered verbatim narration, subtitle excerpts, Edge TTS, Remotion render, MP4 validation, full decode, frame sheet, metadata and QC.
 - Final thumbnail-cleanup E2E run #25: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905286518 — passed the complete workflow including clean frame-based thumbnail generation, QC report and artifact upload.
-- Final build-check run #116: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905286512 — TypeScript, Next.js production build and Remotion smoke render passed. Promptfoo live model evaluation was skipped because the GitHub Actions Groq secret is not configured.
+- Final build-check run #116 on the repair branch: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905286512 — TypeScript, Next.js production build and Remotion smoke render passed. Promptfoo live model evaluation was skipped because the GitHub Actions Groq secret is not configured.
+- TTS engine check #14 on the merged experiment commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45905651107 — passed.
+- Post-merge build-check #117 is running on experiment commit `7652616779c87780413696582b8a5ff515fa43b9`; update this note after it completes.
 - Final E2E artifact ID: `15157887255`, name `lerry-e2e-fixture`, size 2.83 MB, retained until 2026-12-03 22:32 UTC. The downloaded MP4 was independently inspected: H.264/AAC, 1080x1920, yuv420p, 30 fps, 31.019 seconds; full FFmpeg decode passed. The thumbnail was opened and visually checked; it is a clean representative frame without duplicate text overlays.
 - Per-scene Edge TTS durations: 5.33s, 4.42s, 7.49s and 11.74s. The renderer expanded scene lengths to 6s, 5s, 8s and 12s respectively, avoiding clipped narration.
 
