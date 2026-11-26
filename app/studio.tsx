@@ -141,7 +141,7 @@ export default function Studio(){
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
     {usage&&<p className="muted">Pemakaian LLM: {usage.prompt_tokens??"—"} input • {usage.completion_tokens??"—"} output • {usage.total_tokens??"—"} total token</p>}
     <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
-    <h3>Cerita final</h3><pre>{result.idea}</pre><h3>Cerita yang dibuat AI</h3><pre>{result.story||result.ownerStory}</pre>
+    <h3>Cerita final</h3><pre>{result.idea}</pre><h3>Cerita final owner (dikunci)</h3><pre>{result.story||result.ownerStory}</pre>
     <h3>Storyboard ({result.scenes.length} adegan • ±{result.durationSeconds} detik)</h3>
     {result.scenes.map(s=><article className="scene" key={s.number}><strong>Adegan {s.number} • {s.seconds} detik</strong><p>{s.visual}</p><p><strong>Aksi:</strong> {s.action||"idle"}</p><p><strong>Narasi:</strong> {s.narration}</p><p><strong>Dialog:</strong> {s.dialogue}</p><p><strong>Subtitle:</strong> {s.subtitle}</p><p><strong>Arahan visual:</strong> {s.imagePrompt}</p><p><strong>Suara:</strong> {s.sound}</p></article>)}
     <h3>Metadata YouTube</h3><p><strong>{result.title}</strong></p><p>{result.description}</p><p>{result.hashtags.join(" ")}</p>
