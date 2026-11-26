@@ -68,6 +68,11 @@ jobs:
           NODE
       - name: Render MP4 vertical 1080x1920
         run: npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --props=production.json --codec=h264 --crf=20
+      - name: Install FFmpeg verification tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
+          command -v ffprobe
       - name: Verify MP4 output
         run: |
           test -s out/lerry-animasi-short.mp4
