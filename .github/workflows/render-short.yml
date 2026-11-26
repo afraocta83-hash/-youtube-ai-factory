@@ -115,6 +115,7 @@ jobs:
           NODE
       - name: Render AI-directed scenes with local Remotion engine
         run: |
+          mkdir -p out
           npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --codec=h264 --crf=20 --props=production.json
           test -s out/lerry-animasi-short.mp4
       - name: Verify MP4, video and narration
