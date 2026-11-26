@@ -65,6 +65,7 @@ jobs:
           if [ "$ready" != "1" ]; then cat /tmp/lerry-next.log; exit 1; fi
           node <<'NODE'
           const assert = require('node:assert/strict');
+          const fs = require('node:fs');
           const story = 'Riko menemukan peta di loteng. Ia mengikuti tanda menuju taman. Di bawah pohon, ia menemukan kotak kecil. Riko membuka kotak dan tersenyum.';
           const scenes = [
             'Riko menemukan peta di loteng.',
