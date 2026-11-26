@@ -83,7 +83,7 @@ def create_clip(scene: dict, index: int, title: str, out_path: Path) -> int:
         "logos, watermarks, or UI. "
         f"Story title: {title}. Scene {index + 1}. "
         f"Visual direction: {visual}. Detailed scene prompt: {image_prompt}. "
-        f"Character action: {action}. "
+        f"Character action: {action}. Ambient sound cue: {scene.get('sound', '')}. "
         "Use Indonesian cultural context where relevant. Make the action visually "
         "clear and complete within the clip."
     )
@@ -179,7 +179,7 @@ def prepare_scene(
     write_srt(subtitle, str(scene.get("subtitle") or scene.get("narration") or ""), duration)
     vf = (
         "scale=1080:1920:force_original_aspect_ratio=increase,"
-        "crop=1080:1920,fps=30,"
+        "crop=1080:1920,fps=30,tpad=stop_mode=clone:stop_duration=12,"
         f"subtitles='{subtitle.as_posix()}':"
         "force_style='FontName=Arial,FontSize=22,PrimaryColour=&H00FFFFFF,"
         "OutlineColour=&H00000000,BorderStyle=1,Outline=3,Shadow=0,"
