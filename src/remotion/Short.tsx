@@ -2,6 +2,7 @@ import React from "react";
 import { AbsoluteFill, Sequence, useCurrentFrame, interpolate, Audio, staticFile } from "remotion";
 import { CharacterRig, type CharacterAction } from "./CharacterRig";
 import { SceneBackdrop } from "./SceneBackdrop";
+import { SceneMotionLayer, type SceneMotionType } from "./SceneMotionLayer";
 
 export type ShortScene = {
   number: number;
@@ -14,6 +15,7 @@ export type ShortScene = {
   action?: CharacterAction;
   voiceFile?: string;
   voiceDurationSeconds?: number;
+  motionType?: SceneMotionType;
 };
 export type LerryShortProps = { workingTitle: string; scenes: ShortScene[]; voiceFile?: string };
 
@@ -33,6 +35,7 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
   return (
     <AbsoluteFill style={{ background: colors[0], overflow: "hidden", color: "white" }}>
       <SceneBackdrop description={[scene.visual, scene.imagePrompt].filter(Boolean).join(" " ) || "Adegan cerita"} index={index} />
+      <SceneMotionLayer type={scene.motionType || "none"} />
       <div style={{ position: "absolute", top: 82, left: 64, right: 64, fontSize: 34, fontWeight: 800, letterSpacing: 3, color: "#172033", textShadow: "0 2px 8px rgba(255,255,255,.8)" }}>LERRY ANIMASI</div>
       <div style={{ position: "absolute", top: 160, left: 70, right: 70, fontSize: 52, lineHeight: 1.1, fontWeight: 900, textAlign: "center", color: "#172033", textShadow: "0 3px 10px rgba(255,255,255,.85)" }}>{title}</div>
       <div style={{ position: "absolute", top: 330, left: 0, right: 0, height: 900, display: "flex", justifyContent: "center", transform: `scale(${scale})` }}>
