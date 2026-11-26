@@ -29,7 +29,7 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p audit-package
-          rsync -a --exclude='.git/' --exclude='node_modules/' --exclude='.next/' --exclude='.vercel/' --exclude='coverage/' --exclude='dist/' --exclude='build/' --exclude='*.log' --exclude='.env' --exclude='.env.*' --exclude='!.env.example' --exclude='*.pem' --exclude='*.key' --exclude='*.p12' --exclude='*.pfx' --exclude='*.mobileprovision' --exclude='secrets/' --exclude='credentials/' ./ audit-package/source/
+          rsync -a --exclude='.git/' --exclude='node_modules/' --exclude='.next/' --exclude='.vercel/' --exclude='coverage/' --exclude='dist/' --exclude='build/' --exclude='*.log' --include='.env.example' --exclude='.env*' --exclude='*.pem' --exclude='*.key' --exclude='*.p12' --exclude='*.pfx' --exclude='*.mobileprovision' --exclude='secrets/' --exclude='credentials/' ./ audit-package/source/
           mkdir -p audit-package/reviewer
           cp docs/audit/README.md audit-package/reviewer/AUDIT-README.md
           cat > audit-package/reviewer/BRANCH-INFO.txt <<'EOF'
