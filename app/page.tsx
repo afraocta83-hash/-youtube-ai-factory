@@ -1,7 +1,7 @@
 import Studio from "./studio";
 
 const modules = [
- {title:"LLM produser Groq",detail:"GPT-OSS 120B menyusun storyboard dalam satu panggilan API dengan JSON schema ketat dan batas token. Satu GROQ_API_KEY di server.",status:"Menunggu GROQ_API_KEY"},
+ {title:"LLM produser Groq",detail:"GPT-OSS 120B menyusun storyboard dalam satu panggilan API dengan JSON schema ketat dan batas token. Tiga slot key server-side tersedia dengan fallback saat key ditolak.",status:"Groq server-side • key cadangan"},
  {title:"Storyboard & visual",detail:"Membagi cerita owner menjadi 4-6 adegan, prompt visual, durasi, judul, deskripsi dan metadata. Teks cerita tetap terkunci.",status:"Satu panggilan LLM • QC otomatis"},
  {title:"Voice & subtitle",detail:"Edge TTS Bahasa Indonesia sebagai utama dan Piper offline sebagai fallback. Narasi dan subtitle wajib kutipan cerita.",status:"Mesin TTS lulus uji"},
  {title:"Render MP4 Shorts",detail:"Remotion dan GitHub Actions merender video vertikal H.264 1080 × 1920, 30 fps, durasi 15-60 detik.",status:"Showcase MP4 lulus QC"},
