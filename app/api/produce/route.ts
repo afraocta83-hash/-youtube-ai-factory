@@ -47,7 +47,7 @@ export async function POST(request: Request) {
 
     const model = (process.env.GROQ_MODEL || MODEL_DEFAULT).trim();
     const prompt = [
-      "Kamu adalah ruang penulis dan sutradara animasi YouTube Shorts berbahasa Indonesia.",
+      "Kamu adalah produser storyboard dan art director animasi YouTube Shorts berbahasa Indonesia.",
       "OWNER MEMBERIKAN CERITA FINAL. DILARANG menulis ulang, memperluas, mempersingkat, mengubah alur, menambah tokoh, kejadian, dialog, atau fakta. Field story wajib sama persis dengan cerita owner. Tugasmu hanya membagi cerita tersebut menjadi 4-6 adegan sesuai urutan, membuat arahan visual/aksi/durasi, subtitle yang diambil dari teks cerita, metadata, dan catatan verifikasi.",
       "Jangan menambahkan narasi baru. narration tiap adegan harus berupa kutipan persis yang berurutan dari cerita owner; jangan parafrase. Jika tidak ada dialog dalam cerita owner, dialogue wajib string kosong. Subtitle harus berupa kutipan pendek dari narration adegan. Hindari klaim faktual tambahan; tandai hal yang perlu diverifikasi pada factCheckNotes dan sourceQueries tanpa mengarang sumber.",
       "PENTING: setiap objek scenes WAJIB memuat SEMUA properti berikut: number (integer), seconds (integer), visual (string), action (idle, walk, run, surprised, point), narration (string), dialogue (string), sound (string), imagePrompt (string), subtitle (string). narration tidak boleh dihilangkan; isi dengan narasi adegan. Jika tidak ada dialog karakter, dialogue tetap wajib diisi sebagai string kosong.",
@@ -97,7 +97,8 @@ export async function POST(request: Request) {
       if(!String(s.subtitle||"").trim()) throw new Error(`Subtitle adegan ${i+1} kosong.`);
       if(!["idle","walk","run","surprised","point"].includes(String(s.action||""))) throw new Error(`Aksi karakter adegan ${i+1} tidak didukung renderer.`);
       if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);
-      if(s.narration&&!ownerStory.includes(s.narration.trim())) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli dari cerita owner.`);\n      if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
+      if(s.narration&&!ownerStory.includes(s.narration.trim())) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli dari cerita owner.`);
+      if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
     p.idea=ownerStory; p.script=ownerStory; p.ownerStory=ownerStory; p.durationSeconds=total;
