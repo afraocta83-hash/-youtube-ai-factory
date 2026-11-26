@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -10,6 +11,18 @@ const BRANCH = process.env.GITHUB_RENDER_BRANCH || "experiment/openmontage-video
 
 export async function POST(request: Request) {
   try {
+    const authHeader = request.headers.get("authorization") || "";
+    const accessToken = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : "";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
+    if (!accessToken || !supabaseUrl || !supabaseKey) {
+      return NextResponse.json({ error: "Login owner Supabase diperlukan sebelum render." }, { status: 401 });
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey, { auth: { persistSession: false, autoRefreshToken: false } });
+    const { data: authData, error: authError } = await supabase.auth.getUser(accessToken);
+    if (authError || !authData.user) {
+      return NextResponse.json({ error: "Sesi owner tidak valid atau sudah kedaluwarsa. Login ulang." }, { status: 401 });
+    }
     const token = process.env.GITHUB_ACTIONS_TOKEN;
     if (!token) {
       return NextResponse.json({
