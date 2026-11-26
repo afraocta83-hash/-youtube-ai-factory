@@ -51,10 +51,45 @@ export async function POST(request: Request) {
     const text = data?.candidates?.[0]?.content?.parts?.map((p: {text?:string}) => p.text || "").join("");
     if (!text) return NextResponse.json({ error: "Gemini tidak mengembalikan paket produksi. Coba lagi sebentar." }, { status: 502 });
     const production = JSON.parse(text);
-    if (!Array.isArray(production.scenes) || production.scenes.length < 4 || production.scenes.length > 10) return NextResponse.json({ error: "Storyboard Shorts harus berisi 4-10 adegan." }, { status: 502 });
-    const totalSeconds = production.scenes.reduce((sum: number, scene: { seconds?: number }) => sum + (Number(scene.seconds) || 0), 0);
-    if (totalSeconds < 15 || totalSeconds > 60) return NextResponse.json({ error: "Durasi hasil storyboard harus 15-60 detik. Coba ulangi." }, { status: 502 });
-    return NextResponse.json({ ok: true, model, production });
+    if (!production || typeof production !== "object" || !Array.isArray(production.scenes) || production.scenes.length < 4 || production.scenes.length > 10) {
+      return NextResponse.json({ error: "Storyboard Shorts harus berisi 4-10 adegan." }, { status: 502 });
+    }
+
+    const totalSeconds = production.scenes.reduce((sum: number, scene: { seconds?: number }) => {
+      const seconds = Number(scene?.seconds);
+      return sum + (Number.isFinite(seconds) && seconds > 0 ? seconds : 0);
+    }, 0);
+    if (production.scenes.some((scene: { seconds?: number }) => !Number.isFinite(Number(scene?.seconds)) || Number(scene.seconds) <= 0)) {
+      return NextResponse.json({ error: "Ada durasi adegan yang tidak valid." }, { status: 502 });
+    }
+    if (totalSeconds < 15 || totalSeconds > 60) {
+      return NextResponse.json({ error: "Durasi hasil storyboard harus 15-60 detik. Coba ulangi." }, { status: 502 });
+    }
+
+    // The owner's submitted story is the canonical source. Never trust generated
+    // text as a replacement for it, and reject invented spoken/subtitle lines.
+    const textFields = ["narration", "dialogue", "subtitle"] as const;
+    const inventedLines: string[] = [];
+    for (const [index, scene] of production.scenes.entries()) {
+      for (const field of textFields) {
+        const line = typeof scene?.[field] === "string" ? scene[field].trim() : "";
+        if (line && !prompt.includes(line)) inventedLines.push(`Adegan ${index + 1}: ${field}`);
+      }
+      if (typeof scene?.imagePrompt !== "string" || scene.imagePrompt.trim().length < 20) {
+        return NextResponse.json({ error: `Arahan visual adegan ${index + 1} belum cukup jelas.` }, { status: 502 });
+      }
+    }
+    if (inventedLines.length) {
+      return NextResponse.json({
+        error: "Storyboard menambahkan atau memparafrasekan teks cerita. Tidak ada naskah yang diterima; silakan coba ulangi.",
+        validation: { inventedLines }
+      }, { status: 502 });
+    }
+
+    // Preserve exact owner input byte-for-byte in the canonical script field.
+    production.script = prompt;
+    production.durationSeconds = totalSeconds;
+    return NextResponse.json({ ok: true, model, ownerStoryPreserved: true, production });
   } catch (error) {
     const message = error instanceof Error ? error.message : "Terjadi kesalahan.";
     return NextResponse.json({ error: message.includes("JSON") ? "Format hasil AI tidak valid. Coba ulangi." : message }, { status: 500 });
