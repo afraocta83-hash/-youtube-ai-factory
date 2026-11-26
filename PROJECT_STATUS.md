@@ -271,3 +271,42 @@ Main remains isolated; no merge or Production deployment has been made.
 
 ## Acceptance rule
 A feature is not complete because code exists. It is complete only when its workflow ran, output artifact exists, and the artifact passes relevant inspection. Offline CI fixtures prove renderer mechanics only; they do not prove live LLM or real narration.
+
+
+---
+
+# LERRY — End-to-end production repair 2026-11-27
+
+Working branch: `fix/lerry-end-to-end-production`. No changes to `main`, production deployment, or YouTube publishing.
+
+## Implemented
+- Restored the locked Lerry mascot design in `src/remotion/CharacterRig.tsx`: round white head, no nose/hair, expressive eyes and brows, slim body, blue shirt, black limbs/hands/shoes, bold outline.
+- Aligned Groq storyboard art direction with the actual 2D SVG/vector renderer. Removed the contradictory 3D/photorealistic art direction. Added workshop, school, space and vehicle scene elements.
+- Improved title contrast and scene-level subtitles. Subtitles remain visible for the matching scene; no false word-by-word timing is simulated without word timestamps.
+- Made the owner story the source of truth: input is 80–3000 characters; AI must return the exact story and narration must be exact, ordered excerpts. Subtitles must be excerpts from the matching narration. The API rejects rewritten story or paraphrased narration.
+- Strengthened pre-render QC for story lock, ordered narration, subtitles, actions, duration and visual prompts.
+- Extended `.github/workflows/render-short.yml` to generate representative mid-scene frames, a contact sheet, thumbnail, YouTube metadata, MP4 metadata and `production-qc.json`. Artifact includes the MP4 and inspection materials.
+- Added a non-production car-story fixture. Pushes on this isolated repair branch run the actual TTS → Remotion → FFmpeg → QC workflow and upload an artifact named `lerry-e2e-fixture`. This does not publish or deploy anything.
+
+## Verified evidence
+- E2E package-to-MP4 run #93: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904174744
+- Artifact ID: `15157720882`; artifact name `lerry-e2e-fixture`; retained by GitHub until 2026-12-03.
+- Edge TTS succeeded for all four scenes; per-scene durations were 4.18s, 4.25s, 3.60s and 4.73s.
+- Remotion render, MP4 metadata checks, full FFmpeg decode, frame extraction, contact sheet, thumbnail, YouTube metadata and QC report all passed.
+- Independently downloaded and inspected MP4: H.264, AAC, 1080x1920, yuv420p, 30 fps, 20.011 seconds; full decode passed.
+- Build-check run #94: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45903650829 — TypeScript, Next.js production build and Remotion smoke render passed.
+- Build-check run for owner-story API and pre-render QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342657 — passed.
+- E2E render for the owner-story API/QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342569 — passed.
+- Latest visual differentiation and exact ordered-narration fixture validations have separate Actions runs pending at the time this status note was written; do not treat those later changes as verified until their runs complete.
+
+## Still not proven
+- Live Groq/ Langflow request from the deployed studio through the owner-story validator. GitHub Actions has no `GROQ_API_KEY` secret, so Promptfoo's optional live model evaluation is skipped. The workflow fixture proves the production package-to-MP4 leg, not a live LLM response.
+- Live dashboard `POST /api/render` → GitHub `workflow_dispatch` with the hosting `GITHUB_ACTIONS_TOKEN`. The GitHub connector does not expose workflow dispatch, and no live Preview dispatch was observed.
+- Actual owner-authored story render and owner visual/audio acceptance.
+- YouTube OAuth and upload. Publishing remains separate and requires owner approval.
+- Bespoke AI image generation per scene and automatic external fact verification are not implemented. Current free-first visuals are deterministic 2D vector compositions.
+
+## Cost and release boundary
+- No new agent server, paid API, GPU, paid hosting, Supabase, or external rendering service was added.
+- The fixture workflow uses GitHub Actions and free Edge TTS; Piper remains the fallback.
+- `main`, production deployment and YouTube publishing remain untouched.
