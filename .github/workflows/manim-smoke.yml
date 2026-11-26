@@ -1,0 +1,43 @@
+name: Optional Manim Render Smoke Test
+
+on:
+  push:
+    branches:
+      - test/motion-stack-integration
+    paths:
+      - "tools/manim-smoke/**"
+      - ".github/workflows/manim-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  manim-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install system dependencies and Manim Community
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libcairo2-dev libpango1.0-dev pkg-config python3-dev build-essential
+          python -m pip install --upgrade pip
+          python -m pip install manim
+          manim --version
+      - name: Render a vector diagram smoke scene
+        run: |
+          manim -ql --disable_caching -r 320,320 tools/manim-smoke/scene.py ManimSmoke
+          test -s media/videos/scene/480p15/ManimSmoke.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration -of json media/videos/scene/480p15/ManimSmoke.mp4
+          ffmpeg -v error -i media/videos/scene/480p15/ManimSmoke.mp4 -f null -
+      - name: Upload Manim proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: manim-smoke-proof
+          path: media/videos/scene/480p15/ManimSmoke.mp4
+          if-no-files-found: error
+          retention-days: 7
