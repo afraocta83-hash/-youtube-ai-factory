@@ -24,9 +24,10 @@ Base branch: `main`
 - CI now includes TypeScript checking and a Next.js production build.
 
 ## Current in-progress verification
-- Latest known run at this update: [45821069302](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45821069302), for commit `388c553e8644c16e70455bc8f5f84d98cb81a517`.
-- The run was still installing dependencies when last checked. Do not mark the latest changes accepted until the run completes successfully.
-- Earlier runs failed at TypeScript check because literal escaped newline characters were accidentally inserted into `app/studio.tsx`. That source was corrected in a later commit; the new run is intended to verify the correction.
+- Latest known run at this update: [45821849638](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45821849638), for commit `34690ad8944d69ed43a3d90c1e6292b36ce73c61`.
+- The latest run is queued/pending. Do not mark the final rig accepted until it completes and its MP4 is inspected.
+- TypeScript check and Next.js production build passed in run [45821069302](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45821069302).
+- A visual review of the earlier rig showed the legs overlapped/one leg was hidden. The limb layering, spacing, hands and blinking were revised afterward and require a fresh artifact review.
 
 ## Known gaps — not production-ready yet
 1. Scene art is still a reusable SVG character on template backgrounds, not unique illustrated scenes generated from each scene's prompt.
@@ -34,12 +35,13 @@ Base branch: `main`
 3. Voice is currently one combined TTS track; no per-scene audio segmentation, lip-sync, or precise subtitle/audio timing.
 4. Automated QC checks text/package structure, not actual visual quality, audio clarity, subtitle safe areas, lip-sync, or factual accuracy.
 5. The normal dashboard flow still requires manually sending the production JSON to GitHub Actions to render. It is not yet a one-click or unattended factory.
-6. The render workflow calls the configured Vercel API URL; deployment and environment secrets must be verified before a real production render.
+6. The existing Vercel deployment is protected by Vercel Authentication. The render workflow was changed to run QC locally and call Gemini TTS directly, so it now requires a GitHub Actions secret named `GEMINI_API_KEY`; the existence of that secret has not been verified.
 7. Supabase storage is optional and not confirmed configured.
 8. YouTube publishing remains intentionally manual and approval-gated.
 
 ## Next task queue
 - [ ] Complete latest CI run and fix any new failures.
+- [ ] Confirm `GEMINI_API_KEY` is configured as a GitHub Actions secret before a real TTS render; never paste it into chat.
 - [ ] Inspect the latest MP4 at multiple frames; verify walk/run/point/surprised poses and no limb intersections.
 - [ ] Add render acceptance checks for duration, dimensions, frame rate, audio stream and file integrity.
 - [ ] Build scene-specific visual composition from the story's `imagePrompt`, using free/local assets first.
