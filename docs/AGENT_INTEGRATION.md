@@ -18,14 +18,14 @@ This repository keeps one production application and one production pipeline. Ag
 
 ## Langflow
 
-Langflow is an optional visual workflow editor, not a required runtime dependency. This avoids making every render depend on a separately hosted Langflow service.
+Langflow is an optional storyboard provider/orchestrator and visual workflow editor, not a required runtime dependency. When configured, the producer calls the selected Langflow flow first and validates its JSON output; Groq is used as fallback when configured. This avoids making every render depend on a separately hosted Langflow service.
 
 Optional hosting variables:
 - `LANGFLOW_BASE_URL`
 - `LANGFLOW_FLOW_ID`
 - `LANGFLOW_API_KEY` (if the Langflow deployment requires authentication)
 
-The current production pipeline remains operational without these variables. Langflow is currently a registered optional visual editor; a live flow invocation adapter is not yet implemented.
+The current production pipeline remains operational without these variables. The live adapter calls `POST /api/v1/run/{FLOW_ID}?stream=false` with the production prompt. The configured flow must return a JSON object matching the Lerry production schema (4-6 scenes, required narration/dialogue/visual fields, metadata). If Langflow is unavailable and Groq keys exist, the producer falls back to Groq.
 
 ## YouTube Publishing
 
@@ -46,6 +46,6 @@ The publishing agent must require an explicit owner approval for each upload. Re
 ## Known limitations
 
 - Visuals are currently template-driven Remotion animation, not bespoke AI-generated video footage.
-- Langflow is status-registered but not yet connected to a live flow.
+- Langflow invocation is implemented but requires a configured Flow ID and a successful live schema-compatible run.
 - YouTube OAuth/upload is not yet implemented.
 - A successful deployed end-to-end render must still be demonstrated before calling the whole production system accepted.
