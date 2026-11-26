@@ -34,16 +34,16 @@ Main remains isolated; no merge or Production deployment has been made.
 - All experiment changes remain isolated on `experiment/openmontage-video-engine`.
 - No merge to `main`, Production deployment, or YouTube publishing.
 - No paid API, image/video generation provider, paid credits, or subscription was enabled.
-- Owner supplies the final story; AI must not rewrite it.
+- Owner supplies a short idea; AI creates the story. Owner reviews before render and inspects the MP4 before any upload.
 
 ## Selected LLM and token controls
 - Provider: Groq API, OpenAI-compatible endpoint.
 - Model: `openai/gpt-oss-120b`.
-- One LLM request per story; strict JSON Schema; `reasoning_effort=low`; reasoning output disabled; maximum completion budget 3,200 tokens.
-- Server-side deterministic validation preserves the owner story and rejects invented narration, dialogue, subtitles or hook text.
+- One LLM request per idea; strict JSON Schema; `reasoning_effort=low`; reasoning output disabled; maximum completion budget 3,200 tokens.
+- Server-side deterministic QC validates generated story length, scene count, durations, narration/dialogue, visual prompts and metadata.
 - Groq's documented baseline for GPT-OSS 120B: 30 RPM, 1,000 RPD, 8,000 TPM and 200,000 TPD; actual quotas may vary by account and change over time.
-- `GROQ_API_KEY` is not configured in Vercel Preview. Live storyboard generation is therefore not verified.
-- `OWNER_PASSWORD` is not configured in Vercel Preview. Owner login is therefore not activated.
+- Vercel Preview environment metadata lists GROQ_API_KEY and backups; secret values and a live generation request remain unverified.
+- Vercel Preview environment metadata lists OWNER_PASSWORD; live owner login remains unverified until tested with the owner's password.
 - Existing `GITHUB_ACTIONS_TOKEN` is present as a server-side Sensitive/Secret for Preview branch `experiment/openmontage-video-engine`; its Actions:write permission and live dispatch have not been proven.
 
 ## Supabase removal
@@ -55,9 +55,9 @@ Main remains isolated; no merge or Production deployment has been made.
 - A legacy Supabase publishable key may remain in Vercel settings but is unused by the current app.
 
 ## Automated production workers
-- Producer: deterministic request orchestration. One click creates storyboard and automatically dispatches MP4 render.
-- Storyboard + YouTube metadata: Groq GPT-OSS 120B, one call per story.
-- Story-integrity QC: deterministic code; no second LLM judge call.
+- Producer: accepts idea and creates a reviewable story/storyboard draft. Render dispatch occurs only after explicit owner approval.
+- Story + storyboard + YouTube metadata: Groq GPT-OSS 120B, one call per idea.
+- Structural story QC: deterministic code; no second LLM judge call.
 - Voice: Edge TTS Indonesian Ardi voice, Piper Indonesian fallback.
 - Visual composition: Remotion uses generated visual prompts to select scene backdrops, with existing vector art and a simple 2D character rig. Bespoke AI images per scene are not generated yet.
 - Render: GitHub Actions + Remotion + FFmpeg.
@@ -104,7 +104,7 @@ Main remains isolated; no merge or Production deployment has been made.
 - Character rig is stylized 2D, not production-grade 3D.
 - Subtitle timing is estimated; phoneme alignment and lip-sync are not implemented.
 - Research/fact-check source retrieval is not automatic. Suggested search queries are not proof.
-- Live Groq generation and authenticated dashboard-to-GitHub dispatch still need a successful owner login and a real owner story. Vercel Preview secrets are present by metadata, but their values and provider permissions remain unverified. GitHub Actions CI secrets are separately absent.
+- Live Groq generation and authenticated dashboard-to-GitHub dispatch still need a successful owner login and a real idea submission. Vercel Preview secrets are present by metadata, but their values and provider permissions remain unverified. GitHub Actions CI secrets are separately absent.
 - Login throttling is best-effort per runtime instance, not globally coordinated.
 - YouTube publishing remains manual and approval-gated.
 
