@@ -26,7 +26,7 @@ const productionSchema = {
 export async function POST(request: Request) {
   if (!isOwnerRequest(request)) return NextResponse.json({ error: "Login owner diperlukan sebelum memakai mesin produksi." }, { status: 401 });
   const apiKeys = [...new Set([process.env.GROQ_API_KEY,process.env.GROQ_API_KEY2,process.env.GROQ_API_KEY3].map(k=>k?.trim()).filter((k):k is string=>Boolean(k)))];
-  if (!apiKeys.length) return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret di Vercel Preview." }, { status: 503 });
+  if (!apiKeys.length) return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret pada hosting Preview." }, { status: 503 });
 
   try {
     const body = await request.json();
