@@ -1,17 +1,18 @@
 import Studio from "./studio";
 
 const modules = [
- {title:"Produser produksi FreeLLM",detail:"Menyusun storyboard dari cerita final owner. Memerlukan FREELLM_BASE_URL dan kredensial provider yang dikonfigurasi aman pada environment Preview.",status:"Menunggu koneksi FreeLLM"},
- {title:"Storyboard & visual",detail:"Membagi cerita menjadi adegan, arahan visual, durasi, dan metadata. Teks cerita owner tetap menjadi sumber utama.",status:"Pra-produksi • perlu uji live"},
- {title:"Voice & subtitle",detail:"Edge TTS Bahasa Indonesia dan Piper TTS sudah lolos uji audio terpisah. Render per adegan masih perlu uji dengan cerita owner; subtitle memakai estimasi durasi, belum sinkron fonem/lip-sync.",status:"Edge + Piper lulus uji mesin"},
- {title:"Render MP4 Shorts",detail:"Remotion merender video vertikal 1080 × 1920, 30 fps, durasi 15-60 detik melalui GitHub Actions.",status:"Workflow CI lolos • dispatch belum diuji"},
- {title:"Quality control",detail:"QC otomatis memeriksa struktur paket, durasi, prompt visual, dan integritas teks. Penilaian kualitas visual/audio tetap memerlukan inspeksi MP4.",status:"QC struktur tersedia"},
- {title:"YouTube publishing",detail:"Video tidak dipublikasikan otomatis. Upload tetap manual dan memerlukan persetujuan owner.",status:"Manual • persetujuan owner"}
+ {title:"LLM produser Groq",detail:"GPT-OSS 120B menyusun storyboard dalam satu panggilan API dengan JSON schema ketat dan batas token. Satu GROQ_API_KEY di server.",status:"Menunggu GROQ_API_KEY"},
+ {title:"Storyboard & visual",detail:"Membagi cerita owner menjadi 4-6 adegan, prompt visual, durasi, judul, deskripsi dan metadata. Teks cerita tetap terkunci.",status:"Satu panggilan LLM • QC otomatis"},
+ {title:"Voice & subtitle",detail:"Edge TTS Bahasa Indonesia sebagai utama dan Piper offline sebagai fallback. Narasi dan subtitle wajib kutipan cerita.",status:"Mesin TTS lulus uji"},
+ {title:"Render MP4 Shorts",detail:"Remotion dan GitHub Actions merender video vertikal H.264 1080 × 1920, 30 fps, durasi 15-60 detik.",status:"Showcase MP4 lulus QC"},
+ {title:"Quality control",detail:"Kode memeriksa cerita, jumlah adegan, durasi, kutipan, audio, codec, resolusi, FPS dan decode. Tidak perlu panggilan AI kedua.",status:"Validasi deterministik"},
+ {title:"Riwayat & keamanan owner",detail:"Login satu password owner. Maksimal 10 storyboard terakhir disimpan lokal di browser perangkat ini; tidak memakai database cloud.",status:"Tanpa Supabase"},
+ {title:"YouTube publishing",detail:"Upload tetap manual agar owner menyetujui hasil video dan metadata sebelum dipublikasikan.",status:"Persetujuan owner"}
 ];
 export default function Home(){
  return <main className="shell">
   <header className="top"><div className="brand"><div className="logo">L</div><div><strong>LERRY ANIMASI</strong><div className="muted" style={{fontSize:12}}>YouTube Shorts Production Studio</div></div></div><span className="pill">GRATIS DULU • YOUTUBE SAJA</span></header>
-  <section className="hero"><span className="status">Studio produksi • Mesin produksi Shorts • 15-60 detik</span><h1>Mesin produksi Lerry</h1><p>Lo kirim cerita final buatan sendiri. Tim produksi mengubahnya menjadi storyboard, animasi kartun pendek 9:16, dan metadata. Cerita tidak ditulis AI. Video final tetap perlu persetujuan lo sebelum dipublikasikan.</p><a className="cta" href="https://www.youtube.com/@lerry_animasi" target="_blank" rel="noreferrer">Lihat channel YouTube ↗</a></section>
+  <section className="hero"><span className="status">Studio produksi • Mesin produksi Shorts • 15-60 detik</span><h1>Mesin produksi Lerry</h1><p>Lo kirim cerita final buatan sendiri. Satu LLM menyusun storyboard; TTS, render, dan QC berjalan otomatis. Cerita tidak ditulis AI. Video final tetap perlu persetujuan lo sebelum dipublikasikan.</p><a className="cta" href="https://www.youtube.com/@lerry_animasi" target="_blank" rel="noreferrer">Lihat channel YouTube ↗</a></section>
   <Studio/>
   <section className="grid">{modules.map(item=><article className="card" key={item.title}><span className="status">{item.status}</span><h2 style={{marginTop:14}}>{item.title}</h2><p>{item.detail}</p></article>)}</section>
   <footer className="footer">Lerry Animasi Studio • Produksi tidak mempublikasikan apa pun tanpa persetujuan owner.</footer>
