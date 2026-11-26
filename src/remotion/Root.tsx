@@ -14,16 +14,25 @@ const defaultProps: LerryShortProps = {
 
 export const RemotionRoot: React.FC = () => (
   <>
-  <Composition
-    id="LerryShort"
-    component={LerryShort}
-    width={1080}
-    height={1920}
-    fps={30}
-    durationInFrames={450}
-    defaultProps={defaultProps}
-    calculateMetadata={({ props }) => ({
-      durationInFrames: Math.max(450, Math.min(1800, props.scenes.reduce((n, s) => n + Math.max(1, s.seconds), 0) * 30))
-    })}
-  />
+    <Composition
+      id="LerryShort"
+      component={LerryShort}
+      width={1080}
+      height={1920}
+      fps={30}
+      durationInFrames={450}
+      defaultProps={defaultProps}
+      calculateMetadata={({ props }) => ({
+        durationInFrames: Math.max(450, Math.min(1800, props.scenes.reduce((n, s) => n + Math.max(1, s.seconds), 0) * 30))
+      })}
+    />
+    <Composition
+      id="MotionStackSmokeTest"
+      component={MotionStackSmoke}
+      width={640}
+      height={360}
+      fps={30}
+      durationInFrames={60}
+    />
+  </>
 );
