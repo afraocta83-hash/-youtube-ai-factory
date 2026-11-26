@@ -30,12 +30,12 @@ const schema = {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const prompt = typeof body?.story === "string" ? body.story.trim() : (typeof body?.prompt === "string" ? body.prompt.trim() : "");
-    if (!prompt || prompt.length > 12000) return NextResponse.json({ error: "Masukkan cerita buatan owner maksimal 12.000 karakter." }, { status: 400 });
+    const story = typeof body?.story === "string" ? body.story : (typeof body?.prompt === "string" ? body.prompt : "");
+    if (!story.trim() || story.length > 12000) return NextResponse.json({ error: "Masukkan cerita buatan owner maksimal 12.000 karakter." }, { status: 400 });
     const key = process.env.GEMINI_API_KEY;
     if (!key) return NextResponse.json({ error: "GEMINI_API_KEY belum tersedia di environment Production." }, { status: 503 });
     const model = (process.env.GEMINI_MODEL || "gemini-2.5-flash").trim();
-    const instruction = `Kamu adalah kru produksi, BUKAN PENULIS CERITA. Cerita berikut ditulis dan dimiliki owner. DILARANG mengarang, menambah, menghapus, memperbaiki, mengubah urutan, atau memparafrasekan plot, dialog, fakta, dan ending. Pertahankan teks cerita persis sebagai nilai script: ${JSON.stringify(prompt)}. Tugasmu hanya memecah cerita yang sama menjadi 4-8 adegan visual, menentukan durasi, arahan kamera/gerak, prompt gambar, musik/efek, subtitle yang diambil verbatim dari teks cerita (jangan menambah kata), serta metadata. Jika ada detail visual yang tidak disebut dalam cerita, gunakan interpretasi visual netral dan tandai sebagai interpretasi, jangan jadikan fakta cerita. Untuk sejarah, tandai klaim yang perlu diverifikasi; jangan mengarang sumber atau tanggal. Durasi total wajib 15-60 detik. Format vertikal 9:16, gaya animasi 2D konsisten. Jangan membuat naskah baru atau dialog tambahan. synopsis harus ringkasan netral tanpa mengubah alur. hook hanya boleh berupa kutipan persis dari cerita. Output JSON sesuai schema.`;
+    const instruction = `Kamu adalah kru produksi, BUKAN PENULIS CERITA. Cerita berikut ditulis dan dimiliki owner. DILARANG mengarang, menambah, menghapus, memperbaiki, mengubah urutan, atau memparafrasekan plot, dialog, fakta, dan ending. Pertahankan teks cerita persis sebagai nilai script: ${JSON.stringify(story)}. Tugasmu hanya memecah cerita yang sama menjadi 4-8 adegan visual, menentukan durasi, arahan kamera/gerak, prompt gambar, musik/efek, subtitle yang diambil verbatim dari teks cerita (jangan menambah kata), serta metadata. Jika ada detail visual yang tidak disebut dalam cerita, gunakan interpretasi visual netral dan tandai sebagai interpretasi, jangan jadikan fakta cerita. Untuk sejarah, tandai klaim yang perlu diverifikasi; jangan mengarang sumber atau tanggal. Durasi total wajib 15-60 detik. Format vertikal 9:16, gaya animasi 2D konsisten. Jangan membuat naskah baru atau dialog tambahan. synopsis harus ringkasan netral tanpa mengubah alur. hook hanya boleh berupa kutipan persis dari cerita. Output JSON sesuai schema.`;
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -73,7 +73,7 @@ export async function POST(request: Request) {
     for (const [index, scene] of production.scenes.entries()) {
       for (const field of textFields) {
         const line = typeof scene?.[field] === "string" ? scene[field].trim() : "";
-        if (line && !prompt.includes(line)) inventedLines.push(`Adegan ${index + 1}: ${field}`);
+        if (line && !story.includes(line)) inventedLines.push(`Adegan ${index + 1}: ${field}`);
       }
       if (typeof scene?.imagePrompt !== "string" || scene.imagePrompt.trim().length < 20) {
         return NextResponse.json({ error: `Arahan visual adegan ${index + 1} belum cukup jelas.` }, { status: 502 });
@@ -87,8 +87,8 @@ export async function POST(request: Request) {
     }
 
     // Preserve exact owner input byte-for-byte in the canonical script field.
-    production.script = prompt;
-    production.ownerStory = prompt;
+    production.script = story;
+    production.ownerStory = story;
     production.durationSeconds = totalSeconds;
     return NextResponse.json({ ok: true, model, ownerStoryPreserved: true, production });
   } catch (error) {
