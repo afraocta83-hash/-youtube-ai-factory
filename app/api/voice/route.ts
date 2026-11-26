@@ -12,10 +12,10 @@ export async function POST(req:Request){
   const {text,voiceName="Kore",style="Narasi Bahasa Indonesia yang hangat, jelas, ekspresif, dan alami."}=await req.json();
   if(typeof text!=="string"||!text.trim()||text.length>8000)return NextResponse.json({error:"Teks suara wajib diisi dan maksimal 8.000 karakter."},{status:400});
   const key=process.env.GEMINI_API_KEY;if(!key)return NextResponse.json({error:"GEMINI_API_KEY belum tersedia."},{status:503});
-  const model=process.env.GEMINI_TTS_MODEL||"gemini-2.5-flash-tts";
+  const model=process.env.GEMINI_TTS_MODEL||"gemini-3.8-flash-tts";
   const r=await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent?key=${encodeURIComponent(key)}`,{
    method:"POST",headers:{"Content-Type":"application/json"},
-   body:JSON.stringify({contents:[{parts:[{text:`Say in Indonesian with this direction: ${style}\n\n${text}`}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName}}}}}),
+   body:JSON.stringify({contents:[{parts:[{text, speechMetadata:{style}}]}],generationConfig:{responseModalities:["AUDIO"],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName}}}}}),
    signal:AbortSignal.timeout(55000)
   });
   const data=await r.json();if(!r.ok)return NextResponse.json({error:data?.error?.message||"Gemini TTS gagal."},{status:r.status===429?429:502});
