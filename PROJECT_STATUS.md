@@ -1,59 +1,74 @@
 # Lerry Animasi — Project Status
 
 Last updated: 2026-11-26
-Current stage: visual/audio/dashboard integration implemented on experiment branch; verification and external service setup remain
+Current stage: experiment preview deployed; CI render pipeline passes; external-service and owner-story acceptance remain
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Branch comparison at update: 76 commits ahead, 0 behind
-Main HEAD at update: `db295ed51181d8ff969fe2ebea96891b4394cb45`
+Branch comparison at last verified audit: 83 commits ahead, 0 behind
+Main HEAD at last verified audit: `db295ed51181d8ff969fe2ebea96891b4394cb45`
+Experiment HEAD: `d6f085fa2ddc820475fd43af90cb66183ddbacb4`
 
 ## Safety boundary
 - All experiment changes remain isolated on `experiment/openmontage-video-engine`.
-- `main` remains at the recorded base commit; no merge was performed.
+- `main` has not been merged or changed by this work.
 - Dashboard and office visuals were not redesigned.
 - No YouTube upload or publishing was performed.
 - No paid image/video provider was enabled.
-- No production Vercel deployment was performed.
+- No Production deployment was performed.
 
-## Confirmed working — latest end-to-end run
-- Full workflow passed in [run 45830819113](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45830819113), commit `a33e2bc979656b60c81d7fe335fbc14faf771a34`.
-- Dependency audit passed with zero vulnerabilities; TypeScript, Next.js production build, Remotion composition listing, QC, rendering, FFmpeg verification and artifact upload all passed.
-- Live storyboard generation through `/api/produce` succeeded using `gemini-3.5-flash-lite`: 4 scenes, 30 seconds total, with `script` and `ownerStory` preserved exactly.
-- QC negative tests passed: changed owner story, missing owner story and invented subtitle are rejected.
-- Live TTS succeeded using `gemini-3.8-flash-tts`; the response was a valid 24 kHz mono PCM WAV.
-- The generated storyboard package was saved and rendered with its generated narration audio; the final LerryShort MP4 is H.264, 1080×1920, 30 fps, 30.016 seconds, AAC audio, and passed full FFmpeg decode.
-- The final MP4 soundtrack is non-silent (mean volume approximately -21.8 dB); the generated narration file is 16.58 seconds, shorter than the 30-second video.
-- The motion showcase is H.264, 1080×1920, 30 fps, 15 seconds and passed FFmpeg decode.
-- Artifact: `lerry-openmontage-motion-showcase`, ID `15122602232`, expires 2026-12-03.
-- The artifact was downloaded and inspected at multiple frames. The character rig and backgrounds render, but some vector backdrop categories do not match the story scene precisely. Visual quality remains proof-of-concept.
-- The QC endpoint now requires `ownerStory`; a missing source story can no longer pass merely as a warning.
-- The TTS integration was migrated from the unavailable `gemini-2.5-flash-tts` Developer API target to `gemini-3.8-flash-tts`. Storyboard generation uses `gemini-3.5-flash-lite` to reduce capacity pressure.
+## Current infrastructure — verified
+- GitHub repository: https://github.com/afraocta83-hash/-youtube-ai-factory
+- Vercel project: `youtube-ai-factory`, linked to the GitHub repository.
+- Preview deployment: https://youtube-ai-factory-1mywv0k4b-afraocta83-9700.vercel.app
+- Preview deployment ID: `dpl_7FoFwPVUSsSbTBhQUmp4MjNemCfB`; state `READY`.
+- Preview was built from `experiment/openmontage-video-engine`, commit `d6f085fa2ddc820475fd43af90cb66183ddbacb4`.
+- Vercel environment metadata confirms `GITHUB_ACTIONS_TOKEN` is configured as a Secret for both Preview (branch-scoped to the experiment branch) and Production. Its value is hidden; token validity and Actions permission have not yet been tested by a real dispatch.
+- Preview has `NEXT_PUBLIC_SUPABASE_URL`.
+- Preview is missing `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `GEMINI_API_KEY`.
+- Production has metadata entries for `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `GEMINI_API_KEY`; secret values were not inspected.
+- `GEMINI_MODEL=gemini-3.8-flash` is configured for Preview and Production.
+- Supabase project URL: https://ppgkyqqhthfdmvbeihvm.supabase.co
+- Supabase schema file exists at `supabase/schema.sql`; execution in Supabase SQL Editor, RLS behavior, private bucket and storage operations are not verified.
 
-## Changes added after run #54 — awaiting fresh CI verification\n- `SceneBackdrop.tsx` now has deterministic free vector environments for library, treasure/chest, nature, room, city and fallback scenes; these are more scene-specific but remain vector illustrations, not unique generated artwork.\n- `CharacterRig.tsx` adds breathing, secondary motion, head tilt, blinking, anticipation and stronger walk/run travel. Still a stylized 2D rig, not full character acting or lip-sync.\n- `Short.tsx` now supports per-scene audio files and progressive word reveal based on measured audio duration. This is approximate word timing, not phoneme-level forced alignment.\n- `render-short.yml` now requests TTS per scene, writes separate WAV assets and passes each scene's audio duration to Remotion. The render still needs a new workflow run to validate the new multi-request path.\n- Dashboard now includes a Render MP4 button and `/api/render` securely dispatches the GitHub Actions workflow server-side. It requires `GITHUB_ACTIONS_TOKEN` in Vercel Preview with Actions: write; the variable is not configured or dispatch verified yet.\n- Existing Supabase panel, browser client and `supabase/schema.sql` are present. Vercel production has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` metadata, but preview variables and actual database/schema/storage execution have not been verified.\n- Vercel team lookup shows the `youtube-ai-factory` project exists, but no Git-linked projects are registered for the team/repository. The experiment branch has no usable Vercel preview deployment. A direct preview deployment attempt failed with Vercel `git_info_fail` because the existing project is not Git-linked. No production deployment or project relinking was performed.\n\n## Known gaps — not production-ready yet
-1. Scene art is still template/vector scenery selected by simple keywords. The `imagePrompt` does not yet generate unique scene illustrations, props, or consistent character reference sheets.
-2. The character is a simple code-drawn rig. Actions exist, but acting, body mechanics, expressions and scene interaction are not production-grade.
-3. Per-scene TTS has now been implemented in the workflow but has not passed a fresh CI run; duration fit and audio quality still need artifact inspection.
-4. Subtitle reveal is now estimated from each scene WAV duration; true word/phoneme alignment and lip-sync remain unimplemented.
-5. QC validates package structure and text integrity; it does not yet judge visual continuity, subtitle safe areas, narration clarity, lip-sync, factual accuracy or copyright.
-6. A dashboard dispatch API/button has been added, but it is not operational until the GitHub Actions token is configured and the deployed dashboard is verified.
-7. The end-to-end test used a synthetic test story, not a final story supplied and approved by the owner.
-8. Supabase client, auth panel, RLS schema and private bucket definition exist; actual SQL execution, bucket policies and live save/restore remain unverified.
-9. Vercel project exists but has no Git repository connection; experiment preview deployment is unavailable until project linking is resolved. Production env variables are present but not copied to Preview.
-10. YouTube publishing remains manual and approval-gated.
+## CI verification
+- Latest workflow run: [run #65](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45833196730).
+- Run #65 completed successfully on commit `d6f085fa2ddc820475fd43af90cb66183ddbacb4`.
+- Passed: checkout, Node setup, dependency installation/audit, TypeScript, Next.js build, QC and storyboard smoke tests, deterministic local audio fixture, Remotion composition checks, five-action motion showcase render, FFmpeg installation, MP4 validation and artifact upload.
+- Important limitation: run #65 uses a deterministic local PCM audio fixture for CI. It does not prove live per-scene Gemini TTS is working in the current render workflow.
+- Earlier live TTS/storyboard testing and an earlier rendered MP4 are recorded in prior project history; the latest multi-scene TTS workflow still needs a fresh live run and artifact inspection.
+- Motion showcase artifact from earlier run: `lerry-openmontage-motion-showcase`, ID `15122602232`, expires 2026-12-03. Its vector environments and 2D rig are proof-of-concept, not final animation quality.
+
+## Render pipeline architecture
+- `.github/workflows/render-short.yml` accepts a production JSON payload through `workflow_dispatch`.
+- Workflow QC requires the owner story and script to match exactly, 4–10 scenes, 15–60 seconds, image prompts, and narration/dialogue/subtitles quoted verbatim from the owner's story.
+- Workflow requests per-scene Indonesian narration from Gemini TTS using `GEMINI_API_KEY`, writes scene WAV files, renders with Remotion and validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
+- Output artifact name: `lerry-animasi-short`, retained for 7 days.
+- `app/api/render/route.ts` validates a Supabase owner session, reads the server-side `GITHUB_ACTIONS_TOKEN`, and dispatches the workflow on the experiment branch.
+- `app/api/produce/route.ts` generates storyboard/metadata while preserving the exact owner story and rejecting invented spoken/subtitle text.
+- `src/remotion/SceneBackdrop.tsx` uses deterministic vector backdrops (library, treasure/chest, nature, room, city and fallback); it does not yet generate unique AI scene artwork.
+- `src/remotion/CharacterRig.tsx` is a stylized code-drawn 2D character rig with secondary motion, blinking, anticipation and walk/run travel; it is not full 3D animation or production-grade acting.
+- Subtitle reveal is estimated from audio duration, not phoneme-level forced alignment. Lip-sync is not implemented.
+
+## Remaining blockers
+1. Add the Supabase publishable key to the Preview environment. It is a browser-safe public key, unlike server secrets.
+2. Decide whether to add a Gemini API key to Preview. Do not copy or expose a Production secret automatically; confirm the intended key and free/paid usage constraints first.
+3. Verify the GitHub repository Actions secret `GEMINI_API_KEY` exists and is usable by the live render workflow. The CI fixture run does not prove this.
+4. Execute `supabase/schema.sql` in the intended Supabase project, then test owner login, RLS, save/read and private storage.
+5. Redeploy Preview after required environment variables are configured; existing deployments do not automatically receive newly added environment values.
+6. Run a real dispatch from the Preview dashboard with a final story supplied and approved by the owner. Verify GitHub accepts the token and workflow dispatch, then inspect the MP4 artifact.
+7. Improve scene-specific visuals, character acting, subtitle timing and visual QC after the first owner-approved end-to-end render.
+8. YouTube publishing remains manual and approval-gated.
 
 ## Next task queue
-- [x] Confirm current Gemini TTS model and generate real audio.
-- [x] Run live storyboard generation and verify exact owner-story preservation.
-- [x] Enforce ownerStory in structural QC and test negative cases.
-- [x] Render the generated storyboard with its real narration audio.
-- [x] Verify MP4 codec, dimensions, frame rate, duration, audio stream, non-silence and full decode.
-- [x] Add deterministic scene-specific vector environments for library, treasure, nature, room and city; [ ] inspect rendered frames and refine mismatches.
-- [x] Improve rig secondary motion, blinking, anticipation and travel; [ ] add hand-held props and scene interaction; obtain owner visual acceptance.
-- [x] Implement per-scene narration WAVs and approximate duration-based subtitle reveal; [ ] pass CI and inspect word timing/audio; [ ] implement true forced alignment/lip-sync.
-- [ ] Run an end-to-end test using an owner-provided final story and review the MP4 with the owner.
-- [ ] Execute Supabase schema and test login/save/read/storage; verify Vercel Preview environment separately.
-- [x] Add server-side GitHub Actions dispatch endpoint and dashboard render button; [ ] configure `GITHUB_ACTIONS_TOKEN` on Vercel and test dispatch.
-- [ ] Only after acceptance, ask for separate authorization to merge or deploy.
+- [x] Verify Vercel Git integration and a READY Preview deployment.
+- [x] Verify latest CI run #65 and its MP4 showcase pipeline.
+- [x] Register `GITHUB_ACTIONS_TOKEN` as a Secret in Preview and Production metadata.
+- [x] Update this status file to match the current infrastructure and known blockers.
+- [ ] Configure the missing Preview Supabase publishable key.
+- [ ] Complete Supabase SQL/auth/storage setup.
+- [ ] Verify GitHub Actions token by a real, owner-approved dispatch.
+- [ ] Verify live per-scene TTS and inspect the resulting Shorts MP4.
+- [ ] Obtain owner acceptance before any merge, Production deployment or YouTube publishing.
 
 ## Acceptance rule
 A feature is not complete because code exists. It is complete only when its workflow ran, output artifact exists, and the artifact passes the relevant inspection. `Built ≠ Tested ≠ Accepted ≠ Released`.
