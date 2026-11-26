@@ -2,14 +2,14 @@ import React from "react";
 import { Easing, interpolate, useCurrentFrame } from "remotion";
 
 export type CharacterAction = "idle" | "walk" | "run" | "surprised" | "point";
-export type CharacterRigProps = { action?: CharacterAction; accent?: string; travelAcross?: boolean };
+export type CharacterRigProps = { action?: CharacterAction; accent?: string; travelAcross?: boolean; speaking?: boolean };
 
 /**
  * Lerry's locked mascot: round white head, no nose, expressive eyes/brows,
  * slim stick body, blue shirt, black limbs/hands/feet and bold outline.
  * Only pose and facial expression may vary between scenes.
  */
-export const CharacterRig: React.FC<CharacterRigProps> = ({ action = "idle", accent = "#1677d2", travelAcross = false }) => {
+export const CharacterRig: React.FC<CharacterRigProps> = ({ action = "idle", accent = "#1677d2", travelAcross = false, speaking = false }) => {
   const frame = useCurrentFrame();
   const cycle = frame % 90;
   const moving = action === "walk" || action === "run";
@@ -29,7 +29,9 @@ export const CharacterRig: React.FC<CharacterRigProps> = ({ action = "idle", acc
   const surprised = action === "surprised";
   const blink = Math.sin(frame / 14) > 0.985 ? 0.12 : 1;
   const browTilt = surprised ? -12 : action === "point" ? 5 : 0;
-  const mouthRy = surprised ? 17 : action === "point" ? 4 : 6;
+  const mouthOpen = speaking && Math.sin(frame * 0.78) > 0.05;
+  const mouthRy = surprised ? 17 : speaking ? (mouthOpen ? 12 : 3) : action === "point" ? 4 : 6;
+  const mouthRx = speaking && !mouthOpen ? 9 : surprised ? 13 : 17;
 
   return (
     <svg viewBox="0 0 600 760" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ overflow: "visible" }}>
@@ -57,7 +59,7 @@ export const CharacterRig: React.FC<CharacterRigProps> = ({ action = "idle", acc
           </g>
           <path d={`M226 210 Q250 ${190 + browTilt} 274 208`} fill="none" stroke="#080b12" strokeWidth="12" strokeLinecap="round" />
           <path d={`M326 208 Q350 ${190 - browTilt} 374 210`} fill="none" stroke="#080b12" strokeWidth="12" strokeLinecap="round" />
-          <ellipse cx="300" cy="315" rx={surprised ? 13 : 17} ry={mouthRy} fill="#080b12" />
+          <ellipse cx="300" cy="315" rx={mouthRx} ry={mouthRy} fill="#080b12" />
         </g>
       </g>
     </svg>
