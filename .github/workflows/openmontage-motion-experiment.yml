@@ -42,39 +42,101 @@ jobs:
         run: npm run typecheck
       - name: Build Next.js application
         run: npm run build
+      - name: Smoke-test QC API with valid and invalid story packages
+        run: |
+          npm start > /tmp/lerry-next.log 2>&1 &
+          ready=0
+          for i in $(seq 1 30); do
+            if curl -fsS http://127.0.0.1:3000 >/dev/null; then ready=1; break; fi
+            sleep 2
+          done
+          if [ "$ready" != "1" ]; then cat /tmp/lerry-next.log; exit 1; fi
+          node <<'NODE'
+          const assert = require('node:assert/strict');
+          const story = 'Riko menemukan peta di loteng. Ia mengikuti tanda menuju taman. Di bawah pohon, ia menemukan kotak kecil. Riko membuka kotak dan tersenyum.';
+          const scenes = [
+            'Riko menemukan peta di loteng.',
+            'Ia mengikuti tanda menuju taman.',
+            'Di bawah pohon, ia menemukan kotak kecil.',
+            'Riko membuka kotak dan tersenyum.'
+          ].map((line,i)=>({number:i+1,seconds:4,imagePrompt:'Ilustrasi kartun 2D berwarna untuk adegan cerita nomor '+(i+1),narration:line,dialogue:'',subtitle:line}));
+          const base = {script:story,ownerStory:story,scenes,title:'Riko dan Peta Rahasia',description:'Uji pipeline Lerry Animasi.',factCheckNotes:['Cerita fiksi untuk smoke test.']};
+          async function qc(payload) {
+            const response=await fetch('http://127.0.0.1:3000/api/quality-check',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+            assert.equal(response.status,200);
+            return response.json();
+          }
+          (async()=>{
+            const good=await qc(base);
+            assert.equal(good.passed,true,'Valid owner story package should pass QC');
+            assert.equal(good.checks.ownerStoryExactMatch,true);
+            const changed=await qc({...base,script:story+' Tambahan.'});
+            assert.equal(changed.passed,false,'Changed owner story must fail QC');
+            const invented={...base,scenes:base.scenes.map((s,i)=>i===0?{...s,subtitle:'Dialog baru yang tidak ada di cerita.'}:s)};
+            const inventedResult=await qc(invented);
+            assert.equal(inventedResult.passed,false,'Invented subtitle must fail QC');
+            console.log('QC API PASS: valid package accepted; changed story and invented subtitle rejected.');
+          })().catch(error=>{console.error(error);process.exit(1);});
+          NODE
       - name: Verify Remotion compositions
         run: npx remotion compositions src/remotion/index.ts
+      - name: Prepare deterministic LerryShort smoke fixture
+        run: |
+          mkdir -p public out
+          node <<'NODE'
+          const fs=require('node:fs');
+          const story='Riko menemukan peta di loteng. Ia mengikuti tanda menuju taman. Di bawah pohon, ia menemukan kotak kecil. Riko membuka kotak dan tersenyum.';
+          const lines=['Riko menemukan peta di loteng.','Ia mengikuti tanda menuju taman.','Di bawah pohon, ia menemukan kotak kecil.','Riko membuka kotak dan tersenyum.'];
+          const production={workingTitle:'Riko dan Peta Rahasia',script:story,ownerStory:story,voiceFile:'voice.wav',scenes:lines.map((line,i)=>({number:i+1,seconds:4,visual:'Adegan uji '+(i+1),narration:line,dialogue:'',subtitle:line}))};
+          fs.writeFileSync('production-smoke.json',JSON.stringify(production,null,2));
+          const sampleRate=24000,seconds=16,pcm=Buffer.alloc(sampleRate*seconds*2),header=Buffer.alloc(44);
+          header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);
+          header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(1,22);
+          header.writeUInt32LE(sampleRate,24);header.writeUInt32LE(sampleRate*2,28);header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);
+          header.write('data',36);header.writeUInt32LE(pcm.length,40);
+          fs.writeFileSync('public/voice.wav',Buffer.concat([header,pcm]));
+          console.log('Prepared 16-second smoke fixture with silent WAV audio.');
+          NODE
       - name: Render five-action showcase
         run: |
           mkdir -p out
           npx remotion render src/remotion/index.ts SceneMotionShowcase out/openmontage-motion-showcase.mp4 --codec=h264 --crf=23
+          npx remotion render src/remotion/index.ts LerryShort out/lerry-short-smoke.mp4 --props=production-smoke.json --codec=h264 --crf=23
       - name: Install FFmpeg tools
         run: |
           sudo apt-get update
           sudo apt-get install -y ffmpeg
           command -v ffprobe
-      - name: Verify MP4
+      - name: Verify both MP4 artifacts
         run: |
           test -s out/openmontage-motion-showcase.mp4
-          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/openmontage-motion-showcase.mp4 > out/mp4-metadata.json
+          test -s out/lerry-short-smoke.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/openmontage-motion-showcase.mp4 > out/motion-metadata.json
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/lerry-short-smoke.mp4 > out/short-metadata.json
           node <<'NODE'
-          const fs = require('fs');
-          const meta = JSON.parse(fs.readFileSync('out/mp4-metadata.json', 'utf8'));
-          const video = meta.streams.find((stream) => stream.codec_type === 'video');
-          if (!video) throw new Error('Video stream tidak ditemukan.');
-          if (video.codec_name !== 'h264') throw new Error('Codec harus H.264.');
-          if (video.width !== 1080 || video.height !== 1920) throw new Error('Resolusi harus 1080x1920 (9:16).');
-          const [num, den] = video.r_frame_rate.split('/').map(Number);
-          if (num / den !== 30) throw new Error('Frame rate harus 30 fps.');
-          const duration = Number(meta.format.duration);
-          if (duration < 15 || duration > 60) throw new Error('Durasi harus 15-60 detik.');
-          console.log('MP4 PASS', {codec: video.codec_name, width: video.width, height: video.height, fps: num / den, duration});
+          const fs=require('node:fs');
+          function verify(path,expectedDuration,needsAudio){
+            const meta=JSON.parse(fs.readFileSync(path,'utf8'));
+            const video=meta.streams.find(stream=>stream.codec_type==='video');
+            const audio=meta.streams.find(stream=>stream.codec_type==='audio');
+            if(!video||video.codec_name!=='h264')throw new Error(path+': H.264 video missing');
+            if(video.width!==1080||video.height!==1920)throw new Error(path+': expected 1080x1920');
+            const [num,den]=video.r_frame_rate.split('/').map(Number);
+            if(num/den!==30)throw new Error(path+': expected 30 fps');
+            const duration=Number(meta.format.duration);
+            if(Math.abs(duration-expectedDuration)>0.2)throw new Error(path+': unexpected duration '+duration);
+            if(needsAudio&&!audio)throw new Error(path+': audio stream missing');
+            console.log('MP4 PASS',path,{width:video.width,height:video.height,fps:num/den,duration,audio:Boolean(audio)});
+          }
+          verify('out/motion-metadata.json',15,false);
+          verify('out/short-metadata.json',16,true);
           NODE
           ffmpeg -v error -i out/openmontage-motion-showcase.mp4 -f null -
+          ffmpeg -v error -i out/lerry-short-smoke.mp4 -f null -
       - name: Upload experiment artifact
         uses: actions/upload-artifact@v4
         with:
           name: lerry-openmontage-motion-showcase
-          path: out/openmontage-motion-showcase.mp4
+          path: out/*.mp4
           if-no-files-found: error
           retention-days: 7
