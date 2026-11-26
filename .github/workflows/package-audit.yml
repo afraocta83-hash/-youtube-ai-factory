@@ -1,0 +1,56 @@
+name: Package LERRY ANIMASI audit bundle
+
+on:
+  push:
+    branches:
+      - experiment/openmontage-video-engine
+    paths:
+      - '.github/workflows/package-audit.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lerry-audit-package
+  cancel-in-progress: true
+
+jobs:
+  package:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout review branch
+        uses: actions/checkout@v4
+        with:
+          ref: experiment/openmontage-video-engine
+
+      - name: Assemble sanitized source snapshot
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p audit-package
+          rsync -a --exclude='.git/' --exclude='node_modules/' --exclude='.next/' --exclude='.vercel/' --exclude='coverage/' --exclude='dist/' --exclude='build/' --exclude='*.log' --exclude='.env' --exclude='.env.*' --exclude='!.env.example' --exclude='*.pem' --exclude='*.key' --exclude='*.p12' --exclude='*.pfx' --exclude='*.mobileprovision' --exclude='secrets/' --exclude='credentials/' ./ audit-package/source/
+          mkdir -p audit-package/reviewer
+          cp docs/audit/README.md audit-package/reviewer/AUDIT-README.md
+          cat > audit-package/reviewer/BRANCH-INFO.txt <<'EOF'
+          Project: LERRY ANIMASI
+          Branch: experiment/openmontage-video-engine
+          Base branch: main (do not modify)
+          Package contains source snapshot + audit instructions.
+          Actual secrets, .git history, dependencies and build outputs are intentionally excluded.
+          EOF
+          cd audit-package
+          zip -qr ../LERRY-ANIMASI-AUDIT-BUNDLE.zip .
+          cd ..
+          sha256sum LERRY-ANIMASI-AUDIT-BUNDLE.zip > LERRY-ANIMASI-AUDIT-BUNDLE.sha256
+
+      - name: Upload audit ZIP
+        uses: actions/upload-artifact@v4
+        with:
+          name: LERRY-ANIMASI-AUDIT-BUNDLE
+          path: |
+            LERRY-ANIMASI-AUDIT-BUNDLE.zip
+            LERRY-ANIMASI-AUDIT-BUNDLE.sha256
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
