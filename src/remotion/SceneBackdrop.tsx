@@ -67,6 +67,18 @@ export const SceneBackdrop: React.FC<SceneBackdropProps> = ({ description, index
           <path d="M280 1340 L360 1220 H650 L740 1340Z" fill="#90e0ef" stroke="#343a40" strokeWidth="20"/>
           <circle cx="300" cy="1630" r="76" fill="#202124" stroke="#fff" strokeWidth="18"/><circle cx="740" cy="1630" r="76" fill="#202124" stroke="#fff" strokeWidth="18"/>
         </>}
+        {/(terparkir|parkir)/.test(text) && <>
+          <rect x="865" y="1040" width="110" height="170" rx="18" fill="#277da1" stroke="#fff" strokeWidth="14"/>
+          <text x="920" y="1155" fontSize="100" fontWeight="bold" textAnchor="middle" fill="#fff">P</text>
+        </>}
+        {/(melaju|bergerak|roda berputar)/.test(text) && <>
+          {[0,1,2,3].map(n=><path key={n} d={`M${45+n*24} ${1320+n*55} H${175+n*20}`} stroke="#fff" strokeWidth="18" strokeLinecap="round" opacity=".75"/>)}
+        </>}
+        {/(rem|berhenti|zebra|persimpangan)/.test(text) && <>
+          {[0,1,2,3,4,5].map(n=><path key={n} d={`M${100+n*145} 1690 h80 l-24 120 h-80Z`} fill="#fff" opacity=".85"/>)}
+          <rect x="860" y="790" width="86" height="280" rx="26" fill="#202124" stroke="#fff" strokeWidth="14"/>
+          <circle cx="903" cy="850" r="25" fill="#e63946"/><circle cx="903" cy="930" r="25" fill="#f4d35e"/><circle cx="903" cy="1010" r="25" fill="#2a9d8f"/>
+        </>}
       </>}
       {kind === "workshop" && <>
         <path d="M0 1480 H1080 V1920 H0Z" fill="#8d6e63" opacity=".5"/>
