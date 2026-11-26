@@ -38,6 +38,15 @@ jobs:
         run: |
           npm audit --audit-level=moderate
           npm ls next postcss
+      - name: Check Gemini TTS secret availability
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+        run: |
+          if [ -n "$GEMINI_API_KEY" ]; then
+            echo "GEMINI_API_KEY is configured (value hidden)."
+          else
+            echo "::warning::GEMINI_API_KEY is not configured in GitHub Actions secrets; live TTS render will need it."
+          fi
       - name: TypeScript check
         run: npm run typecheck
       - name: Build Next.js application
