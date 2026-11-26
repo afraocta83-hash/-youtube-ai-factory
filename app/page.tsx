@@ -1,12 +1,12 @@
 import Studio from "./studio";
 
 const modules = [
- {title:"Produser produksi Gemini",detail:"Menerima cerita owner dan membaginya menjadi storyboard tanpa menulis ulang cerita.",status:"Gemini terhubung"},
- {title:"Storyboard & visual",detail:"Membuat adegan dan prompt visual konsisten.",status:"Paket pra-produksi"},
- {title:"Voice & subtitle",detail:"Menyiapkan dialog, narasi, dan subtitle.",status:"Naskah tersedia"},
- {title:"Render MP4 Shorts",detail:"Remotion merender video kartun vertikal 1080 × 1920, durasi 15-60 detik.",status:"Workflow GitHub tersedia"},
- {title:"Quality control",detail:"Memeriksa fakta, visual, audio, teks, dan hasil render.",status:"Checklist tersedia"},
- {title:"YouTube publishing",detail:"Mengirim video ke channel setelah persetujuan pemilik.",status:"Koneksi akun terdeteksi"}
+ {title:"Produser produksi Gemini",detail:"Menyusun storyboard dari cerita final owner. Memerlukan GEMINI_API_KEY pada environment Preview/Production yang sesuai.",status:"Menunggu verifikasi API"},
+ {title:"Storyboard & visual",detail:"Membagi cerita menjadi adegan, arahan visual, durasi, dan metadata. Teks cerita owner tetap menjadi sumber utama.",status:"Pra-produksi • perlu uji live"},
+ {title:"Voice & subtitle",detail:"Workflow menyediakan TTS per adegan dan subtitle berbasis estimasi durasi audio. Sinkronisasi fonem/lip-sync belum tersedia.",status:"Perlu uji TTS live"},
+ {title:"Render MP4 Shorts",detail:"Remotion merender video vertikal 1080 × 1920, 30 fps, durasi 15-60 detik melalui GitHub Actions.",status:"Workflow CI lolos • dispatch belum diuji"},
+ {title:"Quality control",detail:"QC otomatis memeriksa struktur paket, durasi, prompt visual, dan integritas teks. Penilaian kualitas visual/audio tetap memerlukan inspeksi MP4.",status:"QC struktur tersedia"},
+ {title:"YouTube publishing",detail:"Video tidak dipublikasikan otomatis. Upload tetap manual dan memerlukan persetujuan owner.",status:"Manual • persetujuan owner"}
 ];
 export default function Home(){
  return <main className="shell">
