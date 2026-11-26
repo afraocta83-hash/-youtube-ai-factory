@@ -22,44 +22,44 @@
       "seconds": 5,
       "visual": "Jalan kota cerah, mobil merah terparkir di samping Raka yang penasaran.",
       "action": "surprised",
-      "narration": "Raka penasaran, bagaimana mobil besar ini bisa bergerak?",
+      "narration": "Raka melihat mobil ayahnya terparkir dan bertanya bagaimana benda sebesar itu bisa bergerak.",
       "dialogue": "",
       "sound": "suara kota lembut",
       "imagePrompt": "Jalan kota cerah, mobil merah terparkir, pepohonan dan rumah sederhana, ilustrasi kartun vektor 2D.",
-      "subtitle": "Bagaimana mobil bisa bergerak?"
+      "subtitle": "Raka melihat mobil ayahnya terparkir"
     },
     {
       "number": 2,
       "seconds": 5,
       "visual": "Potongan sederhana ruang mesin di bengkel, roda gigi berputar.",
       "action": "point",
-      "narration": "Mesin mengubah energi menjadi tenaga putar untuk menggerakkan mobil.",
+      "narration": "Ayah menjelaskan bahwa mesin mengubah energi menjadi tenaga putar.",
       "dialogue": "",
       "sound": "dengung mesin lembut",
       "imagePrompt": "Bengkel kartun 2D dengan meja kerja, mesin terbuka dan roda gigi besar berputar.",
-      "subtitle": "Mesin menghasilkan tenaga putar"
+      "subtitle": "mesin mengubah energi menjadi tenaga putar"
     },
     {
       "number": 3,
       "seconds": 5,
       "visual": "Mobil merah melaju, roda berputar di atas jalan.",
       "action": "run",
-      "narration": "Sistem penggerak meneruskan tenaga mesin menuju roda.",
+      "narration": "Tenaga itu diteruskan melalui sistem penggerak ke roda. Saat ban mencengkeram jalan, mobil terdorong maju.",
       "dialogue": "",
       "sound": "suara kendaraan melaju",
       "imagePrompt": "Jalan kota kartun 2D, mobil merah bergerak ke depan, gedung dan marka jalan.",
-      "subtitle": "Tenaga diteruskan ke roda"
+      "subtitle": "Tenaga itu diteruskan melalui sistem penggerak ke roda"
     },
     {
       "number": 4,
       "seconds": 5,
       "visual": "Mobil berhenti di zebra cross dengan aman.",
       "action": "idle",
-      "narration": "Ban mencengkeram jalan, lalu rem membantu mobil melambat dan berhenti.",
+      "narration": "Ketika pengemudi menekan rem, sistem pengereman memperlambat roda hingga mobil berhenti. Raka pun mengerti bahwa mobil bergerak karena kerja sama mesin, roda, ban, dan rem.",
       "dialogue": "",
       "sound": "suara rem lembut",
       "imagePrompt": "Persimpangan kota kartun 2D, mobil merah berhenti sebelum zebra cross, suasana aman dan cerah.",
-      "subtitle": "Ban mencengkeram, rem menghentikan"
+      "subtitle": "sistem pengereman memperlambat roda hingga mobil berhenti"
     }
   ],
   "script": "Raka melihat mobil ayahnya terparkir dan bertanya bagaimana benda sebesar itu bisa bergerak. Ayah menjelaskan bahwa mesin mengubah energi menjadi tenaga putar. Tenaga itu diteruskan melalui sistem penggerak ke roda. Saat ban mencengkeram jalan, mobil terdorong maju. Ketika pengemudi menekan rem, sistem pengereman memperlambat roda hingga mobil berhenti. Raka pun mengerti bahwa mobil bergerak karena kerja sama mesin, roda, ban, dan rem.",
