@@ -71,7 +71,22 @@ jobs:
       - name: Verify MP4 output
         run: |
           test -s out/lerry-animasi-short.mp4
-          file out/lerry-animasi-short.mp4
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/lerry-animasi-short.mp4 > out/mp4-metadata.json
+          node <<'NODE'
+          const fs = require('fs');
+          const meta = JSON.parse(fs.readFileSync('out/mp4-metadata.json', 'utf8'));
+          const video = meta.streams.find((stream) => stream.codec_type === 'video');
+          const audio = meta.streams.find((stream) => stream.codec_type === 'audio');
+          if (!video || video.codec_name !== 'h264') throw new Error('Video H.264 tidak ditemukan.');
+          if (video.width !== 1080 || video.height !== 1920) throw new Error('Resolusi harus 1080x1920 (9:16).');
+          const [num, den] = video.r_frame_rate.split('/').map(Number);
+          if (num / den !== 30) throw new Error('Frame rate harus 30 fps.');
+          if (!audio) throw new Error('Audio narration track tidak ditemukan.');
+          const duration = Number(meta.format.duration);
+          if (duration < 15 || duration > 60) throw new Error('Durasi harus 15-60 detik.');
+          console.log('SHORTS MP4 PASS', {codec: video.codec_name, width: video.width, height: video.height, fps: num / den, duration, audio: true});
+          NODE
+          ffmpeg -v error -i out/lerry-animasi-short.mp4 -f null -
       - name: Upload finished Shorts
         uses: actions/upload-artifact@v4
         with:
