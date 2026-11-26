@@ -28,14 +28,17 @@ Base branch: `main`
 - Latest known run at this update: [45821849638](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45821849638), for commit `34690ad8944d69ed43a3d90c1e6292b36ce73c61`.
 - The latest run is queued/pending. Do not mark the final rig accepted until it completes and its MP4 is inspected.
 - TypeScript check, Next.js production build, QC API integration test, Remotion composition check, two MP4 renders, FFmpeg decode checks and artifact upload all passed in run [45823031346](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823031346).
-- The latest artifact [lerry-openmontage-motion-showcase](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823031346) contains a 15-second motion showcase and a 16-second LerryShort renderer smoke MP4. The LerryShort MP4 is H.264 1080×1920 at 30 fps with an AAC audio stream.
+- The artifact from [run 45823031346](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823031346) contains a 15-second motion showcase and a 16-second LerryShort renderer smoke MP4. The LerryShort MP4 is H.264 1080×1920 at 30 fps with an AAC audio stream.
+- The same `CharacterRig` is now used by both the motion showcase and the production `LerryShort` composition. Per-scene actions (`idle`, `walk`, `run`, `surprised`, `point`) are included in the storyboard schema and mapped to character animation.
+- Full-body rig integration passed TypeScript, Next.js build, QC API tests, Remotion composition listing, render, FFmpeg verification and artifact upload in [run 45823844373](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45823844373).
+- After visual review, the leg stance was widened and shoe shapes added in commit `9a1eeee6f95766a7b210e52bd0ea245dfd114518`; this last polish commit still needs its own render verification.
 - Visual frame inspection confirmed the one-frame black transitions are fixed. The run pose is improved but remains proof-of-concept, not production art.
 - `npm audit --audit-level=moderate` passed after overriding PostCSS to 8.5.33; the resolved tree shows Next.js 15.5.29 using PostCSS 8.5.33.
 - A visual review of the earlier rig showed the legs overlapped/one leg was hidden. The limb layering, spacing, hands and blinking were revised afterward and require a fresh artifact review.
 
 ## Known gaps — not production-ready yet
-1. Scene art is still a reusable SVG character on template backgrounds, not unique illustrated scenes generated from each scene's prompt.
-2. Motion rig is a proof of concept. Character design, acting quality, and action-to-story mapping still need visual acceptance.
+1. Scene art still uses gradient/template backgrounds; the scene `visual`/`imagePrompt` fields do not yet create unique illustrated backgrounds or props.
+2. The shared full-body rig is integrated and tested, but character design and acting quality remain proof-of-concept and need owner visual acceptance.
 3. Live TTS has not been tested because the GitHub Actions secret `GEMINI_API_KEY` is missing. Once added, the current workflow generates one combined TTS track; there is no per-scene audio segmentation, lip-sync, or precise subtitle/audio timing.
 4. Automated QC checks text/package structure, not actual visual quality, audio clarity, subtitle safe areas, lip-sync, or factual accuracy.
 5. The normal dashboard flow still requires manually sending the production JSON to GitHub Actions to render. It is not yet a one-click or unattended factory.
@@ -50,6 +53,7 @@ Base branch: `main`
 - [ ] Add `GEMINI_API_KEY` under GitHub repository Settings → Secrets and variables → Actions before a real TTS render; never paste the key into chat.
 - [ ] Inspect the latest MP4 at multiple frames; verify walk/run/point/surprised poses and no limb intersections.
 - [ ] Add render acceptance checks for duration, dimensions, frame rate, audio stream and file integrity.
+- [ ] Re-run visual smoke test after the latest leg/foot polish commit.
 - [ ] Build scene-specific visual composition from the story's `imagePrompt`, using free/local assets first.
 - [ ] Split narration by scene and align subtitle timing; add audio/lip-sync checks.
 - [ ] Connect a reliable dashboard-to-render handoff without exposing credentials in the browser.
