@@ -13,6 +13,7 @@ const defaultProps: LerryShortProps = {
 };
 
 export const RemotionRoot: React.FC = () => (
+  <>
   <Composition
     id="LerryShort"
     component={LerryShort}
