@@ -178,6 +178,17 @@ jobs:
           test -s out/tts-smoke.wav
           mkdir -p public
           cp out/tts-smoke.wav public/voice.wav
+          node <<'NODE'
+          const fs=require('node:fs');
+          const p=JSON.parse(fs.readFileSync('production-smoke.json','utf8'));
+          const wav=fs.readFileSync('out/tts-smoke.wav');
+          if(wav.toString('ascii',0,4)!=='RIFF'||wav.toString('ascii',8,12)!=='WAVE') throw new Error('TTS output is not WAV.');
+          const duration=(wav.length-44)/(wav.readUInt32LE(24)*wav.readUInt16LE(22));
+          p.scenes[0].voiceFile='voice.wav';
+          p.scenes[0].voiceDurationSeconds=duration;
+          fs.writeFileSync('production-smoke.json',JSON.stringify(p,null,2));
+          console.log('Attached real smoke narration to first scene',{duration});
+          NODE
           echo "Using the validated generated storyboard and its real Gemini narration."
       - name: Render five-action showcase
         run: |
