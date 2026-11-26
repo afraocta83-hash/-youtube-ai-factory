@@ -49,13 +49,11 @@ jobs:
         run: |
           BASE="https://huggingface.co/rhasspy/piper-voices/resolve/main/id/id_ID/news_tts/medium"
           mkdir -p .cache/piper
-          curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx" -o .cache/piper/id_ID-news_tts-medium.onnx || true
-          curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx.json" -o .cache/piper/id_ID-news_tts-medium.onnx.json || true
-          if test -s .cache/piper/id_ID-news_tts-medium.onnx && test -s .cache/piper/id_ID-news_tts-medium.onnx.json; then
-            echo "PIPER_FALLBACK_READY"
-          else
-            echo "::warning::Piper fallback download unavailable; Edge TTS remains primary."
-          fi
+          curl --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 20 --max-time 300 -fL "$BASE/id_ID-news_tts-medium.onnx" -o .cache/piper/id_ID-news_tts-medium.onnx
+          curl --retry 5 --retry-all-errors --retry-delay 3 --connect-timeout 20 --max-time 120 -fL "$BASE/id_ID-news_tts-medium.onnx.json" -o .cache/piper/id_ID-news_tts-medium.onnx.json
+          test -s .cache/piper/id_ID-news_tts-medium.onnx
+          test -s .cache/piper/id_ID-news_tts-medium.onnx.json
+          echo "PIPER_FALLBACK_READY"
       - name: Validate owner-approved package
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
