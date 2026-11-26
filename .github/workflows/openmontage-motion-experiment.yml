@@ -139,8 +139,13 @@ jobs:
             const missingOwner=await qc(withoutOwnerStory);
             assert.equal(missingOwner.passed,false,'Missing owner story must fail QC');
             const storyForGeneration='Mira menemukan sebuah kunci tua di halaman rumah. Ia membawa kunci itu ke perpustakaan kecil di ujung jalan. Penjaga perpustakaan menunjukkan sebuah peti kayu di ruang baca. Mira membuka peti itu dan menemukan foto keluarganya.';
-            const generatedResponse=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({story:storyForGeneration})});
-            const generated=await generatedResponse.json();
+            let generatedResponse, generated;
+            for(let attempt=0;attempt<3;attempt++){
+              generatedResponse=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({story:storyForGeneration})});
+              generated=await generatedResponse.json();
+              if(generatedResponse.status===200 || (generatedResponse.status!==429 && generatedResponse.status<500)) break;
+              if(attempt<2) await new Promise(resolve=>setTimeout(resolve,3000*(attempt+1)));
+            }
             assert.equal(generatedResponse.status,200,'Live Gemini storyboard API should return HTTP 200: '+JSON.stringify(generated));
             assert.equal(generated.ownerStoryPreserved,true);
             assert.equal(generated.production.ownerStory,storyForGeneration,'Owner story must be preserved byte-for-byte');
