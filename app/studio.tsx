@@ -8,6 +8,7 @@ type Production = {
 };
 type SavedProduction = { id:string; title:string; createdAt:string; production:Production };
 type Usage = { prompt_tokens?:number; completion_tokens?:number; total_tokens?:number } | null;
+type Agent = { id:string; name:string; engine:string; status:"ready"|"optional"|"blocked"; detail:string; approvalRequired?:boolean };
 const HISTORY_KEY = "lerry-animasi-history-v1";
 
 export default function Studio(){
@@ -22,6 +23,10 @@ export default function Studio(){
  const [renderSince,setRenderSince]=useState<number|null>(null);
  const [artifactUrl,setArtifactUrl]=useState("");
  const [renderRunUrl,setRenderRunUrl]=useState("");
+ const [agents,setAgents]=useState<Agent[]>([]);
+ const [agentSummary,setAgentSummary]=useState<{total:number;ready:number;optional:number;blocked:number}|null>(null);
+
+ useEffect(()=>{ let active=true; fetch("/api/agents",{cache:"no-store"}).then(r=>r.json()).then(data=>{if(active&&data.ok){setAgents(data.agents||[]);setAgentSummary(data.summary||null);}}).catch(()=>{}); return()=>{active=false;}; },[]);
 
  useEffect(()=>{
   if(!renderSince)return;
@@ -99,6 +104,16 @@ export default function Studio(){
  return <section className="card studio">
   <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
+  <section className="agentTeam">
+   <div className="studioActions"><h3>Tim Agent Lerry</h3><span className="muted">{agentSummary?agentSummary.ready+"/"+agentSummary.total+" siap":"Memeriksa agent..."}</span></div>
+   <div className="grid">
+    {agents.map(agent=><article className="card" key={agent.id}>
+     <div className="studioActions"><strong>{agent.name}</strong><span className="status">{agent.status==="ready"?"SIAP":agent.status==="optional"?"OPSIONAL":"BELUM AKTIF"}</span></div>
+     <p>{agent.engine}</p><p className="muted">{agent.detail}</p>
+     {agent.approvalRequired&&<p className="muted">Persetujuan owner wajib untuk setiap upload.</p>}
+    </article>)}
+   </div>
+  </section>
   <label htmlFor="storyPrompt">Ide cerita</label>
   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={500} placeholder="Contoh: Gimana mobil bisa berjalan? Jelaskan dengan animasi yang seru dan mudah dipahami anak-anak." rows={3}/>
   <div className="studioActions"><span className="muted">{prompt.length}/500 karakter</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"AI sedang membuat cerita...":"Buat cerita & storyboard →"}</button></div>
