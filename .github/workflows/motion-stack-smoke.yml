@@ -1,0 +1,52 @@
+name: Motion Stack Integration Test
+
+on:
+  push:
+    branches:
+      - test/motion-stack-integration
+    paths:
+      - "package.json"
+      - "src/remotion/MotionStackSmoke.tsx"
+      - "src/remotion/Root.tsx"
+      - "scripts/test-motion-stack.mjs"
+      - ".github/workflows/motion-stack-smoke.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: lerry-motion-stack-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  motion-stack:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install optional renderer packages
+        run: |
+          npm install
+          npm install --no-save gsap@3.13.0
+      - name: Test Lottie, Three.js and GSAP APIs
+        run: npm run test:motion-stack
+      - name: TypeScript validation
+        run: npm run typecheck
+      - name: Render Lottie + Three.js smoke composition
+        run: |
+          mkdir -p out/motion-stack
+          npx remotion render src/remotion/index.ts MotionStackSmokeTest out/motion-stack/motion-stack-smoke.mp4 --codec=h264 --crf=24 --concurrency=1 --gl=swangle
+          test -s out/motion-stack/motion-stack-smoke.mp4
+          ffprobe -v error -select_streams v:0 -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/motion-stack/motion-stack-smoke.mp4
+          ffmpeg -v error -i out/motion-stack/motion-stack-smoke.mp4 -f null -
+      - name: Upload smoke render proof
+        uses: actions/upload-artifact@v4
+        with:
+          name: motion-stack-smoke-proof
+          path: out/motion-stack/motion-stack-smoke.mp4
+          if-no-files-found: error
+          retention-days: 7
