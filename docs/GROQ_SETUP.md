@@ -49,10 +49,15 @@ The first version no longer requires Supabase. Owner login uses a signed, HttpOn
 
 1. Owner login.
 2. Groq creates storyboard + YouTube metadata.
-3. Server validates owner story and all spoken/subtitle excerpts.
+3. Server validates the story, scene count and Agnes-compatible clip durations.
 4. Edge TTS creates Indonesian narration; Piper is fallback.
-5. Remotion renders vertical MP4 on GitHub Actions.
-6. FFmpeg validates the MP4.
-7. Owner downloads/reviews the artifact and manually approves YouTube publishing.
+5. After explicit owner approval, GitHub Actions starts a temporary Docker instance of the MIT-licensed Agnes Video Generator.
+6. Agnes creates each 4–12 second 720p scene clip; FFmpeg crops/upscales, burns subtitles, mixes Indonesian narration and joins the clips into a vertical MP4.
+7. FFmpeg/ffprobe validates H.264, 1080x1920, 30 fps, audio and duration.
+8. Owner downloads/reviews the artifact and separately approves any YouTube publishing.
 
-GitHub Actions on public repositories can be used without a separate video-render API. Groq, GitHub and Microsoft Edge TTS/Piper availability and free quotas are external dependencies and may change.
+### Agnes AI key (required for video rendering)
+
+Create a free key at https://platform.agnes-ai.com. Add it to the GitHub repository (not Netlify) under Settings → Secrets and variables → Actions with the exact name `AGNES_API_KEY`. The render workflow injects it only into the temporary Agnes Docker container. Never commit the key or put it in a `NEXT_PUBLIC_` variable. The Agnes app is open-source MIT, but video generation depends on the provider's free shared queue; queue availability and free access can change. The temporary runner is destroyed after the render job. No Supabase or persistent Agnes server is used.
+
+Groq, Agnes, GitHub Actions, Microsoft Edge TTS/Piper and FFmpeg are external dependencies; free quotas and service availability can change.
