@@ -4,7 +4,7 @@
 Owner supplies the final story. The engine is a production crew, not a story writer. The story text is canonical and must be preserved exactly.
 
 ## Worker roles
-- **Producer/orchestrator (deterministic code):** validates the request and runs the production stages in order.
+- **Producer/orchestrator (deterministic code):** validates the request and runs the production stages in order. One click generates the storyboard and automatically dispatches the MP4 render.
 - **Storyboard + metadata worker (Groq GPT-OSS 120B):** one API call creates 4-6 timed scenes, visual prompts, sound cues, title, description, hashtags and thumbnail prompt.
 - **Story-integrity/QC worker (deterministic code):** validates exact owner story, verbatim narration/dialogue/subtitles, scene count, duration, and required fields. No second LLM judge call.
 - **Voice worker (Edge TTS):** creates Indonesian narration per scene. Piper runs as fallback if Edge generation or conversion fails.
