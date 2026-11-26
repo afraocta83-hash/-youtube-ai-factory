@@ -10,7 +10,7 @@ This repository keeps one production application and one production pipeline. Ag
 4. Visual Agent — Remotion scene compositions and the reusable character rig.
 5. Video Agent — Remotion render plus FFmpeg processing.
 6. Quality Control Agent — storyboard checks before dispatch and ffprobe/FFmpeg checks after render.
-7. Publishing Agent — YouTube Data API is a planned, approval-gated integration; automatic upload is not enabled.
+7. Publishing Agent — YouTube Data API v3 OAuth and resumable upload endpoints; each upload requires a separate owner click and defaults to Private.
 
 ## Agent status API
 
@@ -25,11 +25,11 @@ Optional hosting variables:
 - `LANGFLOW_FLOW_ID`
 - `LANGFLOW_API_KEY` (if the Langflow deployment requires authentication)
 
-The current production pipeline remains operational without these variables. The status endpoint reports Langflow as optional until both base URL and flow ID are configured. No Langflow call is made yet; connecting a live flow requires a defined flow input/output contract and an end-to-end test.
+The current production pipeline remains operational without these variables. Langflow is currently a registered optional visual editor; a live flow invocation adapter is not yet implemented.
 
 ## YouTube Publishing
 
-Publishing remains disabled until Google OAuth is implemented and tested. Required configuration for a future integration:
+OAuth and resumable-upload routes are implemented. Configure these hosting secrets to enable the Publishing Agent:
 - `YOUTUBE_CLIENT_ID`
 - `YOUTUBE_CLIENT_SECRET`
 - `YOUTUBE_REDIRECT_URI`
