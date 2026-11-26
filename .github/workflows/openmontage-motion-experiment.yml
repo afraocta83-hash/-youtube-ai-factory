@@ -51,7 +51,7 @@ jobs:
       - name: Generate a real Gemini TTS smoke sample
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_TTS_MODEL: gemini-2.5-flash-tts
+          GEMINI_TTS_MODEL: gemini-3.8-flash-tts
         run: |
           mkdir -p out
           node <<'NODE'
@@ -65,7 +65,7 @@ jobs:
               method: 'POST',
               headers: {'content-type':'application/json'},
               body: JSON.stringify({
-                contents: [{parts:[{text:'Say in Indonesian with a clear, friendly cartoon narrator voice: Halo, ini tes suara Lerry Animasi.'}]}],
+                contents: [{parts:[{text:'Halo, ini tes suara Lerry Animasi.',speechMetadata:{style:'Say in Indonesian with a clear, friendly cartoon narrator voice.'}}]}],
                 generationConfig: {
                   responseModalities: ['AUDIO'],
                   speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
