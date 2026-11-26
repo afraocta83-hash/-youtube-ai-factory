@@ -36,8 +36,8 @@ jobs:
         run: npm install
       - name: Dependency security audit
         run: |
-          npm audit --json > npm-audit.json || true
-          node -e "const a=require('./npm-audit.json'); const v=a.metadata?.vulnerabilities || {}; console.log('npm audit:', JSON.stringify(v)); for (const [name, item] of Object.entries(a.vulnerabilities || {})) console.log(item.severity.toUpperCase(), name, item.range);"
+          npm audit --audit-level=moderate
+          npm ls next postcss
       - name: TypeScript check
         run: npm run typecheck
       - name: Build Next.js application
