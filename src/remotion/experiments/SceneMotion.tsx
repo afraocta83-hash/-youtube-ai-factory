@@ -39,6 +39,7 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
   const rightArm = action === "point" ? -62 : moving ? gait * (action === "run" ? 36 : 22) : Math.sin(frame / 18 + 1) * 3;
   const mouthHeight = action === "surprised" ? 22 : 7;
   const eyeScale = action === "surprised" ? 1.35 : 1;
+  const blinkScale = Math.sin(frame / 14) > 0.985 ? 0.12 : 1;
 
   return (
     <AbsoluteFill style={{ background, overflow: "hidden", fontFamily: "Arial, sans-serif" }}>
@@ -51,13 +52,15 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
           <g>
             <path d="M220 420 Q300 390 380 420 L400 610 Q300 650 200 610Z" fill={accent} stroke="#27364a" strokeWidth="12" />
             <path d="M220 445 Q160 470 150 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${leftArm} 220 445)`} />
+            <circle cx="150" cy="540" r="16" fill="#ffd8b5" transform={`rotate(${leftArm} 220 445)`} />
             <path d="M378 445 Q440 470 450 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${rightArm} 378 445)`} />
+            <circle cx="450" cy="540" r="16" fill="#ffd8b5" transform={`rotate(${rightArm} 378 445)`} />
           </g>
           <path d="M235 590 L235 650 Q235 680 255 680 L280 680 L280 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 257 590)`} />
           <path d="M320 590 L320 650 Q320 680 340 680 L365 680 L365 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 343 590)`} />
           <path d="M220 220 Q205 95 300 88 Q395 95 385 220 L370 390 Q300 430 230 390Z" fill="#ffd8b5" stroke="#27364a" strokeWidth="12" />
           <path d="M210 220 Q188 90 300 70 Q412 88 390 220 Q365 165 310 160 Q265 205 210 220Z" fill="#27364a" />
-          <g transform={`translate(0 0) scale(1 ${eyeScale})`}>
+          <g transform={`translate(0 0) scale(1 ${eyeScale * blinkScale})`}>
             <ellipse cx="268" cy="250" rx="12" ry="17" fill="#27364a" />
             <ellipse cx="334" cy="250" rx="12" ry="17" fill="#27364a" />
           </g>
