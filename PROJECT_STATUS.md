@@ -1,74 +1,76 @@
 # Lerry Animasi — Project Status
 
 Last updated: 2026-11-26
-Current stage: experiment preview deployed; CI render pipeline passes; external-service and owner-story acceptance remain
+Current stage: Preview build passed; CI showcase passed; live external-service integration and owner-story render remain unverified
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Branch comparison at last verified audit: 83 commits ahead, 0 behind
-Main HEAD at last verified audit: `db295ed51181d8ff969fe2ebea96891b4394cb45`
-Experiment HEAD: `d6f085fa2ddc820475fd43af90cb66183ddbacb4`
+Latest reviewed experiment commit: `cdce0b7f0602b20169b36f31aafb7626444e23cf`
+Main remains isolated; no merge or Production deployment has been made.
 
 ## Safety boundary
 - All experiment changes remain isolated on `experiment/openmontage-video-engine`.
-- `main` has not been merged or changed by this work.
-- Dashboard and office visuals were not redesigned.
-- No YouTube upload or publishing was performed.
+- No merge to `main`, Production deployment, or YouTube publishing was performed.
+- Dashboard/office design was not redesigned; this pass only corrected inaccurate readiness labels.
 - No paid image/video provider was enabled.
-- No Production deployment was performed.
 
 ## Current infrastructure — verified
 - GitHub repository: https://github.com/afraocta83-hash/-youtube-ai-factory
 - Vercel project: `youtube-ai-factory`, linked to the GitHub repository.
-- Preview deployment: https://youtube-ai-factory-1mywv0k4b-afraocta83-9700.vercel.app
-- Preview deployment ID: `dpl_7FoFwPVUSsSbTBhQUmp4MjNemCfB`; state `READY`.
-- Preview was built from `experiment/openmontage-video-engine`, commit `d6f085fa2ddc820475fd43af90cb66183ddbacb4`.
-- Vercel environment metadata confirms `GITHUB_ACTIONS_TOKEN` is configured as a Secret for both Preview (branch-scoped to the experiment branch) and Production. Its value is hidden; token validity and Actions permission have not yet been tested by a real dispatch.
-- Preview has `NEXT_PUBLIC_SUPABASE_URL`.
-- Preview is missing `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` and `GEMINI_API_KEY`.
-- Production has metadata entries for `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, and `GEMINI_API_KEY`; secret values were not inspected.
-- `GEMINI_MODEL=gemini-3.8-flash` is configured for Preview and Production.
+- Latest Preview deployment: https://youtube-ai-factory-hgkt9oqf1-afraocta83-9700.vercel.app
+- Deployment ID: `dpl_AmhWXgwZtydwZMFnfV8eRjhLEHhU`; state `READY`.
+- Latest Preview built from `experiment/openmontage-video-engine`, commit `cdce0b7f0602b20169b36f31aafb7626444e23cf`.
+- Vercel build log confirms Next.js compilation, type validation, static generation, serverless function creation and deployment completion.
+- Vercel Preview environment metadata confirms:
+  - `NEXT_PUBLIC_SUPABASE_URL` exists.
+  - `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` exists, scoped to `experiment/openmontage-video-engine`.
+  - `GITHUB_ACTIONS_TOKEN` exists as a Sensitive/Secret, scoped to the experiment branch.
+  - `GEMINI_API_KEY` is still absent from Preview.
+  - `GEMINI_MODEL=gemini-3.8-flash` exists.
+- Production metadata has its own Supabase and Gemini variables. Secret values were not copied or exposed.
+- Presence of the GitHub token metadata does not prove its contents or Actions write permission; a real authenticated dispatch is still required.
 - Supabase project URL: https://ppgkyqqhthfdmvbeihvm.supabase.co
-- Supabase schema file exists at `supabase/schema.sql`; execution in Supabase SQL Editor, RLS behavior, private bucket and storage operations are not verified.
+- `supabase/schema.sql` exists, but has not been executed in Supabase. Database table, RLS and private bucket are therefore not yet verified.
 
-## CI verification
-- Latest workflow run: [run #65](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45833196730).
-- Run #65 completed successfully on commit `d6f085fa2ddc820475fd43af90cb66183ddbacb4`.
-- Passed: checkout, Node setup, dependency installation/audit, TypeScript, Next.js build, QC and storyboard smoke tests, deterministic local audio fixture, Remotion composition checks, five-action motion showcase render, FFmpeg installation, MP4 validation and artifact upload.
-- Important limitation: run #65 uses a deterministic local PCM audio fixture for CI. It does not prove live per-scene Gemini TTS is working in the current render workflow.
-- Earlier live TTS/storyboard testing and an earlier rendered MP4 are recorded in prior project history; the latest multi-scene TTS workflow still needs a fresh live run and artifact inspection.
-- Motion showcase artifact from earlier run: `lerry-openmontage-motion-showcase`, ID `15122602232`, expires 2026-12-03. Its vector environments and 2D rig are proof-of-concept, not final animation quality.
+## CI and Preview verification
+- Latest GitHub Actions run: [run #65](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45833196730), successful.
+- Passed: dependency audit, TypeScript, Next.js build, QC/storyboard smoke checks, deterministic local audio fixture, Remotion composition checks, five-action showcase render, FFmpeg MP4 validation and artifact upload.
+- Run #65's audio fixture is deterministic CI audio. It does not verify current live per-scene Gemini TTS or the dashboard-to-GitHub dispatch path.
+- Latest Vercel Preview commit `cdce0b7` compiled successfully, passed type checking and completed deployment; deployment state is `READY`.
+- The Preview UI was previously fetched successfully. The latest deployment could not be fetched by the inspection connector because Vercel Authentication returned an SSO redirect; do not claim a full browser/UI acceptance test from this.
+- This pass corrected static dashboard labels that previously implied Gemini and YouTube integrations were active. They now show verification/approval-gated states.
 
 ## Render pipeline architecture
 - `.github/workflows/render-short.yml` accepts a production JSON payload through `workflow_dispatch`.
-- Workflow QC requires the owner story and script to match exactly, 4–10 scenes, 15–60 seconds, image prompts, and narration/dialogue/subtitles quoted verbatim from the owner's story.
-- Workflow requests per-scene Indonesian narration from Gemini TTS using `GEMINI_API_KEY`, writes scene WAV files, renders with Remotion and validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
-- Output artifact name: `lerry-animasi-short`, retained for 7 days.
-- `app/api/render/route.ts` validates a Supabase owner session, reads the server-side `GITHUB_ACTIONS_TOKEN`, and dispatches the workflow on the experiment branch.
-- `app/api/produce/route.ts` generates storyboard/metadata while preserving the exact owner story and rejecting invented spoken/subtitle text.
-- `src/remotion/SceneBackdrop.tsx` uses deterministic vector backdrops (library, treasure/chest, nature, room, city and fallback); it does not yet generate unique AI scene artwork.
-- `src/remotion/CharacterRig.tsx` is a stylized code-drawn 2D character rig with secondary motion, blinking, anticipation and walk/run travel; it is not full 3D animation or production-grade acting.
-- Subtitle reveal is estimated from audio duration, not phoneme-level forced alignment. Lip-sync is not implemented.
+- Workflow QC requires exact equality of owner story and script, 4–10 scenes, 15–60 seconds, image prompts, and narration/dialogue/subtitles quoted verbatim from the owner story.
+- Workflow calls Gemini TTS per scene using the GitHub Actions secret `GEMINI_API_KEY`, creates WAV files, renders with Remotion, then validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
+- Output artifact: `lerry-animasi-short`, retained for 7 days.
+- `app/api/render/route.ts` validates a Supabase owner session, reads server-side `GITHUB_ACTIONS_TOKEN`, then dispatches the workflow on the experiment branch.
+- `app/api/produce/route.ts` requires `GEMINI_API_KEY`, generates storyboard/metadata, preserves exact owner story, and rejects invented spoken/subtitle text.
+- `src/remotion/SceneBackdrop.tsx` uses deterministic vector backdrops; it does not create unique AI scene artwork.
+- `src/remotion/CharacterRig.tsx` is a stylized code-drawn 2D rig, not production-grade 3D character animation.
+- Subtitle reveal is estimated from audio duration; phoneme alignment and lip-sync are not implemented.
 
-## Remaining blockers
-1. Add the Supabase publishable key to the Preview environment. It is a browser-safe public key, unlike server secrets.
-2. Decide whether to add a Gemini API key to Preview. Do not copy or expose a Production secret automatically; confirm the intended key and free/paid usage constraints first.
-3. Verify the GitHub repository Actions secret `GEMINI_API_KEY` exists and is usable by the live render workflow. The CI fixture run does not prove this.
-4. Execute `supabase/schema.sql` in the intended Supabase project, then test owner login, RLS, save/read and private storage.
-5. Redeploy Preview after required environment variables are configured; existing deployments do not automatically receive newly added environment values.
-6. Run a real dispatch from the Preview dashboard with a final story supplied and approved by the owner. Verify GitHub accepts the token and workflow dispatch, then inspect the MP4 artifact.
-7. Improve scene-specific visuals, character acting, subtitle timing and visual QC after the first owner-approved end-to-end render.
-8. YouTube publishing remains manual and approval-gated.
+## Remaining blockers before acceptance
+1. Configure `GEMINI_API_KEY` for Preview only after owner confirms the intended key and accepts any possible API usage/cost. Without it, storyboard generation in Preview returns a service-unavailable response.
+2. Verify that GitHub repository secret `GEMINI_API_KEY` exists and is usable by the live render workflow. CI fixture audio does not prove this.
+3. Execute `supabase/schema.sql` in the intended Supabase project, then test email OTP login, RLS, save/read and private storage.
+4. Verify `GITHUB_ACTIONS_TOKEN` by a real dispatch using an authenticated owner session. Do not use a fake owner story as final acceptance.
+5. Use an owner-supplied final story for the first end-to-end render; inspect narration, timing, visual continuity, codec, dimensions, duration and full MP4 decode.
+6. Improve visual specificity, character acting, subtitle timing and QC after owner review.
+7. YouTube upload remains manual and approval-gated.
 
 ## Next task queue
-- [x] Verify Vercel Git integration and a READY Preview deployment.
-- [x] Verify latest CI run #65 and its MP4 showcase pipeline.
-- [x] Register `GITHUB_ACTIONS_TOKEN` as a Secret in Preview and Production metadata.
-- [x] Update this status file to match the current infrastructure and known blockers.
-- [ ] Configure the missing Preview Supabase publishable key.
-- [ ] Complete Supabase SQL/auth/storage setup.
-- [ ] Verify GitHub Actions token by a real, owner-approved dispatch.
-- [ ] Verify live per-scene TTS and inspect the resulting Shorts MP4.
-- [ ] Obtain owner acceptance before any merge, Production deployment or YouTube publishing.
+- [x] Confirm GitHub/Vercel repository connection and READY Preview.
+- [x] Confirm CI run #65 passed and uploaded its showcase artifact.
+- [x] Register `GITHUB_ACTIONS_TOKEN` as a Preview Secret.
+- [x] Add the Supabase publishable key to the experiment Preview environment.
+- [x] Redeploy after the Preview key was added.
+- [x] Correct misleading static readiness labels in the dashboard.
+- [ ] Configure Preview Gemini API key with owner approval.
+- [ ] Execute Supabase schema and test auth/RLS/storage.
+- [ ] Verify authenticated GitHub Actions dispatch and live per-scene TTS.
+- [ ] Render and inspect an owner-approved final story.
+- [ ] Obtain separate authorization before merge, Production deployment or YouTube publishing.
 
 ## Acceptance rule
-A feature is not complete because code exists. It is complete only when its workflow ran, output artifact exists, and the artifact passes the relevant inspection. `Built ≠ Tested ≠ Accepted ≠ Released`.
+A feature is not complete because code exists. It is complete only when its workflow ran, output artifact exists, and the artifact passes relevant inspection. `Built ≠ Tested ≠ Accepted ≠ Released`.
