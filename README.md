@@ -14,7 +14,7 @@ This repository turns owner-authored Indonesian stories into short vertical cart
 2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side Vercel Secret with Actions: write permission.
 3. Open the Preview app, sign in with the owner password, and paste the final story.
 4. Generate the storyboard and inspect the locked story, narration, subtitles and metadata.
-5. Press **Render MP4 otomatis**.
+5. Press **Produksi Shorts otomatis**. Storyboard, TTS and MP4 render are dispatched automatically in one production run.
 6. Open GitHub Actions and download the `lerry-animasi-short` artifact when the render completes.
 7. Review the MP4 and metadata before publishing manually to YouTube.
 
