@@ -1,6 +1,6 @@
 ---
 name: lerry-shorts-production
-description: Produce owner-authored Indonesian animated YouTube Shorts in the existing LERRY ANIMASI factory. Use for storyboard, visual planning, narration, Remotion composition, render validation and quality control. Never write or rewrite the owner's story.
+description: Produce idea-first Indonesian animated YouTube Shorts in the existing LERRY ANIMASI factory. AI writes story, storyboard and production plan; owner reviews before render and approves before publishing.
 ---
 
 # LERRY ANIMASI — Shorts Production Skill
@@ -8,8 +8,8 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
 ## Non-negotiable project rules
 
 - This project makes YouTube Shorts only: vertical 9:16, 1080x1920, 30 fps, 15–60 seconds.
-- The owner supplies the final story. Preserve the story, plot order, dialogue, facts and ending. AI is a production crew, not the story author.
-- Do not invent missing plot events or dialogue. If the supplied story cannot fit 15–60 seconds without cutting or rewriting, stop and ask the owner which material to prioritize.
+- The owner supplies only a short idea/topic. AI writes an original story, dialogue, narration, storyboard and metadata.
+- Keep the generated plot, dialogue, narration and subtitles internally consistent. Avoid unsupported facts and protected characters/works.
 - Never upload or schedule to YouTube. The owner must inspect the MP4 and explicitly approve any publishing step.
 - Free-first. Do not add paid providers, billing, credits, subscriptions or new API keys without explicit owner approval.
 - Work inside the existing Next.js + Remotion project. Do not replace the renderer or introduce a second video engine.
@@ -23,9 +23,9 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
    - Any proposed adaptation must be shown to the owner for approval; never silently rewrite it.
 
 2. **Storyboard**
-   - Use the Groq GPT-OSS 120B endpoint once to divide the locked story into 4–6 scenes. Request strict JSON Schema, low reasoning effort, and cap completion tokens at 3,200.
+   - Use the Groq GPT-OSS 120B endpoint once to create the story and divide it into 4–6 scenes. Request strict JSON Schema, low reasoning effort, and cap completion tokens at 4,200.
    - Total scene duration must be 15–60 seconds.
-   - Each scene needs: purpose, visual direction, camera/motion direction, narration/dialogue copied from the story, subtitle copied from the story, sound cue and image prompt.
+   - Each scene needs: purpose, visual direction, camera/motion direction, narration/dialogue consistent with the generated story, subtitle aligned with each scene, sound cue and image prompt.
    - Do not add facts. Mark visual interpretation separately from story facts.
    - Check that every scene follows the original story order.
 
@@ -50,7 +50,7 @@ description: Produce owner-authored Indonesian animated YouTube Shorts in the ex
    - Calculate total frames from validated scene durations; never rely on a fixed placeholder duration.
 
 6. **Pre-render quality gate**
-   - Run structural QC before rendering: story present, 4–6 scenes, 15–60 seconds, scene order, narration/subtitle presence, valid visual prompts, title/description, and no unsupported factual claims.
+   - Run structural QC before rendering: generated story present, 4–6 scenes, 15–60 seconds, narration/dialogue presence, valid visual prompts, title/description, and no unsupported factual claims. Require explicit owner approval before render dispatch.
    - Render still frames for the opening, middle of each scene, scene cuts and ending.
    - Inspect the stills for blank frames, missing assets, text overflow, safe-area violations, character inconsistency, visual repetition and abrupt transitions.
    - Stop the full render on critical issues. Record warnings; do not mark a warning as passed.
