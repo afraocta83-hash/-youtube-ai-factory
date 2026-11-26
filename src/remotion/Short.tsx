@@ -27,11 +27,9 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
   const frame = useCurrentFrame();
   const colors = palette[index % palette.length];
   const scale = interpolate(frame, [0, scene.seconds * 30], [0.94, 1.04], { extrapolateRight: "clamp" });
-  const caption = scene.subtitle || scene.dialogue || scene.narration || "";
-  const words = caption.trim().split(/\s+/).filter(Boolean);
-  const speechFrames = Math.max(1, Math.round((scene.voiceDurationSeconds || scene.seconds) * 30));
-  const visibleWords = Math.min(words.length, Math.max(1, Math.ceil((frame / speechFrames) * words.length)));
-  const syncedCaption = words.slice(0, visibleWords).join(" ");
+  // Scene-level subtitle stays visible for its matching narration segment.
+  // Do not simulate word timing without word-level timestamps from the TTS engine.
+  const syncedCaption = (scene.subtitle || scene.dialogue || scene.narration || "").trim();
   return (
     <AbsoluteFill style={{ background: colors[0], overflow: "hidden", color: "white" }}>
       <SceneBackdrop description={[scene.visual, scene.imagePrompt].filter(Boolean).join(" " ) || "Adegan cerita"} index={index} />
