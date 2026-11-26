@@ -13,6 +13,17 @@ Main remains isolated; no merge or Production deployment has been made.
 - Dashboard/office design was not redesigned; this pass only corrected inaccurate readiness labels.
 - No paid image/video provider was enabled.
 
+## FreeLLM integration — code added, service not yet connected
+
+- Added an OpenAI-compatible FreeLLM provider path to `app/api/produce/route.ts`.
+- FreeLLM is preferred when `FREELLM_BASE_URL` is configured; Gemini remains a fallback when its key exists.
+- Added `FREELLM_BASE_URL`, optional `FREELLM_API_KEY`, and `FREELLM_MODEL=free-smart` to `.env.example`.
+- Added `docs/FREELLM_SETUP.md` with deployment and Vercel Preview configuration steps.
+- Upstream project reviewed: https://github.com/Devansh-365/freellm (MIT). It is gateway software, not a free shared API key.
+- **Not yet connected/tested:** no FreeLLM gateway URL or upstream provider credentials have been configured. The gateway must be deployed separately and supplied with provider credentials the owner controls. No public GitHub secrets were copied.
+- FreeLLM currently covers storyboard generation only. The GitHub Actions render workflow still separately requires a Gemini TTS secret for per-scene narration.
+- No Production deployment or merge to `main`.
+
 ## Current infrastructure — verified
 - GitHub repository: https://github.com/afraocta83-hash/-youtube-ai-factory
 - Vercel project: `youtube-ai-factory`, linked to the GitHub repository.
