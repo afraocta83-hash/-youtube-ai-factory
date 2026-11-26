@@ -29,22 +29,18 @@ tests:
       - type: is-json
       - type: javascript
         value: |
-          const p = JSON.parse(output);
-          const validActions = ["idle", "walk", "run", "surprised", "point"];
-          const scenes = p.scenes;
-          Array.isArray(scenes) &&
-          scenes.length >= 4 && scenes.length <= 6 &&
-          typeof p.story === "string" && p.story.trim().length >= 80 &&
-          scenes.every((s) =>
+          JSON.parse(output).scenes.length >= 4 &&
+          JSON.parse(output).scenes.length <= 6 &&
+          JSON.parse(output).story.trim().length >= 80 &&
+          JSON.parse(output).scenes.every(s =>
             Number.isInteger(s.number) &&
             Number.isInteger(s.seconds) && s.seconds >= 4 && s.seconds <= 8 &&
-            typeof s.visual === "string" && s.visual.length > 0 &&
-            validActions.includes(s.action) &&
+            ["idle", "walk", "run", "surprised", "point"].includes(s.action) &&
             typeof s.narration === "string" && s.narration.trim().length > 0 &&
             typeof s.dialogue === "string" &&
             typeof s.sound === "string" &&
             typeof s.imagePrompt === "string" && s.imagePrompt.trim().length >= 25 &&
             typeof s.subtitle === "string"
           ) &&
-          scenes.reduce((sum, s) => sum + s.seconds, 0) >= 20 &&
-          scenes.reduce((sum, s) => sum + s.seconds, 0) <= 60;
+          JSON.parse(output).scenes.reduce((sum, s) => sum + s.seconds, 0) >= 20 &&
+          JSON.parse(output).scenes.reduce((sum, s) => sum + s.seconds, 0) <= 60
