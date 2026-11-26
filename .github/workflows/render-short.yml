@@ -1,6 +1,14 @@
 name: Render Lerry Shorts Factory
 
 on:
+  push:
+    branches:
+      - fix/lerry-end-to-end-production
+    paths:
+      - 'app/**'
+      - 'src/remotion/**'
+      - '.github/workflows/render-short.yml'
+      - 'fixtures/e2e-test-story.json'
   workflow_dispatch:
     inputs:
       production_json:
@@ -53,7 +61,9 @@ jobs:
         run: |
           node <<'NODE'
           const fs=require('fs');
-          const p=JSON.parse(process.env.PRODUCTION_JSON);
+          const raw=process.env.PRODUCTION_JSON||fs.readFileSync('fixtures/e2e-test-story.json','utf8');
+          const p=JSON.parse(raw);
+          if(process.env.GITHUB_EVENT_NAME==='push') console.log('RUNNING NON-PRODUCTION E2E TEST FIXTURE');
           if(!p.ownerStory||p.script!==p.ownerStory) throw new Error('Cerita hasil AI tidak cocok dengan naskah produksi.');
           if(p.script.trim().length<80) throw new Error('Cerita terlalu pendek.');
           if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error('Storyboard harus 4-6 adegan.');
@@ -73,13 +83,11 @@ jobs:
           console.log('OWNER-APPROVED PACKAGE QC PASS',{scenes:p.scenes.length,total});
           NODE
       - name: Generate Indonesian narration with Edge TTS and Piper fallback
-        env:
-          PRODUCTION_JSON: ${{ inputs.production_json }}
         run: |
           node <<'NODE'
           const fs=require('fs');
           const cp=require('child_process');
-          const p=JSON.parse(process.env.PRODUCTION_JSON);
+          const p=JSON.parse(fs.readFileSync('production.json','utf8'));
           const model='.cache/piper/id_ID-news_tts-medium.onnx';
           const run=(cmd,args,opts={})=>cp.spawnSync(cmd,args,{encoding:'utf8',...opts});
           const fail=(label,r)=>{throw new Error(label+': '+(r.error?.message||r.stderr||r.stdout||r.status));};
@@ -223,9 +231,10 @@ jobs:
       - name: Upload finished Shorts
         uses: actions/upload-artifact@v4
         with:
-          name: lerry-animasi-short
+          name: ${{ github.event_name == 'push' && 'lerry-e2e-fixture' || 'lerry-animasi-short' }}
           path: |
             out/lerry-animasi-short.mp4
+            production.json
             out/thumbnail.jpg
             out/youtube-metadata.json
             out/production-qc.json
