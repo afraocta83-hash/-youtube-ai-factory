@@ -13,8 +13,8 @@ export const SceneBackdrop: React.FC<SceneBackdropProps> = ({ description, index
     /sekolah|kelas|guru|murid|papan tulis/.test(text) ? "school" :
     /perpustakaan|rak buku|buku|ruang baca/.test(text) ? "library" :
     /peti|kotak|harta|foto|album|kunci/.test(text) ? "treasure" :
+    /jalan|kota|mobil|kendaraan|pasar|toko/.test(text) ? "city" :
     /taman|pohon|hutan|kebun|bunga|rumput|sungai|pantai|gunung/.test(text) ? "nature" :
-        /jalan|kota|mobil|kendaraan|pasar|toko/.test(text) ? "city" : "dream";
     /rumah|kamar|loteng|dapur|ruang|kantor|gedung/.test(text) ? "room" : "dream";
   const drift = interpolate(frame % 240, [0, 239], [-10, 10]);
   const palettes = [
