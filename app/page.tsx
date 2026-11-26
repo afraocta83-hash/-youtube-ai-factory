@@ -6,7 +6,7 @@ const modules = [
  {title:"Voice & subtitle",detail:"Edge TTS Bahasa Indonesia sebagai utama dan Piper offline sebagai fallback. Narasi dan subtitle disusun AI dari cerita yang dihasilkan.",status:"Mesin TTS lulus uji"},
  {title:"Render MP4 Shorts",detail:"Remotion dan GitHub Actions merender video vertikal H.264 1080 × 1920, 30 fps, durasi 15-60 detik.",status:"Showcase MP4 lulus QC"},
  {title:"Quality control",detail:"Kode memeriksa struktur cerita, jumlah adegan, durasi, audio, codec, resolusi, FPS dan decode.",status:"Validasi deterministik"},
- {title:"Riwayat & keamanan owner",detail:"Login satu password owner. Maksimal 10 storyboard terakhir disimpan lokal di browser perangkat ini; tidak memakai database cloud.",status:"Tanpa Supabase"},
+ {title:"Riwayat lokal",detail:"Maksimal 10 storyboard terakhir disimpan di browser perangkat ini; tidak memakai database cloud.",status:"Tanpa Supabase"},
  {title:"YouTube publishing",detail:"Upload tetap manual agar owner menyetujui hasil video dan metadata sebelum dipublikasikan.",status:"Persetujuan owner"}
 ];
 export default function Home(){
