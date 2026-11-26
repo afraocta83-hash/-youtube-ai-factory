@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isOwnerRequest } from "../../../../lib/owner-auth";
+import { isOwnerRequest } from "../../../lib/owner-auth";
 
 export const runtime = "nodejs";
 
