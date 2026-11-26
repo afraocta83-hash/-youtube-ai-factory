@@ -32,6 +32,7 @@ export default function Studio(){
     const res=await fetch(`/api/render?since=${renderSince}`,{cache:"no-store"});
     const data=await res.json();
     if(!active)return;
+    if(!res.ok){setError(data.error||"Tidak dapat memeriksa status render.");if(timer)clearInterval(timer);return;}
     if(data.runUrl)setRenderRunUrl(data.runUrl);
     if(data.state==="success"&&data.downloadUrl){
      setArtifactUrl(data.downloadUrl);
