@@ -297,7 +297,10 @@ Working branch: `fix/lerry-end-to-end-production`. No changes to `main`, product
 - Build-check run #96: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45903650829 — TypeScript, Next.js production build and Remotion smoke render passed.
 - Build-check run for owner-story API and pre-render QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342657 — passed.
 - E2E render for the owner-story API/QC commit: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904342569 — passed.
-- Latest visual differentiation and exact ordered-narration fixture validations have separate Actions runs pending at the time this status note was written; do not treat those later changes as verified until their runs complete.
+- Final exact-story E2E run #22: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904641904 — passed the story-lock check, ordered verbatim narration, subtitle excerpts, Edge TTS for all four scenes, Remotion render, MP4 validation, full decode, contact sheet, thumbnail, metadata, QC report and artifact upload.
+- Final build-check run #113: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45904641975 — TypeScript, Next.js production build and Remotion smoke render passed. Promptfoo live model evaluation was skipped because the GitHub Actions Groq secret is not configured.
+- Final E2E artifact ID: `15156738934`, name `lerry-e2e-fixture`, size 2.85 MB, retained until 2026-12-03 22:26 UTC. The downloaded MP4 was independently inspected: H.264/AAC, 1080x1920, yuv420p, 30 fps, 31.019 seconds; full FFmpeg decode passed.
+- Per-scene Edge TTS durations: 5.33s, 4.42s, 7.49s and 11.74s. The renderer expanded scene lengths to 6s, 5s, 8s and 12s respectively, avoiding clipped narration.
 
 ## Still not proven
 - Live Groq/ Langflow request from the deployed studio through the owner-story validator. GitHub Actions has no `GROQ_API_KEY` secret, so Promptfoo's optional live model evaluation is skipped. The workflow fixture proves the production package-to-MP4 leg, not a live LLM response.
