@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { runLangflow } from "@/lib/agents/langflow";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -35,7 +36,8 @@ export async function POST(request: Request) {
   const last = recentRequests.get(ip);
   if (last && now - last < 15 * 1000) return NextResponse.json({error:"Tunggu 15 detik sebelum membuat cerita berikutnya."},{status:429});
   const apiKeys = [...new Set([process.env.GROQ_API_KEY,process.env.GROQ_API_KEY2,process.env.GROQ_API_KEY3].map(k=>k?.trim()).filter((k):k is string=>Boolean(k)))];
-  if (!apiKeys.length) return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret pada hosting Preview." }, { status: 503 });
+  const langflowConfigured = Boolean(process.env.LANGFLOW_BASE_URL && process.env.LANGFLOW_FLOW_ID);
+  if (!apiKeys.length && !langflowConfigured) return NextResponse.json({ error: "Pasang GROQ_API_KEY atau konfigurasi LANGFLOW_BASE_URL dan LANGFLOW_FLOW_ID." }, { status: 503 });
 
   try {
     const body = await request.json();
@@ -56,16 +58,32 @@ export async function POST(request: Request) {
     ].join("\n\n");
 
     const requestBody = JSON.stringify({ model, messages:[{role:"user",content:prompt}], response_format:{type:"json_schema",json_schema:{name:"lerry_shorts_production",strict:true,schema:productionSchema}}, reasoning_effort:"low", include_reasoning:false, temperature:0.7, max_completion_tokens:4200, stream:false });
-    let response: Response | null=null, data:any=null;
-    for (const [i,key] of apiKeys.entries()) {
-      response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)});
-      data=await response.json();
-      if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
+    let raw: string | null = null;
+    let provider = "groq";
+    let data: any = null;
+    if (langflowConfigured) {
+      try {
+        raw = await runLangflow(prompt);
+        provider = "langflow";
+      } catch (error) {
+        if (!apiKeys.length) throw error;
+        console.warn("Langflow gagal; menggunakan Groq fallback:", error instanceof Error ? error.message : "unknown");
+      }
     }
-    if(!response) return NextResponse.json({error:"Tidak ada key Groq yang dapat digunakan."},{status:503});
-    if(!response.ok) return NextResponse.json({error:response.status===429?"Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi.":`Groq gagal membuat cerita: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
-    const choice=data?.choices?.[0], raw=choice?.message?.content;
-    if(choice?.finish_reason==="length") return NextResponse.json({error:"Batas token tercapai. Coba ide yang lebih sederhana."},{status:502});
+    if (!raw) {
+      let response: Response | null = null;
+      for (const [i,key] of apiKeys.entries()) {
+        response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)});
+        data=await response.json();
+        if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
+      }
+      if(!response) return NextResponse.json({error:"Tidak ada provider AI yang dapat digunakan."},{status:503});
+      if(!response.ok) return NextResponse.json({error:response.status===429?"Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi.":`Groq gagal membuat cerita: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
+      const choice=data?.choices?.[0];
+      if(choice?.finish_reason==="length") return NextResponse.json({error:"Batas token tercapai. Coba ide yang lebih sederhana."},{status:502});
+      raw=choice?.message?.content;
+    }
+    if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Provider AI tidak mengembalikan JSON produksi."},{status:502});
     if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Groq tidak mengembalikan JSON produksi."},{status:502});
 
     const p=JSON.parse(raw);
@@ -82,7 +100,7 @@ export async function POST(request: Request) {
     p.idea=idea; p.script=p.story; p.ownerStory=p.story; p.durationSeconds=total;
     p.qcChecklist=["Ide owner dikembangkan menjadi cerita baru oleh AI.","Alur cerita, dialog, dan narasi konsisten antaradegan.","Jumlah adegan 4-6 dan durasi 20-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
     recentRequests.set(ip, now);
-    return NextResponse.json({ok:true,provider:"groq",model,usage:data?.usage||null,production:p});
+    return NextResponse.json({ok:true,provider,model:provider==="groq"?model:"Langflow Flow",usage:data?.usage||null,production:p});
   } catch(error) {
     return NextResponse.json({error:error instanceof Error?error.message:"Terjadi kesalahan saat membuat cerita."},{status:502});
   }
