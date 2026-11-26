@@ -8,11 +8,14 @@ export const SceneBackdrop: React.FC<SceneBackdropProps> = ({ description, index
   const frame = useCurrentFrame();
   const text = description.toLowerCase();
   const kind =
-    /perpustakaan|perpustakaan|rak buku|buku|ruang baca/.test(text) ? "library" :
+    /luar angkasa|planet|roket|astronaut|galaksi|bintang/.test(text) ? "space" :
+    /bengkel|mesin|perkakas|montir|garasi/.test(text) ? "workshop" :
+    /sekolah|kelas|guru|murid|papan tulis/.test(text) ? "school" :
+    /perpustakaan|rak buku|buku|ruang baca/.test(text) ? "library" :
     /peti|kotak|harta|foto|album|kunci/.test(text) ? "treasure" :
+    /jalan|kota|mobil|kendaraan|pasar|toko/.test(text) ? "city" :
     /taman|pohon|hutan|kebun|bunga|rumput|sungai|pantai|gunung/.test(text) ? "nature" :
-    /rumah|kamar|loteng|dapur|ruang|sekolah|kantor|gedung/.test(text) ? "room" :
-    /jalan|kota|mobil|kendaraan|pasar|toko/.test(text) ? "city" : "dream";
+    /rumah|kamar|loteng|dapur|ruang|kantor|gedung/.test(text) ? "room" : "dream";
   const drift = interpolate(frame % 240, [0, 239], [-10, 10]);
   const palettes = [
     ["#b8e0d2", "#f1faee", "#39795b"],
@@ -59,6 +62,50 @@ export const SceneBackdrop: React.FC<SceneBackdropProps> = ({ description, index
       {kind === "city" && <>
         {[70,250,460,680,880].map((x,i)=><g key={i}><rect x={x} y={790-i%2*160} width="150" height={760+i%2*160} rx="16" fill={i%2?"#6c7a89":"#8d99ae"} opacity=".72"/>{Array.from({length:5},(_,j)=><rect key={j} x={x+25} y={850+j*115-i%2*160} width="30" height="48" fill="#fff3b0" opacity=".8"/>)}</g>)}
         <path d="M0 1540 H1080 V1920 H0Z" fill="#495867" opacity=".65"/>
+{/(mobil|kendaraan|motor|sepeda)/.test(text) && <>
+          <path d="M130 1510 L190 1370 Q220 1320 280 1320 H700 Q760 1320 800 1380 L900 1510 V1630 H130Z" fill="#e76f51" stroke="#343a40" strokeWidth="24" strokeLinejoin="round"/>
+          <path d="M280 1340 L360 1220 H650 L740 1340Z" fill="#90e0ef" stroke="#343a40" strokeWidth="20"/>
+          <circle cx="300" cy="1630" r="76" fill="#202124" stroke="#fff" strokeWidth="18"/><circle cx="740" cy="1630" r="76" fill="#202124" stroke="#fff" strokeWidth="18"/>
+        </>}
+        {/(terparkir|parkir)/.test(text) && <>
+          <rect x="865" y="1040" width="110" height="170" rx="18" fill="#277da1" stroke="#fff" strokeWidth="14"/>
+          <text x="920" y="1155" fontSize="100" fontWeight="bold" textAnchor="middle" fill="#fff">P</text>
+        </>}
+        {/(melaju|bergerak|roda berputar)/.test(text) && <>
+          {[0,1,2,3].map(n=><path key={n} d={`M${45+n*24} ${1320+n*55} H${175+n*20}`} stroke="#fff" strokeWidth="18" strokeLinecap="round" opacity=".75"/>)}
+        </>}
+        {/(rem|berhenti|zebra|persimpangan)/.test(text) && <>
+          {[0,1,2,3,4,5].map(n=><path key={n} d={`M${100+n*145} 1690 h80 l-24 120 h-80Z`} fill="#fff" opacity=".85"/>)}
+          <rect x="860" y="790" width="86" height="280" rx="26" fill="#202124" stroke="#fff" strokeWidth="14"/>
+          <circle cx="903" cy="850" r="25" fill="#e63946"/><circle cx="903" cy="930" r="25" fill="#f4d35e"/><circle cx="903" cy="1010" r="25" fill="#2a9d8f"/>
+        </>}
+      </>}
+      {kind === "workshop" && <>
+        <path d="M0 1480 H1080 V1920 H0Z" fill="#8d6e63" opacity=".5"/>
+        <rect x="90" y="520" width="900" height="760" rx="24" fill="#d9e2ec" stroke="#52616b" strokeWidth="22"/>
+        <path d="M130 1320 H950" stroke="#52616b" strokeWidth="34"/>
+        <rect x="210" y="1110" width="660" height="210" rx="22" fill="#795548" stroke="#4e342e" strokeWidth="18"/>
+        <circle cx="540" cy="930" r="150" fill="#adb5bd" stroke="#495057" strokeWidth="34"/>
+        <circle cx="540" cy="930" r="55" fill="#6c757d" stroke="#343a40" strokeWidth="18"/>
+        {[0,1,2,3,4,5,6,7].map((n)=><path key={n} d="M540 780 V850" stroke="#495057" strokeWidth="34" strokeLinecap="round" transform={`rotate(${n*45} 540 930)`}/>)}
+        <rect x="140" y="650" width="130" height="300" rx="18" fill="#e9c46a" stroke="#6c584c" strokeWidth="18"/>
+        <rect x="810" y="650" width="130" height="300" rx="18" fill="#e9c46a" stroke="#6c584c" strokeWidth="18"/>
+      </>}
+      {kind === "school" && <>
+        <path d="M0 1480 H1080 V1920 H0Z" fill="#c9a77c" opacity=".5"/>
+        <rect x="110" y="520" width="860" height="610" rx="28" fill="#2a9d8f" stroke="#fff" strokeWidth="26"/>
+        <path d="M190 650 H780 M190 760 H690 M190 870 H820" stroke="#f1faee" strokeWidth="20" strokeLinecap="round" opacity=".85"/>
+        <rect x="180" y="1260" width="720" height="80" rx="20" fill="#8d6e63"/>
+        <path d="M250 1340 V1580 M830 1340 V1580" stroke="#6d4c41" strokeWidth="34"/>
+      </>}
+      {kind === "space" && <>
+        <circle cx="820" cy="500" r="180" fill="#f4a261" opacity=".9"/>
+        <ellipse cx="820" cy="500" rx="270" ry="70" fill="none" stroke="#e9c46a" strokeWidth="28" transform="rotate(-20 820 500)"/>
+        {Array.from({length:24},(_,i)=><circle key={i} cx={(i*173+70)%1080} cy={(i*293+180)%1300} r={5+(i%4)*3} fill="#fff" opacity=".9"/>)}
+        <path d="M300 1450 Q220 1280 300 1110 Q380 1280 300 1450Z" fill="#e0e1dd" stroke="#adb5bd" strokeWidth="18"/>
+        <path d="M300 1110 L260 1210 H340Z" fill="#e76f51"/>
+        <path d="M250 1360 L190 1460 L270 1430 M350 1360 L410 1460 L330 1430" fill="#e76f51" stroke="#e76f51" strokeWidth="18"/>
+        <circle cx="300" cy="1270" r="38" fill="#457b9d" stroke="#343a40" strokeWidth="12"/>
       </>}
       {kind === "dream" && <>
         <circle cx="260" cy="900" r="260" fill="#fff" opacity=".2"/><circle cx="850" cy="1200" r="360" fill="#fff" opacity=".18"/>

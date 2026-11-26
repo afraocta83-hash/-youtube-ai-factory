@@ -4,53 +4,60 @@ import { Easing, interpolate, useCurrentFrame } from "remotion";
 export type CharacterAction = "idle" | "walk" | "run" | "surprised" | "point";
 export type CharacterRigProps = { action?: CharacterAction; accent?: string; travelAcross?: boolean };
 
-/** Frame-deterministic 2D rig with secondary motion, blinking, breathing and anticipation. */
-export const CharacterRig: React.FC<CharacterRigProps> = ({ action = "idle", accent = "#ffb347", travelAcross = false }) => {
+/**
+ * Lerry's locked mascot: round white head, no nose, expressive eyes/brows,
+ * slim stick body, blue shirt, black limbs/hands/feet and bold outline.
+ * Only pose and facial expression may vary between scenes.
+ */
+export const CharacterRig: React.FC<CharacterRigProps> = ({ action = "idle", accent = "#1677d2", travelAcross = false }) => {
   const frame = useCurrentFrame();
   const cycle = frame % 90;
   const moving = action === "walk" || action === "run";
   const speed = action === "run" ? 2.8 : 7;
-  const stride = action === "run" ? 10 : 13;
   const gait = moving ? Math.sin(frame / speed) : 0;
-  const breathing = Math.sin(frame / 24) * 2.2;
-  const bob = Math.sin(frame / (action === "run" ? 2.8 : 7)) * (action === "idle" ? 3 : moving ? 9 : 5) + breathing;
-  const anticipation = action === "surprised" ? interpolate(frame % 45, [0, 8, 45], [0, -9, 0], { extrapolateRight: "clamp" }) : 0;
+  const bob = Math.sin(frame / (action === "run" ? 2.8 : 7)) * (action === "idle" ? 2 : moving ? 8 : 4);
+  const anticipation = action === "surprised" ? interpolate(frame % 45, [0, 8, 45], [0, -8, 0], { extrapolateRight: "clamp" }) : 0;
   const travel = !travelAcross ? 0 : action === "walk"
     ? interpolate(cycle, [0, 89], [-42, 42], { easing: Easing.inOut(Easing.sin) })
     : action === "run"
-      ? interpolate(cycle, [0, 89], [-86, 86], { easing: Easing.inOut(Easing.sin) }) : 0;
-  const lean = action === "run" ? 10 : action === "point" ? -3 : action === "walk" ? Math.sin(frame / speed) * 4 : 0;
-  const leftLeg = moving ? gait * stride : Math.sin(frame / 28) * 1.5;
-  const rightLeg = moving ? -gait * stride : -Math.sin(frame / 28) * 1.5;
-  const leftArm = action === "point" ? 8 : moving ? -gait * (action === "run" ? 36 : 22) : Math.sin(frame / 18) * 5;
-  const rightArm = action === "point" ? -62 : moving ? gait * (action === "run" ? 36 : 22) : Math.sin(frame / 18 + 1) * 5;
-  const mouthHeight = action === "surprised" ? 22 : action === "point" ? 5 : 7;
-  const eyeScale = action === "surprised" ? 1.35 : 1;
-  const blinkScale = Math.sin(frame / 14) > 0.985 ? 0.12 : 1;
-  const headTilt = action === "surprised" ? -4 : action === "point" ? 3 : Math.sin(frame / 35) * 1.8;
+      ? interpolate(cycle, [0, 89], [-82, 82], { easing: Easing.inOut(Easing.sin) }) : 0;
+  const lean = action === "run" ? 9 : action === "point" ? -3 : action === "walk" ? gait * 3 : 0;
+  const leftLeg = moving ? gait * (action === "run" ? 24 : 16) : Math.sin(frame / 28) * 1.2;
+  const rightLeg = moving ? -gait * (action === "run" ? 24 : 16) : -Math.sin(frame / 28) * 1.2;
+  const leftArm = action === "point" ? 8 : moving ? -gait * (action === "run" ? 32 : 20) : Math.sin(frame / 18) * 4;
+  const rightArm = action === "point" ? -58 : moving ? gait * (action === "run" ? 32 : 20) : Math.sin(frame / 18 + 1) * 4;
+  const surprised = action === "surprised";
+  const blink = Math.sin(frame / 14) > 0.985 ? 0.12 : 1;
+  const browTilt = surprised ? -12 : action === "point" ? 5 : 0;
+  const mouthRy = surprised ? 17 : action === "point" ? 4 : 6;
 
   return (
     <svg viewBox="0 0 600 760" width="100%" height="100%" preserveAspectRatio="xMidYMid meet" style={{ overflow: "visible" }}>
-      <ellipse cx="300" cy="680" rx="112" ry="20" fill="#1b2938" opacity=".14" />
+      <ellipse cx="300" cy="690" rx="92" ry="17" fill="#111827" opacity=".16" />
       <g transform={`translate(${travel} ${bob + anticipation}) rotate(${lean} 300 420)`}>
-        <g>
-          <path d="M220 420 Q300 390 380 420 L400 610 Q300 650 200 610Z" fill={accent} stroke="#27364a" strokeWidth="12" />
-          <path d="M220 445 Q160 470 150 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${leftArm} 220 445)`} />
-          <circle cx="150" cy="540" r="16" fill="#ffd8b5" transform={`rotate(${leftArm} 220 445)`} />
-          <path d="M378 445 Q440 470 450 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${rightArm} 378 445)`} />
-          <circle cx="450" cy="540" r="16" fill="#ffd8b5" transform={`rotate(${rightArm} 378 445)`} />
-        </g>
-        <path d="M220 590 L220 650 Q220 680 240 680 L265 680 L265 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 242 590)`} />
-        <path d="M335 590 L335 650 Q335 680 355 680 L380 680 L380 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 358 590)`} />
-        <ellipse cx="245" cy="680" rx="25" ry="12" fill="#182338" transform={`rotate(${leftLeg} 242 590)`} />
-        <ellipse cx="360" cy="680" rx="25" ry="12" fill="#182338" transform={`rotate(${rightLeg} 358 590)`} />
-        <g transform={`rotate(${headTilt} 300 300)`}>
-          <path d="M220 220 Q205 95 300 88 Q395 95 385 220 L370 390 Q300 430 230 390Z" fill="#ffd8b5" stroke="#27364a" strokeWidth="12" />
-          <path d="M210 220 Q188 90 300 70 Q412 88 390 220 Q365 165 310 160 Q265 205 210 220Z" fill="#27364a" />
-          <g transform={`translate(0 0) scale(1 ${eyeScale * blinkScale})`}>
-            <ellipse cx="268" cy="250" rx="12" ry="17" fill="#27364a" /><ellipse cx="334" cy="250" rx="12" ry="17" fill="#27364a" />
+        {/* Slim black stick limbs; hands and shoes remain black in every pose. */}
+        <path d="M244 420 Q205 466 190 535" fill="none" stroke="#111827" strokeWidth="24" strokeLinecap="round" transform={`rotate(${leftArm} 244 420)`} />
+        <path d="M356 420 Q395 466 410 535" fill="none" stroke="#111827" strokeWidth="24" strokeLinecap="round" transform={`rotate(${rightArm} 356 420)`} />
+        <circle cx="190" cy="535" r="18" fill="#080b12" transform={`rotate(${leftArm} 244 420)`} />
+        <circle cx="410" cy="535" r="18" fill="#080b12" transform={`rotate(${rightArm} 356 420)`} />
+        {/* Blue T-shirt, fixed identity color. */}
+        <path d="M242 390 Q300 370 358 390 L382 505 Q300 532 218 505Z" fill="#1677d2" stroke="#080b12" strokeWidth="13" strokeLinejoin="round" />
+        <path d="M242 405 L218 505 M358 405 L382 505" fill="none" stroke="#080b12" strokeWidth="9" strokeLinecap="round" />
+        {/* Narrow legs and black shoes. */}
+        <path d="M270 510 L264 650" stroke="#111827" strokeWidth="25" strokeLinecap="round" transform={`rotate(${leftLeg} 270 510)`} />
+        <path d="M330 510 L336 650" stroke="#111827" strokeWidth="25" strokeLinecap="round" transform={`rotate(${rightLeg} 330 510)`} />
+        <path d="M264 646 Q236 654 230 674 Q250 690 286 680 L286 662" fill="#080b12" stroke="#080b12" strokeWidth="8" strokeLinejoin="round" transform={`rotate(${leftLeg} 270 510)`} />
+        <path d="M336 646 Q364 654 370 674 Q350 690 314 680 L314 662" fill="#080b12" stroke="#080b12" strokeWidth="8" strokeLinejoin="round" transform={`rotate(${rightLeg} 330 510)`} />
+        {/* Round white head: no nose, no hair, no identity changes. */}
+        <g transform={`rotate(${surprised ? -3 : Math.sin(frame / 35) * 1.5} 300 260)`}>
+          <circle cx="300" cy="260" r="142" fill="#ffffff" stroke="#080b12" strokeWidth="16" />
+          <g transform={`scale(1 ${blink})`}>
+            <ellipse cx="253" cy="250" rx={surprised ? 17 : 14} ry={surprised ? 22 : 19} fill="#080b12" />
+            <ellipse cx="347" cy="250" rx={surprised ? 17 : 14} ry={surprised ? 22 : 19} fill="#080b12" />
           </g>
-          <ellipse cx="301" cy="322" rx="10" ry={mouthHeight} fill="#a84d58" />
+          <path d={`M226 210 Q250 ${190 + browTilt} 274 208`} fill="none" stroke="#080b12" strokeWidth="12" strokeLinecap="round" />
+          <path d={`M326 208 Q350 ${190 - browTilt} 374 210`} fill="none" stroke="#080b12" strokeWidth="12" strokeLinecap="round" />
+          <ellipse cx="300" cy="315" rx={surprised ? 13 : 17} ry={mouthRy} fill="#080b12" />
         </g>
       </g>
     </svg>

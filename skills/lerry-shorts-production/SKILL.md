@@ -1,6 +1,6 @@
 ---
 name: lerry-shorts-production
-description: Produce idea-first Indonesian animated YouTube Shorts in the existing LERRY ANIMASI factory. AI writes story, storyboard and production plan; owner reviews before render and approves before publishing.
+description: Produce Indonesian animated YouTube Shorts from the owner's locked final story. AI creates storyboard directions and metadata without rewriting plot or narration.
 ---
 
 # LERRY ANIMASI — Shorts Production Skill
@@ -8,7 +8,7 @@ description: Produce idea-first Indonesian animated YouTube Shorts in the existi
 ## Non-negotiable project rules
 
 - This project makes YouTube Shorts only: vertical 9:16, 1080x1920, 30 fps, 15–60 seconds.
-- The owner supplies only a short idea/topic. AI writes an original story, dialogue, narration, storyboard and metadata.
+- The owner supplies the final story. AI must not write or rewrite the plot. It only splits the exact story into scenes, sets duration/actions, adds visual directions, extracts exact narration/subtitle excerpts, and prepares metadata.
 - Keep the generated plot, dialogue, narration and subtitles internally consistent. Avoid unsupported facts and protected characters/works.
 - Never upload or schedule to YouTube. The owner must inspect the MP4 and explicitly approve any publishing step.
 - Free-first. Do not add paid providers, billing, credits, subscriptions or new API keys without explicit owner approval.
@@ -23,9 +23,9 @@ description: Produce idea-first Indonesian animated YouTube Shorts in the existi
    - Any proposed adaptation must be shown to the owner for approval; never silently rewrite it.
 
 2. **Storyboard**
-   - Use the Groq GPT-OSS 120B endpoint once to create the story and divide it into 4–6 scenes. Request strict JSON Schema, low reasoning effort, and cap completion tokens at 4,200.
+   - Use the Groq GPT-OSS 120B endpoint once to divide the owner-provided story into 4–6 scenes. Require the story field to match the owner input exactly; each narration and subtitle must be a verbatim excerpt in original order. Request strict JSON Schema, low reasoning effort, and cap completion tokens at 4,200.
    - Total scene duration must be 15–60 seconds.
-   - Each scene needs: purpose, visual direction, camera/motion direction, narration/dialogue consistent with the generated story, subtitle aligned with each scene, sound cue and image prompt.
+   - Each scene needs: purpose, visual direction, camera/motion direction, narration/dialogue quoted verbatim from the owner story, subtitle aligned with each scene, sound cue and image prompt.
    - Do not add facts. Mark visual interpretation separately from story facts.
    - Check that every scene follows the original story order.
 

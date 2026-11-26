@@ -4,6 +4,7 @@ on:
     branches:
       - main
       - experiment/openmontage-video-engine
+      - fix/lerry-end-to-end-production
     paths:
       - "app/**"
       - "lib/**"
