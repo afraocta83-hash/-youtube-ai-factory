@@ -8,7 +8,8 @@
     "start": "next start",
     "lint": "next lint",
     "render:short": "remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --codec=h264 --crf=20",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:motion-stack": "node scripts/test-motion-stack.mjs"
   },
   "dependencies": {
     "next": "^15.5.29",
@@ -18,7 +19,12 @@
     "remotion": "^4.0.409",
     "@langfuse/otel": "^6.1.1",
     "@opentelemetry/api": "^1.9.0",
-    "@opentelemetry/sdk-node": "^0.208.0"
+    "@opentelemetry/sdk-node": "^0.208.0",
+    "@remotion/lottie": "^4.0.409",
+    "@remotion/three": "^4.0.409",
+    "@react-three/fiber": "^8.17.10",
+    "lottie-web": "^5.13.0",
+    "three": "^0.170.0"
   },
   "devDependencies": {
     "@types/node": "^22.18.0",
