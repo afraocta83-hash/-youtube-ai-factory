@@ -3,200 +3,75 @@ import { isOwnerRequest } from "../../../lib/owner-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
-
 const MODEL_DEFAULT = "openai/gpt-oss-120b";
 
 const productionSchema = {
-  type: "object",
-  additionalProperties: false,
+  type: "object", additionalProperties: false,
   properties: {
-    workingTitle: { type: "string" },
-    hook: { type: "string" },
-    synopsis: { type: "string" },
-    scenes: {
-      type: "array",
-      items: {
-        type: "object",
-        additionalProperties: false,
-        properties: {
-          number: { type: "integer" },
-          seconds: { type: "integer" },
-          visual: { type: "string" },
-          action: { type: "string", enum: ["idle", "walk", "run", "surprised", "point"] },
-          narration: { type: "string" },
-          dialogue: { type: "string" },
-          sound: { type: "string" },
-          imagePrompt: { type: "string" },
-          subtitle: { type: "string" }
-        },
-        required: ["number", "seconds", "visual", "action", "narration", "dialogue", "sound", "imagePrompt", "subtitle"]
-      }
-    },
-    title: { type: "string" },
-    description: { type: "string" },
-    hashtags: { type: "array", items: { type: "string" } },
-    thumbnailPrompt: { type: "string" },
-    factCheckNotes: { type: "array", items: { type: "string" } },
+    idea: { type: "string" }, workingTitle: { type: "string" }, hook: { type: "string" },
+    story: { type: "string" }, synopsis: { type: "string" },
+    scenes: { type: "array", items: { type: "object", additionalProperties: false, properties: {
+      number: { type: "integer" }, seconds: { type: "integer" }, visual: { type: "string" },
+      action: { type: "string", enum: ["idle", "walk", "run", "surprised", "point"] },
+      narration: { type: "string" }, dialogue: { type: "string" }, sound: { type: "string" },
+      imagePrompt: { type: "string" }, subtitle: { type: "string" }
+    }, required: ["number","seconds","visual","action","narration","dialogue","sound","imagePrompt","subtitle"] } },
+    title: { type: "string" }, description: { type: "string" }, hashtags: { type: "array", items: { type: "string" } },
+    thumbnailPrompt: { type: "string" }, factCheckNotes: { type: "array", items: { type: "string" } },
     sourceQueries: { type: "array", items: { type: "string" } }
   },
-  required: ["workingTitle", "hook", "synopsis", "scenes", "title", "description", "hashtags", "thumbnailPrompt", "factCheckNotes", "sourceQueries"]
+  required: ["idea","workingTitle","hook","story","synopsis","scenes","title","description","hashtags","thumbnailPrompt","factCheckNotes","sourceQueries"]
 };
 
 export async function POST(request: Request) {
-  if (!isOwnerRequest(request)) {
-    return NextResponse.json({ error: "Login owner diperlukan sebelum memakai mesin produksi." }, { status: 401 });
-  }
-
-  // Use the primary key first, then optional server-side backups. Never expose key values.
-  const apiKeys = [...new Set([
-    process.env.GROQ_API_KEY,
-    process.env.GROQ_API_KEY2,
-    process.env.GROQ_API_KEY3
-  ].map((key) => key?.trim()).filter((key): key is string => Boolean(key)))];
-  if (apiKeys.length === 0) {
-    return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret di Vercel Preview." }, { status: 503 });
-  }
+  if (!isOwnerRequest(request)) return NextResponse.json({ error: "Login owner diperlukan sebelum memakai mesin produksi." }, { status: 401 });
+  const apiKeys = [...new Set([process.env.GROQ_API_KEY,process.env.GROQ_API_KEY2,process.env.GROQ_API_KEY3].map(k=>k?.trim()).filter((k):k is string=>Boolean(k)))];
+  if (!apiKeys.length) return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret di Vercel Preview." }, { status: 503 });
 
   try {
     const body = await request.json();
-    const story = typeof body?.story === "string" ? body.story : "";
-    if (!story.trim() || story.length > 12000) {
-      return NextResponse.json({ error: "Masukkan cerita final buatan owner maksimal 12.000 karakter." }, { status: 400 });
-    }
+    const idea = typeof body?.idea === "string" ? body.idea.trim() : "";
+    if (idea.length < 5 || idea.length > 500) return NextResponse.json({ error: "Masukkan ide singkat 5-500 karakter." }, { status: 400 });
 
     const model = (process.env.GROQ_MODEL || MODEL_DEFAULT).trim();
     const prompt = [
-      "TUGAS: kru pra-produksi animasi YouTube Shorts berbahasa Indonesia. Bukan penulis cerita.",
-      "Cerita owner adalah sumber kanonis. Jangan mengarang, menambah, menghapus, mengubah urutan, memperbaiki, atau memparafrasekan cerita.",
-      "Pecah cerita menjadi 4 sampai 6 adegan visual. Durasi tiap adegan bilangan bulat; jumlah total 15 sampai 60 detik.",
-      "Setiap narration, dialogue, subtitle, dan hook wajib berupa kutipan berurutan yang persis ada di cerita. Jika tidak ada dialog, isi string kosong. Jangan membuat kata-kata yang tidak tertulis.",
-      "script tidak perlu dibuat karena server akan memasang teks asli secara langsung.",
-      "visual dan imagePrompt adalah interpretasi gambar, bukan fakta baru. Jaga karakter, pakaian, lokasi dan gaya gambar tetap konsisten. Format vertikal 9:16, kartun 2D, deskripsi gambar ringkas dan konkret.",
-      "action hanya salah satu dari idle, walk, run, surprised, point. Sound berisi arahan efek suara singkat, bukan dialog.",
-      "Synopsis satu kalimat netral. Thumbnail prompt satu komposisi vertikal yang jelas. Jangan mengarang sumber atau tanggal. factCheckNotes dan sourceQueries harus kosong jika cerita tidak mengandung klaim faktual yang perlu diverifikasi.",
-      "Metadata judul, deskripsi dan hashtag harus relevan dengan cerita tanpa mengubah isi cerita. Keluarkan hanya data sesuai JSON schema.",
-      "CERITA OWNER (pertahankan persis):",
-      story
+      "Kamu adalah ruang penulis dan sutradara animasi YouTube Shorts berbahasa Indonesia.",
+      "Owner hanya memberi IDE, bukan cerita final. Kembangkan ide menjadi cerita orisinal yang utuh, menarik, mudah dipahami anak dan keluarga, tanpa menyalin karya atau karakter berhak cipta.",
+      "Buat cerita singkat dengan awal yang menarik, konflik/pertanyaan, penjelasan atau penyelesaian yang memuaskan, dan penutup. Hindari klaim faktual yang tidak pasti; bila topiknya edukasi sains/teknologi, tandai hal yang perlu verifikasi pada factCheckNotes dan sourceQueries. Jangan mengarang sumber.",
+      "Buat 4-6 adegan, durasi tiap adegan bilangan bulat 2-15 detik, total 15-60 detik. Narasi/dialog/subtitle harus ditulis sebagai naskah final yang konsisten dengan story. Setiap adegan punya aksi visual, prompt gambar konkret, efek suara, dan subtitle singkat.",
+      "Jaga konsistensi tokoh (nama, rupa, pakaian), lokasi, properti, dan gaya gambar di semua imagePrompt. Visual: animasi kartun 2D ramah keluarga, vertikal 9:16. action hanya idle, walk, run, surprised, point.",
+      "Judul YouTube menarik tetapi tidak menyesatkan. Deskripsi dan hashtag relevan. thumbnailPrompt mendeskripsikan satu thumbnail yang jelas, tanpa teks kecil. Output hanya JSON sesuai schema.",
+      "IDE OWNER:", idea
     ].join("\n\n");
 
-    const requestBody = JSON.stringify({
-      model,
-      messages: [{ role: "user", content: prompt }],
-      response_format: {
-        type: "json_schema",
-        json_schema: {
-          name: "lerry_shorts_production",
-          strict: true,
-          schema: productionSchema
-        }
-      },
-      reasoning_effort: "low",
-      include_reasoning: false,
-      temperature: 0.5,
-      max_completion_tokens: 3200,
-      stream: false
-    });
+    const requestBody = JSON.stringify({ model, messages:[{role:"user",content:prompt}], response_format:{type:"json_schema",json_schema:{name:"lerry_shorts_production",strict:true,schema:productionSchema}}, reasoning_effort:"low", include_reasoning:false, temperature:0.7, max_completion_tokens:4200, stream:false });
+    let response: Response | null=null, data:any=null;
+    for (const [i,key] of apiKeys.entries()) {
+      response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)});
+      data=await response.json();
+      if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
+    }
+    if(!response) return NextResponse.json({error:"Tidak ada key Groq yang dapat digunakan."},{status:503});
+    if(!response.ok) return NextResponse.json({error:response.status===429?"Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi.":`Groq gagal membuat cerita: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
+    const choice=data?.choices?.[0], raw=choice?.message?.content;
+    if(choice?.finish_reason==="length") return NextResponse.json({error:"Batas token tercapai. Coba ide yang lebih sederhana."},{status:502});
+    if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Groq tidak mengembalikan JSON produksi."},{status:502});
 
-    let response: Response | null = null;
-    let data: any = null;
-    for (const [index, apiKey] of apiKeys.entries()) {
-      response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${apiKey}`,
-          "Content-Type": "application/json"
-        },
-        body: requestBody,
-        signal: AbortSignal.timeout(55000)
-      });
-      data = await response.json();
-
-      // Retry another configured key only when this key is rejected. Do not
-      // multiply requests on rate limits, provider outages, or model errors.
-      if (response.ok || ![401, 403].includes(response.status) || index === apiKeys.length - 1) break;
+    const p=JSON.parse(raw);
+    if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error("Storyboard harus berisi 4-6 adegan.");
+    if(typeof p.story!=="string"||p.story.trim().length<80) throw new Error("Cerita hasil AI terlalu pendek atau kosong.");
+    let total=0;
+    for(const [i,s] of p.scenes.entries()){
+      if(!Number.isInteger(Number(s.seconds))||s.seconds<2||s.seconds>20) throw new Error(`Durasi adegan ${i+1} tidak valid.`);
+      total+=Number(s.seconds); s.number=i+1;
+      if(typeof s.imagePrompt!=="string"||s.imagePrompt.trim().length<25) throw new Error(`Prompt visual adegan ${i+1} kurang jelas.`);
+      if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);
     }
-
-    if (!response) {
-      return NextResponse.json({ error: "Tidak ada key Groq yang dapat digunakan." }, { status: 503 });
-    }
-    if (!response.ok) {
-      const providerMessage = data?.error?.message || `Groq error ${response.status}`;
-      return NextResponse.json({
-        error: response.status === 429
-          ? "Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi."
-          : `Groq gagal membuat storyboard: ${providerMessage}`,
-        provider: "groq",
-        model
-      }, { status: response.status === 429 ? 429 : 502 });
-    }
-
-    const choice = data?.choices?.[0];
-    const text = choice?.message?.content;
-    if (choice?.finish_reason === "length") {
-      return NextResponse.json({ error: "Batas token tercapai. Pendekkan cerita atau kurangi detail adegan, lalu coba lagi.", provider: "groq", model }, { status: 502 });
-    }
-    if (typeof text !== "string" || !text.trim()) {
-      return NextResponse.json({ error: "Groq tidak mengembalikan storyboard JSON.", provider: "groq", model }, { status: 502 });
-    }
-
-    const production = JSON.parse(text);
-    if (!production || typeof production !== "object" || !Array.isArray(production.scenes) ||
-        production.scenes.length < 4 || production.scenes.length > 6) {
-      return NextResponse.json({ error: "Storyboard harus berisi 4-6 adegan." }, { status: 502 });
-    }
-
-    let totalSeconds = 0;
-    for (const [index, scene] of production.scenes.entries()) {
-      const seconds = Number(scene?.seconds);
-      if (!Number.isInteger(seconds) || seconds < 1 || seconds > 20) {
-        return NextResponse.json({ error: `Durasi adegan ${index + 1} tidak valid.` }, { status: 502 });
-      }
-      totalSeconds += seconds;
-      scene.number = index + 1;
-      if (typeof scene.imagePrompt !== "string" || scene.imagePrompt.trim().length < 20) {
-        return NextResponse.json({ error: `Arahan visual adegan ${index + 1} belum cukup jelas.` }, { status: 502 });
-      }
-    }
-    if (totalSeconds < 15 || totalSeconds > 60) {
-      return NextResponse.json({ error: "Durasi total storyboard harus 15-60 detik." }, { status: 502 });
-    }
-
-    const spokenFields = ["narration", "dialogue", "subtitle"] as const;
-    const inventedLines: string[] = [];
-    for (const [index, scene] of production.scenes.entries()) {
-      for (const field of spokenFields) {
-        const line = typeof scene?.[field] === "string" ? scene[field].trim() : "";
-        if (line && !story.includes(line)) inventedLines.push(`Adegan ${index + 1}: ${field}`);
-      }
-    }
-    if (typeof production.hook !== "string" || !story.includes(production.hook.trim()) || inventedLines.length) {
-      return NextResponse.json({
-        error: "Storyboard menambahkan atau mengubah teks cerita. Tidak ada naskah yang diterima; coba ulangi.",
-        validation: { inventedLines, hookValid: typeof production.hook === "string" && story.includes(production.hook.trim()) }
-      }, { status: 502 });
-    }
-
-    production.script = story;
-    production.ownerStory = story;
-    production.durationSeconds = totalSeconds;
-    production.qcChecklist = [
-      "Cerita asli owner dipertahankan persis.",
-      "Narasi, dialog dan subtitle hanya memakai kutipan cerita.",
-      "Jumlah adegan dan durasi berada dalam batas Shorts 15-60 detik.",
-      "Konsistensi karakter, lokasi dan gaya visual diperiksa.",
-      "MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio dan decode."
-    ];
-
-    return NextResponse.json({
-      ok: true,
-      provider: "groq",
-      model,
-      ownerStoryPreserved: true,
-      usage: data?.usage || null,
-      production
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : "Terjadi kesalahan.";
-    return NextResponse.json({ error: message.includes("JSON") ? "Format hasil AI tidak valid. Coba ulangi." : message }, { status: 500 });
+    if(total<15||total>60) throw new Error("Durasi total storyboard harus 15-60 detik.");
+    p.idea=idea; p.script=p.story; p.ownerStory=p.story; p.durationSeconds=total;
+    p.qcChecklist=["Ide owner dikembangkan menjadi cerita baru oleh AI.","Alur cerita, dialog, dan narasi konsisten antaradegan.","Jumlah adegan 4-6 dan durasi 15-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
+    return NextResponse.json({ok:true,provider:"groq",model,usage:data?.usage||null,production:p});
+  } catch(error) {
+    return NextResponse.json({error:error instanceof Error?error.message:"Terjadi kesalahan saat membuat cerita."},{status:502});
   }
 }
