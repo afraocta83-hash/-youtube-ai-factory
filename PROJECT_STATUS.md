@@ -19,7 +19,8 @@ Base branch: `main`
 - TypeScript check, Next.js build, Remotion composition listing, render, MP4 verification and artifact upload all passed together in run [45820602185](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45820602185).
 - Story generation API now restores the exact owner story as canonical `script` and carries it as `ownerStory`.
 - Generated narration/dialogue/subtitle lines must be exact excerpts of the owner's story or the generation is rejected.
-- Studio calls the QC endpoint and displays story-integrity/QC results.
+- Studio presentation remains unchanged; the copied production JSON includes the canonical `ownerStory` field for render-time checks.
+- QC is checked server-side and again in the render workflow; no new dashboard/office visual components were added.
 - Render workflow rejects a package if `script` and `ownerStory` differ.
 - CI now includes TypeScript checking and a Next.js production build.
 
@@ -41,6 +42,7 @@ Base branch: `main`
 
 ## Next task queue
 - [ ] Complete latest CI run and fix any new failures.
+- [ ] Confirm the new QC API smoke test passes and the LerryShort renderer produces a 16-second MP4 with an audio stream.
 - [ ] Confirm `GEMINI_API_KEY` is configured as a GitHub Actions secret before a real TTS render; never paste it into chat.
 - [ ] Inspect the latest MP4 at multiple frames; verify walk/run/point/surprised poses and no limb intersections.
 - [ ] Add render acceptance checks for duration, dimensions, frame rate, audio stream and file integrity.
