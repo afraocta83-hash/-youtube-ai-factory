@@ -16,9 +16,9 @@ The model supports strict JSON Schema output. This makes storyboard objects pred
 
 Groq publishes per-model rate limits. The currently documented baseline for GPT-OSS 120B is 30 requests/minute, 1,000 requests/day, 8,000 tokens/minute, and 200,000 tokens/day. Actual account limits may vary and should be checked in the Groq Console. Free availability and quotas can change.
 
-## Configure Vercel Preview
+## Configure hosting Preview (Netlify or Vercel)
 
-Create one or more API keys at https://console.groq.com/keys and add these variables to Vercel Project → Settings → Environment Variables, target Preview, branch `experiment/openmontage-video-engine`:
+Create one or more API keys at https://console.groq.com/keys and add these variables to the hosting project's environment-variable settings. For Netlify, use Site configuration → Environment variables and scope them to the deploy context/branch used for Preview. For Vercel, use Project → Settings → Environment Variables, target Preview, branch `experiment/openmontage-video-engine`:
 
 - `GROQ_API_KEY`: Sensitive/Secret, primary key, required.
 - `GROQ_API_KEY2`: Sensitive/Secret, optional backup.
@@ -29,7 +29,7 @@ The producer tries keys in order. It switches to the next configured key only wh
 - `OWNER_PASSWORD`: Sensitive/Secret, unique random password at least 24 characters.
 - `GITHUB_ACTIONS_TOKEN`: existing Sensitive/Secret with Actions: write permission.
 
-Redeploy Preview after adding variables. Never paste API keys or owner passwords into chat or commit them to GitHub.
+Redeploy the Preview after adding variables. Netlify and Vercel both require a new deploy for changed environment variables to take effect. Never paste API keys or owner passwords into chat or commit them to GitHub.
 
 ## Supabase removal
 
