@@ -38,24 +38,25 @@ jobs:
         run: |
           npm audit --audit-level=moderate
           npm ls next postcss
-      - name: Check optional FreeLLM provider configuration
+      - name: Check optional Groq provider configuration
         env:
-          FREELLM_BASE_URL: ${{ secrets.FREELLM_BASE_URL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          OWNER_PASSWORD: ${{ secrets.OWNER_PASSWORD }}
         run: |
-          if [ -n "$FREELLM_BASE_URL" ]; then
-            echo "FreeLLM endpoint is configured (value hidden)."
+          if [ -n "$GROQ_API_KEY" ] && [ -n "$OWNER_PASSWORD" ]; then
+            echo "Groq provider and owner test credentials are configured (values hidden)."
           else
-            echo "::warning::FreeLLM is not configured; renderer CI will use its clearly labeled offline fixture. Gemini is intentionally not used in this test."
+            echo "::warning::Groq live storyboard test is skipped; CI will use its clearly labeled offline fixture."
           fi
       - name: TypeScript check
         run: npm run typecheck
       - name: Build Next.js application
         run: npm run build
-      - name: Smoke-test QC and storyboard API (live provider with offline CI fallback)
+      - name: Smoke-test QC and storyboard API (Groq live provider with offline CI fallback)
         env:
-          FREELLM_BASE_URL: ${{ secrets.FREELLM_BASE_URL }}
-          FREELLM_API_KEY: ${{ secrets.FREELLM_API_KEY }}
-          FREELLM_MODEL: ${{ vars.FREELLM_MODEL }}
+          GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+          GROQ_MODEL: ${{ vars.GROQ_MODEL }}
+          OWNER_PASSWORD: ${{ secrets.OWNER_PASSWORD }}
         run: |
           npm start > /tmp/lerry-next.log 2>&1 &
           ready=0
@@ -93,12 +94,27 @@ jobs:
             const missingOwner=await qc(withoutOwnerStory);
             assert.equal(missingOwner.passed,false,'Missing owner story must fail QC');
             const storyForGeneration='Mira menemukan sebuah kunci tua di halaman rumah. Ia membawa kunci itu ke perpustakaan kecil di ujung jalan. Penjaga perpustakaan menunjukkan sebuah peti kayu di ruang baca. Mira membuka peti itu dan menemukan foto keluarganya.';
-            let generatedResponse, generated;
-            for(let attempt=0;attempt<3;attempt++){
-              generatedResponse=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({story:storyForGeneration})});
-              generated=await generatedResponse.json();
-              if(generatedResponse.status===200 || (generatedResponse.status!==429 && generatedResponse.status<500)) break;
-              if(attempt<2) await new Promise(resolve=>setTimeout(resolve,3000*(attempt+1)));
+            let generatedResponse, generated, sessionCookie='';
+            const liveConfigured=Boolean(process.env.GROQ_API_KEY && process.env.OWNER_PASSWORD);
+            if(liveConfigured){
+              const login=await fetch('http://127.0.0.1:3000/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:process.env.OWNER_PASSWORD})});
+              assert.equal(login.status,200,'Owner password login must work before live Groq storyboard test');
+              sessionCookie=(login.headers.get('set-cookie')||'').split(';')[0];
+              assert.ok(sessionCookie.startsWith('lerry_owner_session='),'Owner session cookie must be issued');
+            }else{
+              const unauth=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({story:storyForGeneration})});
+              assert.equal(unauth.status,401,'Storyboard API must reject unauthenticated callers');
+            }
+            if(liveConfigured){
+              for(let attempt=0;attempt<3;attempt++){
+                generatedResponse=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json','cookie':sessionCookie},body:JSON.stringify({story:storyForGeneration})});
+                generated=await generatedResponse.json();
+                if(generatedResponse.status===200 || (generatedResponse.status!==429 && generatedResponse.status<500)) break;
+                if(attempt<2) await new Promise(resolve=>setTimeout(resolve,3000*(attempt+1)));
+              }
+            }else{
+              generatedResponse={status:503};
+              generated={error:'Groq API key and owner test password are not configured in GitHub Actions.'};
             }
             let production;
             if(generatedResponse.status===200){
