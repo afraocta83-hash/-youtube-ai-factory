@@ -35,18 +35,20 @@ jobs:
       - name: Render local Remotion MP4 smoke test
         run: |
           mkdir -p out
+          mkdir -p public
+          ffmpeg -y -v error -f lavfi -i "sine=frequency=440:duration=20" -ar 24000 -ac 1 public/smoke.wav
           cat > /tmp/lerry-smoke-props.json <<'JSON'
           {
             "workingTitle": "Lerry Render Test",
             "scenes": [
-              {"number":1,"seconds":5,"visual":"Pembukaan ceria","narration":"Tes satu","subtitle":"Tes satu","action":"walk"},
-              {"number":2,"seconds":5,"visual":"Adegan penjelasan","narration":"Tes dua","subtitle":"Tes dua","action":"point"},
-              {"number":3,"seconds":5,"visual":"Adegan kejutan","narration":"Tes tiga","subtitle":"Tes tiga","action":"surprised"},
-              {"number":4,"seconds":5,"visual":"Penutup","narration":"Tes selesai","subtitle":"Tes selesai","action":"idle"}
+              {"number":1,"seconds":5,"visual":"Pembukaan ceria","narration":"Tes satu","subtitle":"Tes satu","action":"walk","voiceFile":"smoke.wav","voiceDurationSeconds":5},
+              {"number":2,"seconds":5,"visual":"Adegan penjelasan","narration":"Tes dua","subtitle":"Tes dua","action":"point","voiceFile":"smoke.wav","voiceDurationSeconds":5},
+              {"number":3,"seconds":5,"visual":"Adegan kejutan","narration":"Tes tiga","subtitle":"Tes tiga","action":"surprised","voiceFile":"smoke.wav","voiceDurationSeconds":5},
+              {"number":4,"seconds":5,"visual":"Penutup","narration":"Tes selesai","subtitle":"Tes selesai","action":"idle","voiceFile":"smoke.wav","voiceDurationSeconds":5}
             ]
           }
           JSON
           npx remotion render src/remotion/index.ts LerryShort out/lerry-smoke.mp4 --codec=h264 --crf=24 --props=/tmp/lerry-smoke-props.json
-          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/lerry-smoke.mp4 > /tmp/lerry-smoke-meta.json
-          node -e 'const m=require("/tmp/lerry-smoke-meta.json");const v=m.streams.find(x=>x.codec_name==="h264");if(!v||v.width!==1080||v.height!==1920||v.r_frame_rate!=="30/1")process.exit(1);if(Number(m.format.duration)<19)process.exit(1);console.log("REMOTION_MP4_SMOKE_PASS",m.format.duration)'
+          ffprobe -v error -show_entries stream=codec_type,codec_name,width,height,r_frame_rate -show_entries format=duration -of json out/lerry-smoke.mp4 > /tmp/lerry-smoke-meta.json
+          node -e 'const m=require("/tmp/lerry-smoke-meta.json");const v=m.streams.find(x=>x.codec_type==="video");const a=m.streams.find(x=>x.codec_type==="audio");if(!v||v.codec_name!=="h264"||v.width!==1080||v.height!==1920||v.r_frame_rate!=="30/1"||!a)process.exit(1);if(Number(m.format.duration)<19)process.exit(1);console.log("REMOTION_MP4_AUDIO_SMOKE_PASS",m.format.duration)'
           ffmpeg -v error -i out/lerry-smoke.mp4 -f null -
