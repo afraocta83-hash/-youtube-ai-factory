@@ -1,11 +1,17 @@
 name: Lerry Shorts Build Check
 on:
   push:
-    branches: [main]
+    branches:
+      - main
+      - experiment/openmontage-video-engine
     paths:
       - "app/**"
+      - "lib/**"
       - "src/remotion/**"
       - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "next.config.ts"
       - ".github/workflows/**"
   workflow_dispatch:
 permissions:
@@ -13,11 +19,13 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 20
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: 22
+          cache: npm
       - run: npm install
+      - run: npm run typecheck
       - run: npm run build
