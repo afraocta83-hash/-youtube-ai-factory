@@ -1,6 +1,7 @@
 import React from "react";
 import { Composition } from "remotion";
 import { LerryShort, LerryShortProps } from "./Short";
+import { MotionStackSmoke } from "./MotionStackSmoke";
 
 const defaultProps: LerryShortProps = {
   workingTitle: "Lerry Animasi",
