@@ -1,30 +1,34 @@
 # LERRY ANIMASI — Shorts Factory
 
-This repository builds owner-authored stories into short vertical cartoon videos.
+This repository turns owner-authored Indonesian stories into short vertical cartoon videos.
 
 ## Production contract
-- Owner supplies the complete story. AI may only break it into scenes and production instructions; it must not invent, rewrite, shorten, or change the plot, dialogue, or ending.
+- Owner supplies the complete final story. AI only divides it into scenes and production instructions; it must not invent, rewrite, shorten, or change the plot, dialogue, or ending.
 - Output target: MP4 H.264, 1080x1920, 30 fps, 15–60 seconds.
-- Pipeline: Gemini storyboard -> structural QC -> Gemini Indonesian TTS -> Remotion cartoon composition -> MP4 artifact.
+- Pipeline: Groq GPT-OSS 120B storyboard + metadata → deterministic text/story QC → Edge TTS (Piper fallback) → Remotion animation → FFmpeg MP4 QC → GitHub Actions artifact.
+- One Groq request per story; strict JSON Schema; low reasoning effort; maximum completion budget 3,200 tokens.
 - No YouTube upload is performed. Owner reviews and approves the MP4 and metadata separately.
 
-## Run a Short
-1. Open the Lerry studio and paste the final owner-written story.
-2. Generate the production package and inspect the storyboard, dialogue, subtitles and metadata.
-3. Use Salin paket JSON.
-4. Open GitHub Actions > Render Lerry Shorts Factory.
-5. Choose Run workflow, paste the full JSON into production_json, and start.
-6. Wait for the job to complete. Download the lerry-animasi-short artifact from the run's Artifacts section.
+## Owner setup
+1. Add `GROQ_API_KEY` and `OWNER_PASSWORD` as Vercel Preview Secrets. Owner password must be at least 24 characters.
+2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side Vercel Secret with Actions: write permission.
+3. Open the Preview app, sign in with the owner password, and paste the final story.
+4. Generate the storyboard and inspect the locked story, narration, subtitles and metadata.
+5. Press **Render MP4 otomatis**.
+6. Open GitHub Actions and download the `lerry-animasi-short` artifact when the render completes.
+7. Review the MP4 and metadata before publishing manually to YouTube.
 
-## Requirements
-- GitHub Actions enabled for this repository.
-- GEMINI_API_KEY configured in the Vercel production environment for the voice endpoint.
-- The Vercel production deployment must contain /api/quality-check and /api/voice.
-- Gemini usage is subject to free-tier quotas and availability. This workflow does not enable billing or paid providers.
+Detailed setup: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
+
+## Free-first architecture
+- Groq is the only LLM provider key required by the app.
+- Edge TTS is primary; Piper is the local fallback. Neither requires a paid TTS API key.
+- Remotion and FFmpeg run in GitHub Actions.
+- The last 10 storyboards are stored in browser localStorage on the current device. No Supabase/database/OTP setup is required.
+- The app does not use paid image/video providers by default.
 
 ## Current limitations
-- The first renderer uses one consistent, code-drawn cartoon character and scene-specific visual captions/backgrounds. It does not yet generate unique AI artwork for each scene or character reference sheets.
-- TTS currently generates one continuous narration track from scene narration/dialogue; it is not per-character dialogue acting or precise word-level lip sync.
-- The GitHub Actions workflow is manually started from the Actions page. A server-side GitHub Actions token and job-status/download integration are still needed for one-click rendering from the dashboard.
-- Artifact is retained for seven days.
-- YouTube publishing is intentionally not automated; no upload occurs without owner approval.
+- Scene image prompts are generated, but the current Remotion renderer still uses deterministic vector backdrops and a simple 2D character rig. It does not yet create bespoke AI artwork for every scene or full 3D character acting.
+- Subtitle timing is estimated from audio duration; phoneme alignment and lip-sync are not implemented.
+- Dashboard-to-GitHub render dispatch and artifact handoff still require a live owner-session test with configured secrets.
+- YouTube publishing remains manual and requires explicit owner approval.
