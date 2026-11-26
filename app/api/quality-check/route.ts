@@ -1,7 +1,11 @@
 import { NextResponse } from "next/server";
+import { isOwnerRequest } from "../../../../lib/owner-auth";
+
+export const runtime = "nodejs";
 
 type Scene={seconds?:number;imagePrompt?:string;narration?:string;dialogue?:string;subtitle?:string};
 export async function POST(req:Request){
+  if(!isOwnerRequest(req)) return NextResponse.json({error:"Login owner diperlukan untuk menjalankan pemeriksaan kualitas."},{status:401});
   try{
     const p=await req.json(),issues:string[]=[],warnings:string[]=[];
     const story=typeof p.story==="string"?p.story:typeof p.script==="string"?p.script:"";
@@ -17,6 +21,6 @@ export async function POST(req:Request){
     if(!p.description) warnings.push("Deskripsi YouTube belum tersedia.");
     if(!Array.isArray(p.factCheckNotes)||!p.factCheckNotes.length) warnings.push("Tidak ada klaim yang ditandai untuk pemeriksaan fakta; tetap periksa bila topik edukasi.");
     const passed=issues.length===0;
-    return NextResponse.json({ok:true,passed,score:Math.max(0,100-issues.length*20-warnings.length*5),issues,warnings,checks:{storyLength:story.length,sceneCount:scenes.length,totalSceneSeconds:seconds,visualPromptCount:scenes.filter(s=>String(s.imagePrompt||"").trim().length>=25).length},note:"QC ini memeriksa struktur naskah dan storyboard. Belum menilai fakta eksternal, hak cipta, kualitas visual/audio MP4, atau sinkronisasi."});
+    return NextResponse.json({ok:true,passed,score:Math.max(0,100-issues.length*20-warnings.length*5),issues,warnings,checks:{storyLength:story.length,sceneCount:scenes.length,totalSceneSeconds:seconds,visualPromptCount:scenes.filter(s=>String(s.imagePrompt||"").trim().length>=25).length},note:"QC ini memeriksa struktur naskah dan storyboard. Belum menilai fakta eksternal, hak cipta, kualitas visual/audio MP4, atau sinkronisasi."},{headers:{"Cache-Control":"no-store"}});
   }catch{return NextResponse.json({error:"Data produksi tidak valid."},{status:400});}
 }
