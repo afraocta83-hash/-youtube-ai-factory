@@ -38,7 +38,7 @@ The production studio exposes the integrated agent roster at `GET /api/agents` a
 - Quality Control Agent: deterministic storyboard checks plus MP4/ffprobe/decode validation.
 - Publishing Agent: YouTube OAuth + resumable upload session; each upload requires a second explicit owner approval and defaults to Private.
 
-Langflow is an optional visual workflow editor. The core production pipeline does not depend on a separately hosted Langflow service. Its live flow adapter is not yet implemented. YouTube publishing uses a separate OAuth connection and explicit owner approval for every upload; render approval is not upload approval. Langflow remains an optional visual editor without a live flow adapter.
+Langflow can act as the optional storyboard provider: when configured, Lerry invokes its Flow API and validates the returned production JSON; Groq is the fallback when configured. The core pipeline remains usable without a separately hosted Langflow service. YouTube publishing uses a separate OAuth connection and explicit owner approval for every upload; render approval is not upload approval. Langflow's live storyboard adapter is implemented but requires a configured Flow ID and a successful schema-compatible test.
 
 See [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for the integration boundary and remaining work.
 
