@@ -42,8 +42,8 @@ export async function POST(request: Request) {
 
   try {
     const body = await request.json();
-    const idea = typeof body?.idea === "string" ? body.idea.trim() : "";
-    if (idea.length < 5 || idea.length > 500) return NextResponse.json({ error: "Masukkan ide singkat 5-500 karakter." }, { status: 400 });
+    const ownerStory = typeof body?.idea === "string" ? body.idea.trim() : "";
+    if (ownerStory.length < 80 || ownerStory.length > 500) return NextResponse.json({ error: "Masukkan cerita final 80-500 karakter agar bisa dibagi menjadi adegan." }, { status: 400 });
 
     const model = (process.env.GROQ_MODEL || MODEL_DEFAULT).trim();
     const prompt = [
@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     let data: any = null;
     if (langflowConfigured) {
       try {
-        raw = await withAgentSpan("storyboard.langflow", { "agent.name": "Langflow Storyboard Agent", "agent.provider": "langflow", "input.length": idea.length }, () => runLangflow(prompt));
+        raw = await withAgentSpan("storyboard.langflow", { "agent.name": "Langflow Storyboard Agent", "agent.provider": "langflow", "input.length": ownerStory.length }, () => runLangflow(prompt));
         provider = "langflow";
       } catch (error) {
         if (!apiKeys.length) throw error;
@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     if (!raw) {
       let response: Response | null = null;
       for (const [i,key] of apiKeys.entries()) {
-        response=await withAgentSpan("storyboard.groq", { "agent.name": "Groq Storyboard Agent", "agent.provider": "groq", "llm.model": model, "input.length": idea.length, "provider.key_index": i + 1 }, () => fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)}));
+        response=await withAgentSpan("storyboard.groq", { "agent.name": "Groq Storyboard Agent", "agent.provider": "groq", "llm.model": model, "input.length": ownerStory.length, "provider.key_index": i + 1 }, () => fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)}));
         data=await response.json();
         if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
       }
@@ -96,7 +96,8 @@ export async function POST(request: Request) {
       if(typeof s.imagePrompt!=="string"||s.imagePrompt.trim().length<25) throw new Error(`Prompt visual adegan ${i+1} kurang jelas.`);
       if(!String(s.subtitle||"").trim()) throw new Error(`Subtitle adegan ${i+1} kosong.`);
       if(!["idle","walk","run","surprised","point"].includes(String(s.action||""))) throw new Error(`Aksi karakter adegan ${i+1} tidak didukung renderer.`);
-      if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);\n      if(s.narration&&!ownerStory.includes(s.narration.trim())) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli dari cerita owner.`);\n      if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
+      if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);
+      if(s.narration&&!ownerStory.includes(s.narration.trim())) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli dari cerita owner.`);\n      if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
     p.idea=ownerStory; p.script=ownerStory; p.ownerStory=ownerStory; p.durationSeconds=total;
