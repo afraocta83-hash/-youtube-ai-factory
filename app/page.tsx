@@ -1,9 +1,9 @@
 import Studio from "./studio";
 
 const modules = [
- {title:"Produser produksi Gemini",detail:"Menyusun storyboard dari cerita final owner. Memerlukan GEMINI_API_KEY pada environment Preview/Production yang sesuai.",status:"Menunggu verifikasi API"},
+ {title:"Produser produksi FreeLLM",detail:"Menyusun storyboard dari cerita final owner. Memerlukan FREELLM_BASE_URL dan kredensial provider yang dikonfigurasi aman pada environment Preview.",status:"Menunggu koneksi FreeLLM"},
  {title:"Storyboard & visual",detail:"Membagi cerita menjadi adegan, arahan visual, durasi, dan metadata. Teks cerita owner tetap menjadi sumber utama.",status:"Pra-produksi • perlu uji live"},
- {title:"Voice & subtitle",detail:"Workflow menyediakan TTS per adegan dan subtitle berbasis estimasi durasi audio. Sinkronisasi fonem/lip-sync belum tersedia.",status:"Perlu uji TTS live"},
+ {title:"Voice & subtitle",detail:"Edge TTS Bahasa Indonesia dan Piper TTS sudah lolos uji audio terpisah. Render per adegan masih perlu uji dengan cerita owner; subtitle memakai estimasi durasi, belum sinkron fonem/lip-sync.",status:"Edge + Piper lulus uji mesin"},
  {title:"Render MP4 Shorts",detail:"Remotion merender video vertikal 1080 × 1920, 30 fps, durasi 15-60 detik melalui GitHub Actions.",status:"Workflow CI lolos • dispatch belum diuji"},
  {title:"Quality control",detail:"QC otomatis memeriksa struktur paket, durasi, prompt visual, dan integritas teks. Penilaian kualitas visual/audio tetap memerlukan inspeksi MP4.",status:"QC struktur tersedia"},
  {title:"YouTube publishing",detail:"Video tidak dipublikasikan otomatis. Upload tetap manual dan memerlukan persetujuan owner.",status:"Manual • persetujuan owner"}
