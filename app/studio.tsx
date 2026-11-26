@@ -19,6 +19,36 @@ export default function Studio(){
  const [result,setResult]=useState<Production|null>(null);
  const [usage,setUsage]=useState<Usage>(null);
  const [history,setHistory]=useState<SavedProduction[]>([]);
+ const [renderSince,setRenderSince]=useState<number|null>(null);
+ const [artifactUrl,setArtifactUrl]=useState("");
+ const [renderRunUrl,setRenderRunUrl]=useState("");
+
+ useEffect(()=>{
+  if(!renderSince)return;
+  let active=true;
+  let timer:ReturnType<typeof setInterval>|undefined;
+  const check=async()=>{
+   try{
+    const res=await fetch(`/api/render?since=${renderSince}`,{cache:"no-store"});
+    const data=await res.json();
+    if(!active)return;
+    if(data.runUrl)setRenderRunUrl(data.runUrl);
+    if(data.state==="success"&&data.downloadUrl){
+     setArtifactUrl(data.downloadUrl);
+     setRenderMessage("MP4 selesai dan lolos QC. Paket video, thumbnail, dan metadata siap diunduh.");
+     if(timer)clearInterval(timer);
+    }else if(data.state==="failed"){
+     setError("Render gagal. Buka log GitHub untuk detail: "+(data.runUrl||""));
+     if(timer)clearInterval(timer);
+    }else{
+     setRenderMessage(data.message||"Render sedang berjalan. Status diperiksa otomatis.");
+    }
+   }catch{}
+  };
+  check();
+  timer=setInterval(check,10000);
+  return()=>{active=false;if(timer)clearInterval(timer);};
+ },[renderSince]);
 
  useEffect(()=>{
   try{
@@ -49,13 +79,15 @@ export default function Studio(){
  }
  async function render(){
   if(!result)return;
-  setRenderBusy(true);setRenderMessage("");setError("");
+  setRenderBusy(true);setRenderMessage("");setError("");setArtifactUrl("");setRenderRunUrl("");setRenderSince(null);
   try{
    const qc=await fetch("/api/quality-check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(result)});
    const report=await qc.json();
    if(!qc.ok||!report.passed) throw new Error("QC belum lolos: "+[...(report.issues||[]),...(report.warnings||[])].join(" • "));
+   const startedAt=Date.now();
    await dispatchRender(result);
-   setRenderMessage("QC struktur lulus (skor "+report.score+"). Render MP4 dikirim setelah persetujuan lo. Tunggu artifact selesai, lalu tonton dan periksa sebelum upload.");
+   setRenderSince(startedAt);
+   setRenderMessage("QC struktur lulus (skor "+report.score+"). Render dimulai; status dan paket unduhan akan muncul otomatis di sini.");
   }catch(e){setError(e instanceof Error?e.message:"Render gagal dimulai.");}
   finally{setRenderBusy(false);}
  }
@@ -84,6 +116,8 @@ export default function Studio(){
     <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Memeriksa QC & mengirim render...":"Saya setujui — mulai render MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
+    {artifactUrl&&<p><a href={artifactUrl} target="_blank" rel="noreferrer">Unduh paket MP4 + thumbnail + metadata ↗</a></p>}
+    {renderRunUrl&&<p className="muted"><a href={renderRunUrl} target="_blank" rel="noreferrer">Lihat log render ↗</a></p>}
     <p className="muted">Tombol persetujuan ini memulai render klip AI. Setelah MP4 selesai, periksa hasilnya sebelum upload. Tidak ada upload YouTube otomatis.</p>
   </div>}
   {error&&<p className="error" role="alert">{error}</p>}
