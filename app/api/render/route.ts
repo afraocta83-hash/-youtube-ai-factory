@@ -11,7 +11,7 @@ const BRANCH=process.env.GITHUB_RENDER_BRANCH||"experiment/openmontage-video-eng
 export async function POST(request:Request){
   if(!isOwnerRequest(request)) return NextResponse.json({error:"Login owner diperlukan sebelum mengirim render."},{status:401});
   const token=process.env.GITHUB_ACTIONS_TOKEN;
-  if(!token) return NextResponse.json({error:"GITHUB_ACTIONS_TOKEN belum dipasang sebagai Secret server-side di Vercel Preview."},{status:503});
+  if(!token) return NextResponse.json({error:"GITHUB_ACTIONS_TOKEN belum dipasang sebagai environment variable rahasia server-side pada hosting Preview."},{status:503});
   try{
     const body=await request.json(),p=body?.production;
     if(!p||typeof p!=="object"||typeof p.ownerStory!=="string"||p.ownerStory!==p.script||!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6)
@@ -38,7 +38,7 @@ export async function POST(request:Request){
       const accepted=response.headers.get("x-accepted-github-permissions");
       const requestId=response.headers.get("x-github-request-id");
       if(response.status===403){
-        return NextResponse.json({error:"GitHub menolak token (403). Untuk Fine-grained PAT, aktifkan Repository permissions > Actions: Read and write dan pastikan akses repo -youtube-ai-factory diberikan. Simpan token baru ke Vercel Preview > GITHUB_ACTIONS_TOKEN pada branch experiment/openmontage-video-engine, lalu redeploy Preview. "+(accepted?"Izin yang diminta GitHub: "+accepted+". ":"")+(requestId?"Request ID: "+requestId+". ":"")+detail.slice(0,250)},{status:403});
+        return NextResponse.json({error:"GitHub menolak token (403). Untuk Fine-grained PAT, aktifkan Repository permissions > Actions: Read and write dan pastikan akses repo -youtube-ai-factory diberikan. Simpan token baru sebagai GITHUB_ACTIONS_TOKEN pada environment Preview untuk branch experiment/openmontage-video-engine, lalu redeploy Preview. "+(accepted?"Izin yang diminta GitHub: "+accepted+". ":"")+(requestId?"Request ID: "+requestId+". ":"")+detail.slice(0,250)},{status:403});
       }
       return NextResponse.json({error:`GitHub menolak job render (${response.status}). Periksa akses repo, branch, dan workflow. ${detail.slice(0,400)}`},{status:response.status===404?502:response.status});
     }
