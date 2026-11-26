@@ -112,10 +112,15 @@ jobs:
             if(!Number.isFinite(duration)||duration<=0) throw new Error('Durasi audio tidak valid pada adegan '+(i+1));
             scene.voiceFile=stem+'.wav';
             scene.voiceDurationSeconds=duration;
-            console.log('SCENE TTS PASS',{scene:i+1,engine,file:scene.voiceFile,seconds:Number(duration.toFixed(2)),bytes:fs.statSync(wav).size});
+            // Prevent per-scene narration from being clipped by the original storyboard timing.
+            scene.seconds=Math.max(Number(scene.seconds)||1,Math.ceil(duration+0.2));
+            console.log('SCENE TTS PASS',{scene:i+1,engine,file:scene.voiceFile,seconds:Number(duration.toFixed(2)),sceneSeconds:scene.seconds,bytes:fs.statSync(wav).size});
           }
+          const finalDuration=p.scenes.reduce((sum,scene)=>sum+Number(scene.seconds||0),0);
+          if(finalDuration<15||finalDuration>60) throw new Error('Durasi setelah menyesuaikan audio harus tetap 15-60 detik; revisi storyboard owner sebelum render.');
+          p.durationSeconds=finalDuration;
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
-          console.log('PER-SCENE AUDIO READY; Edge primary, Piper fallback.');
+          console.log('PER-SCENE AUDIO READY; Edge primary, Piper fallback. Narration fit checked.');
           NODE
       - name: Render MP4 vertical 1080x1920
         run: npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --props=production.json --codec=h264 --crf=20
