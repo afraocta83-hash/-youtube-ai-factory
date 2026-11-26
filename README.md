@@ -11,17 +11,13 @@ This repository turns a short owner idea into an Indonesian animated YouTube Sho
 - Pipeline: Groq idea-to-story → deterministic package QC → explicit owner render approval → Edge TTS (Piper fallback) → local Remotion animation → MP4 QC → thumbnail and YouTube metadata packaging → GitHub Actions artifact.
 - One Groq request per idea; strict JSON Schema; low reasoning effort; maximum completion budget 4,200 tokens.
 
-## Owner setup
-1. Add `GROQ_API_KEY` as the primary hosting Preview secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403).
-2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side hosting secret with Actions: write permission.
-3. No video-provider API key is required. The current render workflow uses the local Remotion engine.
-4. Open the Preview app and enter a short idea.
-5. Inspect the generated story, storyboard, and metadata.
-6. Only when satisfied, press **Saya setujui — mulai render MP4**.
-7. The dashboard checks render progress automatically and offers one download link for the MP4, thumbnail, and YouTube metadata when complete.
-8. Watch the entire MP4 and inspect audio, subtitles, visuals, and factual accuracy. Upload to YouTube only after your separate approval.
+## Runtime configuration
+- The Preview runtime expects `GROQ_API_KEY` (optional backups: `GROQ_API_KEY2`, `GROQ_API_KEY3`) and server-side `GITHUB_ACTIONS_TOKEN` with Actions read/write permission. These are hosting secrets, never browser values.
+- No Agnes or other video-provider API key is required. The current render workflow uses Remotion on GitHub's standard CPU runner.
+- Normal use requires no GitHub or hosting dashboard work: enter an idea, review the story and storyboard, approve the render, then download the completed package from the studio.
+- The studio checks render progress and packages the MP4, thumbnail, and YouTube metadata. Inspect the complete video before uploading; YouTube publishing remains manual.
 
-Detailed setup: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
+Detailed configuration reference: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
 
 ## Free-first architecture
 - Groq is the only LLM provider required by the app. One primary key is sufficient; up to two optional backup keys are supported.
