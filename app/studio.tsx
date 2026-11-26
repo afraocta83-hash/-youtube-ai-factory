@@ -46,6 +46,12 @@ export default function Studio(){
   await fetch("/api/auth/logout",{method:"POST"});
   setAuthenticated(false);setResult(null);setPrompt("");setRenderMessage("Sesi owner sudah ditutup.");
  }
+ async function dispatchRender(production:Production){
+  const res=await fetch("/api/render",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({production})});
+  const data=await res.json();
+  if(!res.ok)throw new Error(data.error||"Gagal memulai render.");
+  return data;
+ }
  async function generate(){
   setError("");setRenderMessage("");setResult(null);setUsage(null);setBusy(true);
   try{
@@ -56,6 +62,13 @@ export default function Studio(){
    const saved:SavedProduction={id:crypto.randomUUID(),title:production.workingTitle||"Lerry Short",createdAt:new Date().toISOString(),production};
    const next=[saved,...history].slice(0,10);
    setHistory(next);localStorage.setItem(HISTORY_KEY,JSON.stringify(next));
+   setRenderBusy(true);
+   try{
+    await dispatchRender(production);
+    setRenderMessage("Storyboard lolos QC dan render otomatis sudah dikirim ke GitHub Actions. MP4 akan tersedia sebagai artifact setelah job selesai.");
+   }catch(e){
+    setError("Storyboard berhasil dibuat dan tersimpan, tetapi render otomatis gagal: "+(e instanceof Error?e.message:"kesalahan render"));
+   }finally{setRenderBusy(false);}
   }catch(e){setError(e instanceof Error?e.message:"Terjadi kesalahan.");}
   finally{setBusy(false);}
  }
@@ -63,10 +76,8 @@ export default function Studio(){
   if(!result)return;
   setRenderBusy(true);setRenderMessage("");setError("");
   try{
-   const res=await fetch("/api/render",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({production:result})});
-   const data=await res.json();
-   if(!res.ok)throw new Error(data.error||"Gagal memulai render.");
-   setRenderMessage("Job render berhasil dikirim ke GitHub Actions. Buka halaman Actions untuk melihat status dan mengunduh MP4.");
+   await dispatchRender(result);
+   setRenderMessage("Render ulang berhasil dikirim ke GitHub Actions.");
   }catch(e){setError(e instanceof Error?e.message:"Render gagal dimulai.");}
   finally{setRenderBusy(false);}
  }
@@ -75,7 +86,7 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ GPT-OSS 120B</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>LLM hanya membuat storyboard satu kali. Pemeriksaan naskah, TTS, render, dan QC dijalankan otomatis oleh mesin. Cerita final lo tidak boleh ditulis ulang.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ GPT-OSS 120B</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Satu klik menjalankan storyboard, pemeriksaan naskah, TTS, render dan QC otomatis. LLM hanya dipanggil sekali; publikasi YouTube tetap menunggu persetujuan owner. Cerita final lo tidak boleh ditulis ulang.</p></div></div>
   {!authChecked?<p className="muted">Memeriksa sesi owner...</p>:!authenticated?<div className="ownerLogin">
    <h3>Login owner</h3><p className="muted">Masukkan password owner yang dipasang sebagai Secret <code>OWNER_PASSWORD</code> di Vercel Preview.</p>
    <label htmlFor="ownerPassword">Password owner</label><input id="ownerPassword" type="password" value={ownerPassword} onChange={e=>setOwnerPassword(e.target.value)} placeholder="Password owner" autoComplete="current-password"/>
@@ -84,7 +95,7 @@ export default function Studio(){
    <div className="studioActions"><span className="muted">Sesi owner aktif • riwayat tersimpan di perangkat ini</span><button className="secondary" onClick={logout}>Keluar</button></div>
    <label htmlFor="storyPrompt">Cerita final owner</label>
    <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={12000} placeholder="Tempel cerita lengkap yang sudah lo tulis. AI tidak akan menambah atau mengubah alur cerita..." rows={5}/>
-   <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang menyusun storyboard...":"Buat storyboard Shorts →"}</button></div>
+   <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"Menyusun storyboard & mengirim render...":"Produksi Shorts otomatis →"}</button></div>
    {busy&&<p className="muted">Groq sedang menyusun 4-6 adegan dengan satu permintaan. Pemeriksaan teks dilakukan oleh kode setelahnya.</p>}
    {result&&<div className="productionResult">
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
@@ -98,7 +109,7 @@ export default function Studio(){
     <h3>Catatan verifikasi</h3><ul>{result.factCheckNotes.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <h3>Query sumber</h3><ul>{result.sourceQueries.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
-    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Mengirim job render...":"Render MP4 otomatis →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
+    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Mengirim job render...":"Render ulang MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
     <p className="muted">Render memakai Edge TTS dengan Piper fallback. Video tidak diunggah ke YouTube otomatis; publikasi tetap menunggu persetujuan owner.</p>
    </div>}
