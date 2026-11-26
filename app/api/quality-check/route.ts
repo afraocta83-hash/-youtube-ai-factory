@@ -12,9 +12,9 @@ export async function POST(req:Request){
     const scenes:Scene[]=Array.isArray(p.scenes)?p.scenes:[];
     if(story.trim().length<80) issues.push("Cerita hasil AI terlalu pendek atau kosong.");
     if(scenes.length<4||scenes.length>6) issues.push("Storyboard harus berisi 4-6 adegan.");
-    if(scenes.some(s=>!Number.isInteger(Number(s.seconds))||Number(s.seconds)<2||Number(s.seconds)>20)) issues.push("Ada durasi adegan yang tidak valid.");
+    if(scenes.some(s=>!Number.isInteger(Number(s.seconds))||Number(s.seconds)<4||Number(s.seconds)>12)) issues.push("Ada durasi adegan yang tidak valid.");
     const seconds=scenes.reduce((n,s)=>n+(Number(s.seconds)||0),0);
-    if(seconds<15||seconds>60) issues.push("Total durasi harus 15-60 detik.");
+    if(seconds<20||seconds>60) issues.push("Total durasi harus 20-60 detik.");
     if(scenes.some(s=>String(s.imagePrompt||"").trim().length<25)) issues.push("Ada prompt visual yang kurang jelas.");
     if(scenes.some(s=>!String(s.narration||s.dialogue||"").trim())) issues.push("Setiap adegan wajib memiliki narasi atau dialog.");
     if(!p.title||String(p.title).length>100) warnings.push("Judul YouTube kosong atau terlalu panjang.");
