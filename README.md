@@ -6,7 +6,7 @@ This repository turns a short owner idea into an Indonesian animated YouTube Sho
 - Owner supplies only a short idea/topic (5-500 characters).
 - Groq GPT-OSS 120B creates the story, hook, narration, dialogue, subtitles, 4-6 scene storyboard, visual prompts, sound cues, thumbnail prompt, and YouTube metadata.
 - Owner reviews the generated story, scenes, and metadata before approving MP4 rendering.
-- After rendering, owner must inspect the actual MP4. Upload/publishing is a separate step and is not automatic.
+- After rendering, owner must inspect the actual MP4. Upload is a separate action and requires a second explicit owner approval.
 - Output target: MP4 H.264, 1080x1920, 30 fps, 15-60 seconds.
 - Pipeline: Groq idea-to-story → deterministic package QC → explicit owner render approval → Edge TTS (Piper fallback) → local Remotion animation → MP4 QC → thumbnail and YouTube metadata packaging → GitHub Actions artifact.
 - One Groq request per idea; strict JSON Schema; low reasoning effort; maximum completion budget 4,200 tokens.
@@ -15,7 +15,7 @@ This repository turns a short owner idea into an Indonesian animated YouTube Sho
 - The Preview runtime expects `GROQ_API_KEY` (optional backups: `GROQ_API_KEY2`, `GROQ_API_KEY3`) and server-side `GITHUB_ACTIONS_TOKEN` with Actions read/write permission. These are hosting secrets, never browser values.
 - No Agnes or other video-provider API key is required. The current render workflow uses Remotion on GitHub's standard CPU runner.
 - Normal use requires no GitHub or hosting dashboard work: enter an idea, review the story and storyboard, approve the render, then download the completed package from the studio.
-- The studio checks render progress and packages the MP4, thumbnail, and YouTube metadata. Inspect the complete video before uploading; YouTube publishing remains manual.
+- The studio checks render progress and packages the MP4, thumbnail, and YouTube metadata. Inspect the complete video, connect YouTube OAuth, select the extracted MP4, and explicitly approve upload. Upload defaults to Private.
 
 Detailed configuration reference: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
 
@@ -36,9 +36,9 @@ The production studio exposes the integrated agent roster at `GET /api/agents` a
 - Visual Agent: Remotion scene compositions and reusable character rig.
 - Video Agent: Remotion + FFmpeg on GitHub Actions.
 - Quality Control Agent: deterministic storyboard checks plus MP4/ffprobe/decode validation.
-- Publishing Agent: YouTube Data API integration remains gated and is not implemented yet.
+- Publishing Agent: YouTube OAuth + resumable upload session; each upload requires a second explicit owner approval and defaults to Private.
 
-Langflow is an optional visual workflow editor. The core production pipeline does not depend on a separately hosted Langflow service. Its live flow adapter is not yet implemented. YouTube publishing requires a separate OAuth implementation and explicit owner approval for every upload; render approval is not upload approval.
+Langflow is an optional visual workflow editor. The core production pipeline does not depend on a separately hosted Langflow service. Its live flow adapter is not yet implemented. YouTube publishing uses a separate OAuth connection and explicit owner approval for every upload; render approval is not upload approval. Langflow remains an optional visual editor without a live flow adapter.
 
 See [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for the integration boundary and remaining work.
 
@@ -47,4 +47,4 @@ See [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for the integration b
 - Narration is generated with Edge TTS (Piper fallback); subtitles are burned per scene. Phoneme alignment and lip-sync are not implemented.
 - Research/fact-check source retrieval is not automatic. Claims in educational/science stories still need manual verification.
 - The full live dashboard-to-MP4 flow still needs a successful end-to-end run on the deployed Preview. CI smoke tests validate the local Remotion MP4 path.
-- YouTube OAuth upload integration is not implemented. Publishing remains manual and separately approval-gated.
+- YouTube OAuth upload requires Google Cloud OAuth credentials and a successful live test. Langflow's live flow adapter is not implemented.
