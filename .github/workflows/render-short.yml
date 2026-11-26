@@ -86,7 +86,7 @@ jobs:
               const mime=part.inlineData.mimeType||'audio/pcm;rate=24000';
               let audio=raw;
               if(!mime.includes('wav')){
-                const rate=Number((mime.match(/rate=(\\d+)/)||[])[1]||24000);
+                const rate=Number((mime.match(/rate=(\d+)/)||[])[1]||24000);
                 const header=Buffer.alloc(44);
                 header.write('RIFF',0);header.writeUInt32LE(36+raw.length,4);header.write('WAVE',8);
                 header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);
@@ -95,7 +95,7 @@ jobs:
                 audio=Buffer.concat([header,raw]);
                 scene.voiceDurationSeconds=raw.length/(2*rate);
               }else{
-                scene.voiceDurationSeconds=Math.max(0.1,(audio.length-44)/48000);
+                scene.voiceDurationSeconds=Math.max(0.1,(audio.length-44)/(audio.readUInt32LE(24)*audio.readUInt16LE(22)));
               }
               const file='scene-'+String(i+1).padStart(2,'0')+'.wav';
               fs.writeFileSync('public/'+file,audio);
