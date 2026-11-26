@@ -1,3 +1,26 @@
+# LERRY — Agent performance add-ons 2026-11-27
+
+## Added to the existing production branch
+- Added Langfuse + OpenTelemetry dependencies and optional Next.js instrumentation. Tracing is enabled only when `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are present; otherwise it is no-op.
+- Added `withAgentSpan` and traced Langflow storyboard calls, Groq fallback calls, storyboard schema validation, pre-render storyboard QC, GitHub Actions render dispatch, and owner-approved YouTube upload-session creation. Story text and credentials are not sent as trace attributes.
+- Added Promptfoo configuration with one Groq regression case that checks JSON validity, 4-6 scenes, all required fields, non-empty narration, allowed character actions, and total duration. Existing build-check workflow runs it only when the repository Actions secret `GROQ_API_KEY` is present.
+- Added Langfuse readiness to the dashboard agent registry and documented optional configuration in `.env.example` and `docs/AGENT_INTEGRATION.md`.
+- Kept Langflow, Edge TTS/Piper, Remotion, FFmpeg, GitHub Actions, QC, and approval-gated YouTube upload as the production pipeline. No second agent runtime or separate worker platform was added.
+
+## Selected vs. deferred
+- Selected: Promptfoo (MIT) for regression/evaluation and Langfuse (MIT) for agent observability.
+- Deferred: Mastra, LangGraph.js, CrewAI, Agno and Trigger.dev because they duplicate the existing orchestrator or add a separate runtime/hosting footprint.
+- Excluded: Flowise because its curated platform directory reports end-of-life on 31 August 2026.
+
+## Verification / deployment
+- Static repository changes are committed on `experiment/openmontage-video-engine`; `main` remains untouched.
+- No successful CI run has been observed for the newest changes. Earlier push-triggered workflow records were marked failed with no jobs returned; after the workflow condition was corrected, no newer GitHub Actions run appeared in the available run list.
+- Latest commit combined status returned a Vercel failure with target URL indicating the build-rate limit requires a plan upgrade. Therefore no Preview deployment or production deployment is claimed.
+- Langfuse traces require optional Langfuse keys. Promptfoo's live evaluation requires the GitHub Actions secret `GROQ_API_KEY`; if absent, that CI step is skipped.
+- No live Langfuse ingestion, Promptfoo model call, Langflow production flow, YouTube OAuth connection, or real MP4 upload has been performed in this session.
+
+---
+
 # LERRY — Integration follow-up 2026-11-27
 
 The initial integration note below predates the latest additions. Current state:
