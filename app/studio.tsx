@@ -3,7 +3,7 @@ import { useState } from "react";
 import SupabasePanel from "./supabase-panel";
 
 type Production = {
- workingTitle:string; hook:string; synopsis:string; script:string; durationSeconds:number;
+ workingTitle:string; hook:string; synopsis:string; script:string; ownerStory:string; durationSeconds:number;
  scenes:{number:number;seconds:number;visual:string;narration:string;dialogue:string;sound:string;imagePrompt:string;subtitle:string}[];
  title:string;description:string;hashtags:string[];thumbnailPrompt:string;factCheckNotes:string[];sourceQueries:string[];qcChecklist:string[];
 };
