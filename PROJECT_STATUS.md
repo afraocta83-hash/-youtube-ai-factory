@@ -1,3 +1,30 @@
+# LERRY — Delivery update 2026-11-27
+
+Working branch: `experiment/openmontage-video-engine`. `main` remains untouched.
+
+## Changes committed
+- Removed the Agnes Docker/video API dependency and its required `AGNES_API_KEY`.
+- Render job now uses Edge TTS with Piper fallback, then Remotion + FFmpeg on a standard GitHub Actions CPU runner.
+- Render job validates H.264 1080×1920, 30 fps, audio stream, and full decode.
+- Added a thumbnail JPG and YouTube metadata JSON to the render artifact.
+- Added dashboard polling for workflow status and a direct signed artifact download link.
+- Added CI smoke-test coverage for an MP4 with an audio stream.
+- README and studio labels disclose that this is a template-driven 2D character animation renderer, not bespoke AI-generated 3D video.
+
+## Current verification and blockers
+- The last known successful GitHub Actions run is the earlier run `45887796281`; it tested the previous Agnes container health/build path, not the new Remotion MP4 smoke test.
+- The new Remotion smoke test and the live owner-to-artifact flow have not yet been observed passing.
+- The latest available Vercel Preview deployment is still commit `c30e8cb6ce8b529ee3700de2c32848591a352285`, not the latest experiment branch commits.
+- Vercel rejected a new Preview deployment with HTTP 402 `api-deployments-free-per-day` and `retryAfter=86400`; the free daily deployment quota is exhausted. No paid upgrade was made.
+- Vercel Preview environment metadata lists `GROQ_API_KEY`, optional backup keys, and `GITHUB_ACTIONS_TOKEN` as configured names. Secret values were not read, so their validity and GitHub permissions remain unverified.
+- No YouTube OAuth uploader exists. The output package is prepared for manual upload; publishing remains separate.
+- No merge to `main`, Production deployment, or YouTube upload was performed.
+
+## Resource constraints
+- The free path uses GitHub-hosted CPU runners and open-source Remotion/FFmpeg. It can render a deterministic animated MP4 without a paid video API.
+- Realistic generative video models such as Wan require a capable GPU (roughly 8–16 GB VRAM depending on model/quantization) and large model storage; standard GitHub-hosted runners do not provide GPU acceleration. They are not installed in this cloud CPU pipeline.
+- Intended owner workflow: enter idea, review story/storyboard, approve render, download package. No technical GitHub/hosting setup should be needed once Preview deployment and existing secrets are valid.
+
 # LERRY — Update 2026-11-27
 
 Current working branch: `experiment/openmontage-video-engine`.
