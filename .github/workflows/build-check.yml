@@ -27,6 +27,22 @@ jobs:
         with:
           python-version: "3.11"
       - run: python -m py_compile scripts/render_agnes.py
+      - name: Smoke-test Agnes video engine container (no generation)
+        run: |
+          docker pull ghcr.io/lcy362/free-short-video:8.2.2
+          docker run -d --name agnes-smoke -p 8765:8765 ghcr.io/lcy362/free-short-video:8.2.2
+          cleanup() { docker rm -f agnes-smoke >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          for i in $(seq 1 60); do
+            if curl -fsS http://127.0.0.1:8765/api/health | grep -q 'healthy'; then
+              echo "AGNES_CONTAINER_HEALTH_PASS"
+              exit 0
+            fi
+            sleep 3
+          done
+          docker logs agnes-smoke --tail 100
+          echo "::error::Agnes container health check failed."
+          exit 1
       - uses: actions/setup-node@v4
         with:
           node-version: 22
