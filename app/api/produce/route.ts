@@ -94,6 +94,8 @@ export async function POST(request: Request) {
       if(!Number.isInteger(Number(s.seconds))||s.seconds<4||s.seconds>12) throw new Error(`Durasi adegan ${i+1} tidak valid.`);
       total+=Number(s.seconds); s.number=i+1;
       if(typeof s.imagePrompt!=="string"||s.imagePrompt.trim().length<25) throw new Error(`Prompt visual adegan ${i+1} kurang jelas.`);
+      if(!String(s.subtitle||"").trim()) throw new Error(`Subtitle adegan ${i+1} kosong.`);
+      if(!["idle","walk","run","surprised","point"].includes(String(s.action||""))) throw new Error(`Aksi karakter adegan ${i+1} tidak didukung renderer.`);
       if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
