@@ -1,3 +1,31 @@
+# LERRY — Unified Agent Integration 2026-11-27
+
+Working branch: `experiment/openmontage-video-engine`; `main` remains untouched.
+
+## Implemented in this change set
+- Added a single production agent registry and `GET /api/agents`; the studio now displays each agent's readiness.
+- Kept the current Groq → Edge TTS/Piper → Remotion → FFmpeg → QC pipeline as the production backbone. Langflow is optional and is not yet invoked as a live workflow service.
+- Added YouTube OAuth connect/callback/status routes, encrypted refresh-token cookie storage, and a resumable upload-session endpoint.
+- Added a dashboard publishing panel. Owner must connect YouTube, extract the MP4 from the artifact ZIP, select that MP4, and explicitly approve a separate upload. Upload defaults to Private.
+- Added same-origin validation to the upload-session endpoint and documented the required OAuth secrets in `.env.example` and `docs/AGENT_INTEGRATION.md`.
+
+## Verification state
+- GitHub Actions build-check was automatically triggered by the commits. Latest observed run: [run 45900674970](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45900674970), commit `9d9d4f3cbfcb4e968928b6c6353946bc793e53a2`; at last inspection, dependency installation was in progress. TypeScript, Next build, and Remotion MP4 smoke test had not yet completed.
+- Later commits also triggered build-check runs. The latest commit in this update series adds same-origin validation to the YouTube upload-session route; its CI result must be checked separately.
+- No live Google OAuth connection or YouTube upload has been performed. The four YouTube OAuth secrets must be configured in hosting before the publisher can connect.
+- No live Langflow flow is connected; it remains optional and the internal pipeline does not depend on it.
+- No Preview deployment, merge to `main`, Production deployment, or YouTube publishing was performed.
+
+## Required runtime configuration for YouTube
+- `YOUTUBE_CLIENT_ID`
+- `YOUTUBE_CLIENT_SECRET`
+- `YOUTUBE_REDIRECT_URI` (exact callback: `https://YOUR-DOMAIN/api/youtube/callback`)
+- `YOUTUBE_TOKEN_ENCRYPTION_KEY` (32 random bytes encoded as 64 hex characters)
+
+Keep all values as server-side hosting secrets. Never commit real credentials.
+
+---
+
 # LERRY — Delivery update 2026-11-27
 
 Working branch: `experiment/openmontage-video-engine`. `main` remains untouched.
