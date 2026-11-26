@@ -6,6 +6,7 @@ on:
       - experiment/openmontage-video-engine
     paths:
       - .github/workflows/test-tts-engines.yml
+      - .github/workflows/render-short.yml
   workflow_dispatch:
 
 permissions:
