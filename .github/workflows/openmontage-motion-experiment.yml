@@ -96,7 +96,7 @@ jobs:
           const fs=require('node:fs');
           const story='Riko menemukan peta di loteng. Ia mengikuti tanda menuju taman. Di bawah pohon, ia menemukan kotak kecil. Riko membuka kotak dan tersenyum.';
           const lines=['Riko menemukan peta di loteng.','Ia mengikuti tanda menuju taman.','Di bawah pohon, ia menemukan kotak kecil.','Riko membuka kotak dan tersenyum.'];
-          const production={workingTitle:'Riko dan Peta Rahasia',script:story,ownerStory:story,voiceFile:'voice.wav',scenes:lines.map((line,i)=>({number:i+1,seconds:4,visual:'Adegan uji '+(i+1),narration:line,dialogue:'',subtitle:line}))};
+          const production={workingTitle:'Riko dan Peta Rahasia',script:story,ownerStory:story,voiceFile:'voice.wav',scenes:lines.map((line,i)=>({number:i+1,seconds:4,visual:'Adegan uji '+(i+1),action:['surprised','walk','point','idle'][i],narration:line,dialogue:'',subtitle:line}))};
           fs.writeFileSync('production-smoke.json',JSON.stringify(production,null,2));
           const sampleRate=24000,seconds=16,pcm=Buffer.alloc(sampleRate*seconds*2),header=Buffer.alloc(44);
           header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);
