@@ -25,7 +25,7 @@ const palette = [
 const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> = ({ scene, index, title }) => {
   const frame = useCurrentFrame();
   const colors = palette[index % palette.length];
-  const opacity = interpolate(frame, [0, 12, Math.max(13, scene.seconds * 30 - 12), scene.seconds * 30], [1, 1, 1, 0], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const opacity = 1; // Hard scene cuts avoid a black final frame in each non-overlapping Sequence.
   const scale = interpolate(frame, [0, scene.seconds * 30], [0.94, 1.04], { extrapolateRight: "clamp" });
   const caption = scene.subtitle || scene.dialogue || scene.narration || "";
   const visual = scene.visual || "Adegan cerita";
