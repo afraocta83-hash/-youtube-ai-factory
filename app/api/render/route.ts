@@ -21,12 +21,12 @@ export async function POST(request:Request){
     let total=0;
     for(const [i,s] of p.scenes.entries()){
       const seconds=Number(s?.seconds);
-      if(!Number.isInteger(seconds)||seconds<2||seconds>20) return NextResponse.json({error:`Durasi adegan ${i+1} tidak valid.`},{status:400});
+      if(!Number.isInteger(seconds)||seconds<4||seconds>12) return NextResponse.json({error:`Durasi adegan ${i+1} tidak valid.`},{status:400});
       total+=seconds;
       if(typeof s?.imagePrompt!=="string"||s.imagePrompt.trim().length<25) return NextResponse.json({error:`Prompt visual adegan ${i+1} belum valid.`},{status:400});
       if(!String(s?.narration||s?.dialogue||"").trim()) return NextResponse.json({error:`Narasi/dialog adegan ${i+1} kosong.`},{status:400});
     }
-    if(total<15||total>60) return NextResponse.json({error:"Durasi video harus 15-60 detik."},{status:400});
+    if(total<20||total>60) return NextResponse.json({error:"Durasi video harus 20-60 detik."},{status:400});
     const productionJson=JSON.stringify(p);
     if(Buffer.byteLength(productionJson,"utf8")>60000) return NextResponse.json({error:"Paket produksi melebihi batas 60 KB GitHub Actions."},{status:413});
     const response=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,{
