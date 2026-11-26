@@ -36,7 +36,7 @@ const SceneCard: React.FC<{ scene: ShortScene; index: number; title: string }> =
       <div style={{ position: "absolute", top: 82, left: 64, right: 64, fontSize: 34, fontWeight: 800, letterSpacing: 3, color: "#172033", textShadow: "0 2px 8px rgba(255,255,255,.8)" }}>LERRY ANIMASI</div>
       <div style={{ position: "absolute", top: 160, left: 70, right: 70, fontSize: 52, lineHeight: 1.1, fontWeight: 900, textAlign: "center", color: "#172033", textShadow: "0 3px 10px rgba(255,255,255,.85)" }}>{title}</div>
       <div style={{ position: "absolute", top: 330, left: 0, right: 0, height: 900, display: "flex", justifyContent: "center", transform: `scale(${scale})` }}>
-        <div style={{ width: "78%", height: "100%" }}><CharacterRig action={scene.action || "idle"} accent={colors[2]} travelAcross /></div>
+        <div style={{ width: "78%", height: "100%" }}><CharacterRig action={scene.action || "idle"} accent={colors[2]} travelAcross speaking={Boolean(scene.voiceFile)} /></div>
       </div>
       <div style={{ position: "absolute", bottom: 250, left: 72, right: 72, minHeight: 120, padding: "30px 28px", borderRadius: 28, background: "rgba(7,12,27,.84)", border: "3px solid rgba(255,255,255,.2)", fontSize: 46, fontWeight: 800, lineHeight: 1.2, textAlign: "center" }}>{syncedCaption}</div>
       <div style={{ position: "absolute", bottom: 112, left: 72, right: 72, display: "flex", justifyContent: "space-between", fontSize: 26, opacity: .75 }}><span>SHORTS • 9:16</span><span>{index + 1}</span></div>
