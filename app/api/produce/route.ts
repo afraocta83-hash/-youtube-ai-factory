@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { runLangflow } from "@/lib/agents/langflow";
+import { withAgentSpan } from "@/lib/agents/telemetry";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -63,7 +64,7 @@ export async function POST(request: Request) {
     let data: any = null;
     if (langflowConfigured) {
       try {
-        raw = await runLangflow(prompt);
+        raw = await withAgentSpan("storyboard.langflow", { "agent.name": "Langflow Storyboard Agent", "agent.provider": "langflow", "input.length": idea.length }, () => runLangflow(prompt));
         provider = "langflow";
       } catch (error) {
         if (!apiKeys.length) throw error;
@@ -73,7 +74,7 @@ export async function POST(request: Request) {
     if (!raw) {
       let response: Response | null = null;
       for (const [i,key] of apiKeys.entries()) {
-        response=await fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)});
+        response=await withAgentSpan("storyboard.groq", { "agent.name": "Groq Storyboard Agent", "agent.provider": "groq", "llm.model": model, "input.length": idea.length, "provider.key_index": i + 1 }, () => fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)}));
         data=await response.json();
         if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
       }
@@ -85,7 +86,7 @@ export async function POST(request: Request) {
     }
     if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Provider AI tidak mengembalikan JSON produksi."},{status:502});
 
-    const p=JSON.parse(raw);
+    const p=await withAgentSpan("storyboard.validate", { "agent.name": "Storyboard QC Agent", "agent.scene_schema": "lerry-shorts-v1" }, async () => JSON.parse(raw!));
     if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error("Storyboard harus berisi 4-6 adegan.");
     if(typeof p.story!=="string"||p.story.trim().length<80) throw new Error("Cerita hasil AI terlalu pendek atau kosong.");
     let total=0;
