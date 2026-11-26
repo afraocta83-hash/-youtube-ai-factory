@@ -211,7 +211,9 @@ jobs:
             console.log('MP4 PASS',path,{width:video.width,height:video.height,fps:num/den,duration,audio:Boolean(audio)});
           }
           verify('out/motion-metadata.json',15,false);
-          verify('out/short-metadata.json',16,true);
+          const production=JSON.parse(fs.readFileSync('production-smoke.json','utf8'));
+          const expectedShortDuration=production.scenes.reduce((sum,scene)=>sum+Number(scene.seconds),0);
+          verify('out/short-metadata.json',expectedShortDuration,true);
           NODE
           test -s out/tts-smoke.wav
           ffprobe -v error -show_entries stream=codec_name,sample_rate,channels -show_entries format=duration -of json out/tts-smoke.wav > out/tts-metadata.json
