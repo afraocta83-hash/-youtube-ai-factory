@@ -1,12 +1,12 @@
-# LERRY ANIMASI — Owner-Authored Shorts Production Rules
+# LERRY ANIMASI — Idea-First Shorts Production Rules
 
 ## Owner input
-The owner supplies the complete final story. The AI crew must not write, rewrite, shorten, reorder, embellish or change the plot, dialogue, facts or ending. If the story cannot fit 15–60 seconds without cutting or rewriting, stop and ask the owner what to prioritize.
+The owner supplies only a short idea/topic. The AI writing crew creates an original story, hook, dialogue, narration, subtitles and ending. Keep all generated elements consistent. Do not copy protected characters or works, and do not present uncertain factual claims as verified.
 
 ## Automated production team
-1. **Producer/orchestrator:** validates the owner story and starts the production workflow.
-2. **Storyboard + metadata:** one Groq GPT-OSS 120B request creates 4–6 scenes, visual directions, timing, sound cues, title, description, hashtags and thumbnail prompt. Strict JSON Schema, low reasoning effort, maximum 3,200 completion tokens.
-3. **Story integrity/QC:** deterministic code verifies the original story is preserved exactly and all narration, dialogue, subtitle and hook text are verbatim excerpts. It also checks scene count, duration and required visual prompts.
+1. **Producer/orchestrator:** accepts a short idea and requests story, storyboard and metadata from the AI producer.
+2. **Story + storyboard + metadata:** one Groq GPT-OSS 120B request creates the original story, hook, 4–6 scenes, visual directions, timing, sound cues, title, description, hashtags and thumbnail prompt. Strict JSON Schema, low reasoning effort, maximum 4,200 completion tokens.
+3. **Story/QC:** deterministic code checks story presence, scene count, timing, narration/dialogue, visual prompts, title and description. It does not verify external facts or subjective story quality.
 4. **Voice:** Edge TTS Indonesian Ardi voice generates narration per scene. Piper Indonesian voice is the fallback if Edge generation or audio conversion fails.
 5. **Visual composition:** Remotion uses the generated visual directions with the existing vector backdrops and 2D character rig. Bespoke AI images per scene and full 3D acting are not yet implemented.
 6. **Editor/render:** GitHub Actions runs Remotion and FFmpeg, validates H.264, 1080×1920, 30 fps, duration, audio and full decode, then uploads the MP4 artifact.
@@ -15,9 +15,9 @@ The owner supplies the complete final story. The AI crew must not write, rewrite
 9. **Publisher:** manual owner action only. Never upload or schedule until the owner explicitly approves the final MP4 and metadata.
 
 ## Approval and publishing
-- Do not ask the owner to write intermediate scripts or storyboards.
+- Do not ask the owner to write intermediate scripts or storyboards. The owner only provides the idea and reviews the AI draft.
 - Ask only when a real ambiguity, factual issue or safety issue blocks production.
-- Do not publish, schedule, or make a video public until the owner explicitly approves the final rendered video and metadata.
+- Do not dispatch render until the owner explicitly approves the story, storyboard and metadata. Do not upload, schedule, or make a video public until the owner explicitly reviews and approves the final rendered MP4 and metadata.
 - Upload target is YouTube only, profile @lerry_animasi, after approval.
 - If any stage cannot be completed with available free resources, report the exact blocker and provide the closest working free alternative. Never claim a render, upload, integration, or test succeeded unless verified.
 
