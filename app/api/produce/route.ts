@@ -98,7 +98,12 @@ export async function POST(request: Request) {
       if(!String(s.subtitle||"").trim()) throw new Error(`Subtitle adegan ${i+1} kosong.`);
       if(!["idle","walk","run","surprised","point"].includes(String(s.action||""))) throw new Error(`Aksi karakter adegan ${i+1} tidak didukung renderer.`);
       if(!String(s.narration||s.dialogue||"").trim()) throw new Error(`Adegan ${i+1} belum memiliki narasi atau dialog.`);
-      if(s.narration){\n        const narrationText=s.narration.trim();\n        const narrationAt=ownerStory.indexOf(narrationText,narrationCursor);\n        if(narrationAt<0) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli berurutan dari cerita owner.`);\n        narrationCursor=narrationAt+narrationText.length;\n      }\n      if(s.subtitle&&!String(s.narration||"").includes(s.subtitle.trim())) throw new Error(`Subtitle adegan ${i+1} harus diambil dari narasi adegan.`);
+      if(s.narration){
+        const narrationText=s.narration.trim();
+        const narrationAt=ownerStory.indexOf(narrationText,narrationCursor);
+        if(narrationAt<0) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli berurutan dari cerita owner.`);
+        narrationCursor=narrationAt+narrationText.length;
+      }\n      if(s.subtitle&&!String(s.narration||"").includes(s.subtitle.trim())) throw new Error(`Subtitle adegan ${i+1} harus diambil dari narasi adegan.`);
       if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
