@@ -74,7 +74,7 @@ jobs:
               method: 'POST',
               headers: {'content-type':'application/json'},
               body: JSON.stringify({
-                contents: [{parts:[{text:'Say in Indonesian with this direction: Narator kartun Shorts Indonesia, ekspresif, jelas, tempo hidup, artikulasi bersih.\n\n' + spoken}]}],
+                contents: [{parts:[{text:spoken,speechMetadata:{style:'Narator kartun Shorts Indonesia, ekspresif, jelas, tempo hidup, artikulasi bersih.'}}]}],
                 generationConfig: {
                   responseModalities: ['AUDIO'],
                   speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
