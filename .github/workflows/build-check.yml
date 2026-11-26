@@ -9,7 +9,7 @@ on:
       - "lib/**"
       - "src/remotion/**"
       - "scripts/**"
-      - "package.json"
+      - "promptfooconfig.yaml"\n      - "package.json"
       - "package-lock.json"
       - "tsconfig.json"
       - "next.config.ts"
