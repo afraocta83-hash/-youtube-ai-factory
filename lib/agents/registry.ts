@@ -22,7 +22,7 @@ export function getAgentRegistry(): AgentInfo[] {
 
   return [
     { id: "orchestrator", name: "Production Orchestrator", role: "Mengatur urutan agent dan status produksi", engine: "Lerry internal pipeline", status: "ready", detail: "Menggunakan alur internal agar produksi tetap berjalan tanpa server tambahan." },
-    { id: "langflow", name: "Langflow Workflow Agent", role: "Editor visual untuk workflow dan eksperimen agent", engine: "Langflow", status: hasLangflow ? "ready" : "optional", detail: hasLangflow ? "Endpoint dan Flow ID tersedia; adapter Langflow dapat diaktifkan." : "Opsional. Pipeline inti tidak bergantung pada server Langflow." },
+    { id: "langflow", name: "Langflow Workflow Agent", role: "Editor visual untuk workflow dan eksperimen agent", engine: "Langflow", status: "optional", detail: hasLangflow ? "Konfigurasi ditemukan. Pemanggilan flow belum diimplementasikan; pipeline inti tetap berjalan internal." : "Opsional. Pipeline inti tidak bergantung pada server Langflow." },
     { id: "storyboard", name: "Storyboard Agent", role: "Membuat cerita, dialog, storyboard, dan metadata", engine: "Groq GPT-OSS 120B", status: hasGroq ? "ready" : "blocked", detail: hasGroq ? "Provider Groq terkonfigurasi." : "Tambahkan GROQ_API_KEY di hosting." },
     { id: "narrator", name: "Narrator Agent", role: "Membuat narasi Bahasa Indonesia per adegan", engine: "Edge TTS → Piper fallback", status: "ready", detail: "Dijalankan pada GitHub Actions saat render." },
     { id: "visual", name: "Visual Agent", role: "Mengubah arahan visual menjadi adegan animasi konsisten", engine: "Remotion scene compositions", status: "ready", detail: "Visual template/rig 2D; bukan generator footage AI." },
