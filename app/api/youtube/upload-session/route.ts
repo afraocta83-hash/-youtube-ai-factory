@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getYoutubeAccessToken } from "@/lib/youtube/oauth";\nimport { withAgentSpan } from "@/lib/agents/telemetry";
+import { getYoutubeAccessToken } from "@/lib/youtube/oauth";
+import { withAgentSpan } from "@/lib/agents/telemetry";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
