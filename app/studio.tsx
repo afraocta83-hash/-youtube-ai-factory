@@ -62,13 +62,7 @@ export default function Studio(){
    const saved:SavedProduction={id:crypto.randomUUID(),title:production.workingTitle||"Lerry Short",createdAt:new Date().toISOString(),production};
    const next=[saved,...history].slice(0,10);
    setHistory(next);localStorage.setItem(HISTORY_KEY,JSON.stringify(next));
-   setRenderBusy(true);
-   try{
-    await dispatchRender(production);
-    setRenderMessage("Storyboard lolos QC dan render otomatis sudah dikirim ke GitHub Actions. MP4 akan tersedia sebagai artifact setelah job selesai.");
-   }catch(e){
-    setError("Storyboard berhasil dibuat dan tersimpan, tetapi render otomatis gagal: "+(e instanceof Error?e.message:"kesalahan render"));
-   }finally{setRenderBusy(false);}
+   setRenderMessage("Draft cerita dan storyboard siap diperiksa. Belum ada render atau upload yang dijalankan.");
   }catch(e){setError(e instanceof Error?e.message:"Terjadi kesalahan.");}
   finally{setBusy(false);}
  }
@@ -76,8 +70,11 @@ export default function Studio(){
   if(!result)return;
   setRenderBusy(true);setRenderMessage("");setError("");
   try{
+   const qc=await fetch("/api/quality-check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(result)});
+   const report=await qc.json();
+   if(!qc.ok||!report.passed) throw new Error("QC belum lolos: "+[...(report.issues||[]),...(report.warnings||[])].join(" • "));
    await dispatchRender(result);
-   setRenderMessage("Render ulang berhasil dikirim ke GitHub Actions.");
+   setRenderMessage("QC struktur lulus (skor "+report.score+"). Render MP4 dikirim setelah persetujuan lo. Tunggu artifact selesai, lalu tonton dan periksa sebelum upload.");
   }catch(e){setError(e instanceof Error?e.message:"Render gagal dimulai.");}
   finally{setRenderBusy(false);}
  }
