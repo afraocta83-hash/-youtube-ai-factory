@@ -24,7 +24,7 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
   const cycle = frame % 90;
   const moving = action === "walk" || action === "run";
   const speed = action === "run" ? 2.8 : 7;
-  const stride = action === "run" ? 20 : 13;
+  const stride = action === "run" ? 10 : 13;
   const gait = moving ? Math.sin(frame / speed) : 0;
   const bob = Math.sin(frame / (action === "run" ? 2.8 : 7)) * (action === "idle" ? 3 : moving ? 9 : 5);
   const travel = action === "walk"
