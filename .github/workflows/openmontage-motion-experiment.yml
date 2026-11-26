@@ -1,0 +1,44 @@
+name: Lerry OpenMontage Motion Experiment
+
+on:
+  push:
+    branches:
+      - experiment/openmontage-video-engine
+    paths:
+      - "src/remotion/**"
+      - ".github/workflows/openmontage-motion-experiment.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  render-motion-showcase:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout experiment branch
+        uses: actions/checkout@v4
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Install dependencies
+        run: npm install
+      - name: Verify Remotion compositions
+        run: npx remotion compositions src/remotion/index.ts
+      - name: Render five-action showcase
+        run: |
+          mkdir -p out
+          npx remotion render src/remotion/index.ts SceneMotionShowcase out/openmontage-motion-showcase.mp4 --codec=h264 --crf=23
+      - name: Verify MP4
+        run: |
+          test -s out/openmontage-motion-showcase.mp4
+          ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 out/openmontage-motion-showcase.mp4
+      - name: Upload experiment artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: lerry-openmontage-motion-showcase
+          path: out/openmontage-motion-showcase.mp4
+          if-no-files-found: error
+          retention-days: 7
