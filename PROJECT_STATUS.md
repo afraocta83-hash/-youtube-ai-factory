@@ -1,10 +1,10 @@
 # Lerry Animasi — Project Status
 
 Last updated: 2026-11-26
-Current stage: end-to-end synthetic smoke passed; visual/audio acceptance and product integration remain
+Current stage: visual/audio/dashboard integration implemented on experiment branch; verification and external service setup remain
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Branch comparison at update: 69 commits ahead, 0 behind
+Branch comparison at update: 76 commits ahead, 0 behind
 Main HEAD at update: `db295ed51181d8ff969fe2ebea96891b4394cb45`
 
 ## Safety boundary
@@ -29,16 +29,16 @@ Main HEAD at update: `db295ed51181d8ff969fe2ebea96891b4394cb45`
 - The QC endpoint now requires `ownerStory`; a missing source story can no longer pass merely as a warning.
 - The TTS integration was migrated from the unavailable `gemini-2.5-flash-tts` Developer API target to `gemini-3.8-flash-tts`. Storyboard generation uses `gemini-3.5-flash-lite` to reduce capacity pressure.
 
-## Known gaps — not production-ready yet
+## Changes added after run #54 — awaiting fresh CI verification\n- `SceneBackdrop.tsx` now has deterministic free vector environments for library, treasure/chest, nature, room, city and fallback scenes; these are more scene-specific but remain vector illustrations, not unique generated artwork.\n- `CharacterRig.tsx` adds breathing, secondary motion, head tilt, blinking, anticipation and stronger walk/run travel. Still a stylized 2D rig, not full character acting or lip-sync.\n- `Short.tsx` now supports per-scene audio files and progressive word reveal based on measured audio duration. This is approximate word timing, not phoneme-level forced alignment.\n- `render-short.yml` now requests TTS per scene, writes separate WAV assets and passes each scene's audio duration to Remotion. The render still needs a new workflow run to validate the new multi-request path.\n- Dashboard now includes a Render MP4 button and `/api/render` securely dispatches the GitHub Actions workflow server-side. It requires `GITHUB_ACTIONS_TOKEN` in Vercel with Actions: write; it is not configured or verified yet.\n- Existing Supabase panel, browser client and `supabase/schema.sql` are present. Vercel production has `NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY` metadata, but preview variables and actual database/schema/storage execution have not been verified.\n- Vercel team lookup shows the `youtube-ai-factory` project exists, but no Git-linked projects are registered for the team/repository. The experiment branch has no Vercel preview deployment. No project linking or production deployment was done.\n\n## Known gaps — not production-ready yet
 1. Scene art is still template/vector scenery selected by simple keywords. The `imagePrompt` does not yet generate unique scene illustrations, props, or consistent character reference sheets.
 2. The character is a simple code-drawn rig. Actions exist, but acting, body mechanics, expressions and scene interaction are not production-grade.
-3. TTS currently produces one combined narration track. It is not split per scene or per character; the 16.58-second smoke narration does not fill the 30-second test video.
-4. Subtitle timing is scene-based/static, not aligned to spoken words. No lip-sync is implemented.
+3. Per-scene TTS has now been implemented in the workflow but has not passed a fresh CI run; duration fit and audio quality still need artifact inspection.
+4. Subtitle reveal is now estimated from each scene WAV duration; true word/phoneme alignment and lip-sync remain unimplemented.
 5. QC validates package structure and text integrity; it does not yet judge visual continuity, subtitle safe areas, narration clarity, lip-sync, factual accuracy or copyright.
-6. The dashboard still requires manual transfer of the production JSON to GitHub Actions. It is not a one-click or unattended factory.
+6. A dashboard dispatch API/button has been added, but it is not operational until the GitHub Actions token is configured and the deployed dashboard is verified.
 7. The end-to-end test used a synthetic test story, not a final story supplied and approved by the owner.
-8. Supabase storage/configuration is not confirmed.
-9. The Vercel deployment and protected dashboard were not revalidated in this run.
+8. Supabase client, auth panel, RLS schema and private bucket definition exist; actual SQL execution, bucket policies and live save/restore remain unverified.
+9. Vercel project exists but has no Git repository connection; experiment preview deployment is unavailable until project linking is resolved. Production env variables are present but not copied to Preview.
 10. YouTube publishing remains manual and approval-gated.
 
 ## Next task queue
@@ -47,12 +47,12 @@ Main HEAD at update: `db295ed51181d8ff969fe2ebea96891b4394cb45`
 - [x] Enforce ownerStory in structural QC and test negative cases.
 - [x] Render the generated storyboard with its real narration audio.
 - [x] Verify MP4 codec, dimensions, frame rate, duration, audio stream, non-silence and full decode.
-- [ ] Improve scene-specific free/local vector illustration so the visual category matches each scene more accurately.
-- [ ] Improve rig acting and add scene interaction/props; obtain owner visual acceptance.
-- [ ] Split narration per scene and align subtitle timing; add audio/lip-sync checks.
+- [x] Add deterministic scene-specific vector environments for library, treasure, nature, room and city; [ ] inspect rendered frames and refine mismatches.
+- [x] Improve rig secondary motion, blinking, anticipation and travel; [ ] add hand-held props and scene interaction; obtain owner visual acceptance.
+- [x] Implement per-scene narration WAVs and approximate duration-based subtitle reveal; [ ] pass CI and inspect word timing/audio; [ ] implement true forced alignment/lip-sync.
 - [ ] Run an end-to-end test using an owner-provided final story and review the MP4 with the owner.
-- [ ] Verify Supabase storage and the protected Vercel dashboard separately.
-- [ ] Implement secure dashboard-to-render handoff without exposing credentials in the browser.
+- [ ] Execute Supabase schema and test login/save/read/storage; verify Vercel Preview environment separately.
+- [x] Add server-side GitHub Actions dispatch endpoint and dashboard render button; [ ] configure `GITHUB_ACTIONS_TOKEN` on Vercel and test dispatch.
 - [ ] Only after acceptance, ask for separate authorization to merge or deploy.
 
 ## Acceptance rule
