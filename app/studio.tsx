@@ -135,7 +135,7 @@ export default function Studio(){
   </section>
   <label htmlFor="storyPrompt">Cerita final dari owner</label>
   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={500} placeholder="Tempel cerita final 80–500 karakter. AI hanya membagi cerita menjadi adegan dan membuat arahan visual; alur dan kalimat narasi tidak boleh diubah." rows={3}/>
-  <div className="studioActions"><span className="muted">{prompt.length}/500 karakter</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"AI sedang membuat cerita...":"Buat cerita & storyboard →"}</button></div>
+  <div className="studioActions"><span className="muted">{prompt.length}/500 karakter • minimal 80 karakter</span><button onClick={generate} disabled={busy||renderBusy||prompt.trim().length<80}>{busy?"AI sedang membuat cerita...":"Buat cerita & storyboard →"}</button></div>
   {busy&&<p className="muted">AI sedang membagi cerita owner menjadi 4-6 adegan, arahan visual, dan metadata. Cerita asli harus tetap utuh; belum ada video yang dirender.</p>}
   {result&&<div className="productionResult">
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
