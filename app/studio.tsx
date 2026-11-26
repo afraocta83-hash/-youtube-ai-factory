@@ -11,13 +11,13 @@ export default function Studio(){
  const [prompt,setPrompt]=useState("");
  const [busy,setBusy]=useState(false);
  const [error,setError]=useState("");
- const [result,setResult]=useState<Production|null>(null);
+ const [result,setResult]=useState<Production|null>(null);\n const [qc,setQc]=useState<{passed:boolean;score:number;issues:string[];warnings:string[]}|null>(null);\n const [storyVerified,setStoryVerified]=useState(false);
  async function generate(){
-  setError("");setResult(null);setBusy(true);
+  setError("");setResult(null);setQc(null);setStoryVerified(false);setBusy(true);
   try{
    const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({story:prompt})});
    const data=await res.json();if(!res.ok)throw new Error(data.error||"Gagal membuat paket produksi.");
-   setResult(data.production);
+   setResult(data.production);\n   setStoryVerified(data.ownerStoryPreserved === true && data.production?.script === prompt);\n   const qcResponse=await fetch("/api/quality-check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({...data.production,ownerStory:prompt})});\n   const qcData=await qcResponse.json();\n   if(qcResponse.ok)setQc(qcData);
   }catch(e){setError(e instanceof Error?e.message:"Terjadi kesalahan.");}
   finally{setBusy(false);}
  }
@@ -29,7 +29,7 @@ export default function Studio(){
   <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||!prompt.trim()}>{busy?"Sedang menyusun storyboard...":"Buat storyboard Shorts →"}</button></div>
   {error&&<p className="error" role="alert">{error}</p>}
   {busy&&<p className="muted">Tim produksi sedang membagi cerita lo menjadi adegan visual. Cerita asli tetap dipertahankan.</p>}
-  {result&&<div className="productionResult">
+  {result&&<div className="productionResult">\n   <p className={storyVerified?"status":"error"}>{storyVerified?"✓ Cerita asli terjaga persis.":"Peringatan: keutuhan cerita belum terverifikasi."}</p>\n   {qc&&<div className="scene"><strong>{qc.passed?"QC struktur lulus":"QC struktur perlu diperbaiki"} • Skor {qc.score}/100</strong>{qc.issues.map((x,i)=><p className="error" key={"i"+i}>{x}</p>)}{qc.warnings.map((x,i)=><p className="muted" key={"w"+i}>{x}</p>)}</div>}
    <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
    <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
    <h3>Naskah</h3><pre>{result.script}</pre>
