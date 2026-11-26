@@ -15,8 +15,8 @@ This repository turns a short owner idea into an Indonesian animated YouTube Sho
 1. Add `GROQ_API_KEY` as the primary hosting Preview secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403). Add `OWNER_PASSWORD` as a hosting Preview secret; keep it private.
 2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side hosting secret with Actions: write permission.
 3. Add `AGNES_API_KEY` as a GitHub repository Actions secret (Settings → Secrets and variables → Actions). Get the free key from https://platform.agnes-ai.com. This key is used only inside the temporary render runner to call the Agnes video engine; it is never sent to the browser or stored in the app database.
-4. Open the Preview app and sign in with the owner password.
-5. Enter a short idea, generate the story and storyboard, then inspect all scenes and metadata.
+4. Open the Preview app and enter a short idea.
+5. Inspect the generated story, storyboard, and metadata.
 6. Only when satisfied, press **Saya setujui — mulai render MP4**.
 7. Open GitHub Actions and download the `lerry-animasi-short` artifact when the render completes.
 8. Watch the entire MP4 and inspect audio, subtitles, visuals, and factual accuracy. Upload to YouTube only after your separate approval.
