@@ -5,11 +5,14 @@ on:
     branches:
       - fix/lerry-end-to-end-production
       - experiment/openmontage-video-engine
+      - test/motion-stack-integration
     paths:
       - 'app/**'
       - 'src/remotion/**'
       - '.github/workflows/render-short.yml'
       - 'fixtures/e2e-test-story.json'
+      - 'package.json'
+      - 'scripts/test-motion-stack.mjs'
   workflow_dispatch:
     inputs:
       production_json:
