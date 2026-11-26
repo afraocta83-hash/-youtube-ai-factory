@@ -96,7 +96,7 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + AGNES VIDEO</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
   <label htmlFor="storyPrompt">Ide cerita</label>
   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={500} placeholder="Contoh: Gimana mobil bisa berjalan? Jelaskan dengan animasi yang seru dan mudah dipahami anak-anak." rows={3}/>
@@ -118,7 +118,7 @@ export default function Studio(){
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
     {artifactUrl&&<p><a href={artifactUrl} target="_blank" rel="noreferrer">Unduh paket MP4 + thumbnail + metadata ↗</a></p>}
     {renderRunUrl&&<p className="muted"><a href={renderRunUrl} target="_blank" rel="noreferrer">Lihat log render ↗</a></p>}
-    <p className="muted">Tombol persetujuan ini memulai render klip AI. Setelah MP4 selesai, periksa hasilnya sebelum upload. Tidak ada upload YouTube otomatis.</p>
+    <p className="muted">Render memakai animasi Remotion berbasis karakter 2D, narasi Indonesia, dan subtitle. Setelah paket selesai, periksa MP4 sebelum upload. Tidak ada upload YouTube otomatis.</p>
   </div>}
   {error&&<p className="error" role="alert">{error}</p>}
   {history.length>0&&<section className="localHistory"><div className="studioActions"><h3>Riwayat di perangkat ini</h3><button className="secondary" onClick={clearHistory}>Hapus riwayat</button></div><p className="muted">Maksimal 10 produksi terakhir. Data disimpan di browser HP ini, bukan di cloud.</p><ul>{history.map(item=><li key={item.id}><button className="secondary" onClick={()=>restore(item)}>{item.title} — {new Date(item.createdAt).toLocaleString("id-ID")}</button></li>)}</ul></section>}
