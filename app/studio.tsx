@@ -121,7 +121,7 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan cerita final. AI hanya membagi cerita menjadi storyboard, arahan visual, durasi, dan metadata tanpa mengubah alur atau narasi. Render berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
   <section className="agentTeam">
    <div className="studioActions"><h3>Tim Agent Lerry</h3><span className="muted">{agentSummary?agentSummary.ready+"/"+agentSummary.total+" siap":"Memeriksa agent..."}</span></div>
@@ -133,15 +133,15 @@ export default function Studio(){
     </article>)}
    </div>
   </section>
-  <label htmlFor="storyPrompt">Ide cerita</label>
-  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={500} placeholder="Contoh: Gimana mobil bisa berjalan? Jelaskan dengan animasi yang seru dan mudah dipahami anak-anak." rows={3}/>
+  <label htmlFor="storyPrompt">Cerita final dari owner</label>
+  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={500} placeholder="Tempel cerita final 80–500 karakter. AI hanya membagi cerita menjadi adegan dan membuat arahan visual; alur dan kalimat narasi tidak boleh diubah." rows={3}/>
   <div className="studioActions"><span className="muted">{prompt.length}/500 karakter</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"AI sedang membuat cerita...":"Buat cerita & storyboard →"}</button></div>
-  {busy&&<p className="muted">AI sedang mengembangkan ide menjadi cerita, dialog, 4-6 adegan, dan metadata. Belum ada video yang dirender.</p>}
+  {busy&&<p className="muted">AI sedang membagi cerita owner menjadi 4-6 adegan, arahan visual, dan metadata. Cerita asli harus tetap utuh; belum ada video yang dirender.</p>}
   {result&&<div className="productionResult">
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
     {usage&&<p className="muted">Pemakaian LLM: {usage.prompt_tokens??"—"} input • {usage.completion_tokens??"—"} output • {usage.total_tokens??"—"} total token</p>}
     <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
-    <h3>Ide cerita</h3><pre>{result.idea}</pre><h3>Cerita yang dibuat AI</h3><pre>{result.story||result.ownerStory}</pre>
+    <h3>Cerita final</h3><pre>{result.idea}</pre><h3>Cerita yang dibuat AI</h3><pre>{result.story||result.ownerStory}</pre>
     <h3>Storyboard ({result.scenes.length} adegan • ±{result.durationSeconds} detik)</h3>
     {result.scenes.map(s=><article className="scene" key={s.number}><strong>Adegan {s.number} • {s.seconds} detik</strong><p>{s.visual}</p><p><strong>Aksi:</strong> {s.action||"idle"}</p><p><strong>Narasi:</strong> {s.narration}</p><p><strong>Dialog:</strong> {s.dialogue}</p><p><strong>Subtitle:</strong> {s.subtitle}</p><p><strong>Arahan visual:</strong> {s.imagePrompt}</p><p><strong>Suara:</strong> {s.sound}</p></article>)}
     <h3>Metadata YouTube</h3><p><strong>{result.title}</strong></p><p>{result.description}</p><p>{result.hashtags.join(" ")}</p>
