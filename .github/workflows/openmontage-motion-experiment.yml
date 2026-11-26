@@ -69,88 +69,42 @@ jobs:
           const assert = require('node:assert/strict');
           const fs = require('node:fs');
           const story = 'Riko menemukan peta di loteng. Ia mengikuti tanda menuju taman. Di bawah pohon, ia menemukan kotak kecil. Riko membuka kotak dan tersenyum.';
-          const scenes = [
-            'Riko menemukan peta di loteng.',
-            'Ia mengikuti tanda menuju taman.',
-            'Di bawah pohon, ia menemukan kotak kecil.',
-            'Riko membuka kotak dan tersenyum.'
-          ].map((line,i)=>({number:i+1,seconds:4,imagePrompt:'Ilustrasi kartun 2D berwarna untuk adegan cerita nomor '+(i+1),narration:line,dialogue:'',subtitle:line}));
-          const base = {script:story,ownerStory:story,scenes,title:'Riko dan Peta Rahasia',description:'Uji pipeline Lerry Animasi.',factCheckNotes:['Cerita fiksi untuk smoke test.']};
-          async function qc(payload) {
-            const response=await fetch('http://127.0.0.1:3000/api/quality-check',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
-            assert.equal(response.status,200);
-            return response.json();
-          }
+          const scenes = ['Riko menemukan peta di loteng.','Ia mengikuti tanda menuju taman.','Di bawah pohon, ia menemukan kotak kecil.','Riko membuka kotak dan tersenyum.'].map((line,i)=>({number:i+1,seconds:4,imagePrompt:'Ilustrasi kartun 2D berwarna untuk adegan cerita nomor '+(i+1),narration:line,dialogue:'',subtitle:line}));
+          const base = {story,script:story,ownerStory:story,scenes,title:'Riko dan Peta Rahasia',description:'Uji pipeline Lerry Animasi.',factCheckNotes:['Cerita fiksi untuk smoke test.']};
+          async function qc(payload) { const response=await fetch('http://127.0.0.1:3000/api/quality-check',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)}); assert.equal(response.status,200); return response.json(); }
           (async()=>{
-            const good=await qc(base);
-            assert.equal(good.passed,true,'Valid owner story package should pass QC');
-            assert.equal(good.checks.ownerStoryExactMatch,true);
-            const changed=await qc({...base,script:story+' Tambahan.'});
-            assert.equal(changed.passed,false,'Changed owner story must fail QC');
-            const invented={...base,scenes:base.scenes.map((s,i)=>i===0?{...s,subtitle:'Dialog baru yang tidak ada di cerita.'}:s)};
-            const inventedResult=await qc(invented);
-            assert.equal(inventedResult.passed,false,'Invented subtitle must fail QC');
-            const {ownerStory,...withoutOwnerStory}=base;
-            const missingOwner=await qc(withoutOwnerStory);
-            assert.equal(missingOwner.passed,false,'Missing owner story must fail QC');
-            const storyForGeneration='Mira menemukan sebuah kunci tua di halaman rumah. Ia membawa kunci itu ke perpustakaan kecil di ujung jalan. Penjaga perpustakaan menunjukkan sebuah peti kayu di ruang baca. Mira membuka peti itu dan menemukan foto keluarganya.';
-            let generatedResponse, generated, sessionCookie='';
-            const liveConfigured=Boolean(process.env.GROQ_API_KEY && process.env.OWNER_PASSWORD);
-            if(liveConfigured){
+            const good=await qc(base); assert.equal(good.passed,true); assert.equal(good.checks.sceneCount,4);
+            assert.equal((await qc({...base,story:'Terlalu pendek.'})).passed,false);
+            assert.equal((await qc({...base,scenes:base.scenes.map((s,i)=>i===0?{...s,seconds:40}:s)})).passed,false);
+            assert.equal((await qc({...base,scenes:base.scenes.map((s,i)=>i===0?{...s,narration:'',dialogue:''}:s)})).passed,false);
+            const idea='Gimana mobil bisa berjalan? Jelaskan dengan animasi yang seru dan mudah dipahami anak-anak.';
+            let response,generated,cookie='';
+            const live=Boolean(process.env.GROQ_API_KEY&&process.env.OWNER_PASSWORD);
+            if(live){
               const login=await fetch('http://127.0.0.1:3000/api/auth/login',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({password:process.env.OWNER_PASSWORD})});
-              assert.equal(login.status,200,'Owner password login must work before live Groq storyboard test');
-              sessionCookie=(login.headers.get('set-cookie')||'').split(';')[0];
-              assert.ok(sessionCookie.startsWith('lerry_owner_session='),'Owner session cookie must be issued');
+              assert.equal(login.status,200); cookie=(login.headers.get('set-cookie')||'').split(';')[0]; assert.ok(cookie.startsWith('lerry_owner_session='));
             }else{
-              const unauth=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({story:storyForGeneration})});
-              assert.equal(unauth.status,401,'Storyboard API must reject unauthenticated callers');
+              const unauth=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({idea})});
+              assert.equal(unauth.status,401);
             }
-            if(liveConfigured){
-              for(let attempt=0;attempt<3;attempt++){
-                generatedResponse=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json','cookie':sessionCookie},body:JSON.stringify({story:storyForGeneration})});
-                generated=await generatedResponse.json();
-                if(generatedResponse.status===200 || (generatedResponse.status!==429 && generatedResponse.status<500)) break;
-                if(attempt<2) await new Promise(resolve=>setTimeout(resolve,3000*(attempt+1)));
-              }
-            }else{
-              generatedResponse={status:503};
-              generated={error:'Groq API key and owner test password are not configured in GitHub Actions.'};
-            }
+            if(live){
+              for(let i=0;i<3;i++){response=await fetch('http://127.0.0.1:3000/api/produce',{method:'POST',headers:{'content-type':'application/json','cookie':cookie},body:JSON.stringify({idea})});generated=await response.json();if(response.status===200||(response.status!==429&&response.status<500))break;if(i<2)await new Promise(r=>setTimeout(r,3000*(i+1)));}
+            }else{response={status:503};generated={error:'Groq API key and owner test password are not configured in GitHub Actions.'};}
             let production;
-            if(generatedResponse.status===200){
-              assert.equal(generated.ownerStoryPreserved,true);
-              assert.equal(generated.production.ownerStory,storyForGeneration,'Owner story must be preserved byte-for-byte');
-              assert.equal(generated.production.script,storyForGeneration,'Canonical script must remain the owner story');
-              assert.ok(generated.production.scenes.length>=4 && generated.production.scenes.length<=10);
-              const total=generated.production.scenes.reduce((sum,s)=>sum+Number(s.seconds),0);
-              assert.ok(total>=15 && total<=60,'Storyboard duration must be 15-60 seconds');
-              for(const [i,s] of generated.production.scenes.entries()){
-                for(const field of ['narration','dialogue','subtitle']){
-                  const line=typeof s[field]==='string'?s[field].trim():'';
-                  assert.ok(!line || storyForGeneration.includes(line),'Generated '+field+' in scene '+(i+1)+' must be an exact excerpt');
-                }
-              }
-              production=generated.production;
-              console.log('LIVE STORYBOARD API PASS',{model:generated.model,scenes:production.scenes.length,durationSeconds:total,ownerStoryExact:true});
-            }else if([429,502,503].includes(generatedResponse.status)){
-              // External model availability is not a renderer regression. Keep this
-              // explicitly offline fixture separate from live-provider acceptance.
-              console.warn('LIVE STORYBOARD PROVIDER UNAVAILABLE; continuing renderer-only CI:',generatedResponse.status,generated.error||'provider unavailable');
-              const lines=[
-                'Mira menemukan sebuah kunci tua di halaman rumah.',
-                'Ia membawa kunci itu ke perpustakaan kecil di ujung jalan.',
-                'Penjaga perpustakaan menunjukkan sebuah peti kayu di ruang baca.',
-                'Mira membuka peti itu dan menemukan foto keluarganya.'
-              ];
-              production={workingTitle:'Mira dan Kunci Tua',title:'Mira dan Kunci Tua',description:'Fixture offline untuk menguji renderer Lerry Animasi.',script:storyForGeneration,ownerStory:storyForGeneration,factCheckNotes:['Fixture fiksi CI; bukan hasil AI.'],scenes:lines.map((line,i)=>({number:i+1,seconds:4,visual:line,imagePrompt:'Ilustrasi kartun 2D berwarna untuk '+line,action:['walk','walk','point','surprised'][i],narration:line,dialogue:'',subtitle:line}))};
-            }else{
-              throw new Error('Storyboard API returned unexpected HTTP '+generatedResponse.status+': '+JSON.stringify(generated));
-            }
-            production.voiceFile='voice.wav';
+            if(response.status===200){
+              production=generated.production; assert.equal(production.idea,idea); assert.ok(typeof production.story==='string'&&production.story.trim().length>=80);
+              assert.ok(production.scenes.length>=4&&production.scenes.length<=6);
+              const total=production.scenes.reduce((sum,x)=>sum+Number(x.seconds),0); assert.ok(total>=15&&total<=60);
+              for(const [i,x] of production.scenes.entries()){assert.ok(String(x.narration||x.dialogue||'').trim(),'Scene '+(i+1)+' narration/dialogue required');assert.ok(String(x.imagePrompt||'').trim().length>=25);}
+              console.log('LIVE IDEA-TO-STORY API PASS',{model:generated.model,scenes:production.scenes.length,durationSeconds:total});
+            }else if([429,502,503].includes(response.status)){
+              console.warn('LIVE GROQ UNAVAILABLE; renderer-only fixture used:',response.status,generated.error||'provider unavailable');
+              production={idea,story,workingTitle:'Riko dan Peta Rahasia',title:'Riko dan Peta Rahasia',description:'Fixture offline CI.',script:story,ownerStory:story,factCheckNotes:['Fixture fiksi CI; bukan hasil AI.'],scenes:scenes.map((x,i)=>({...x,visual:x.narration,imagePrompt:'Ilustrasi kartun 2D berwarna untuk '+x.narration,action:['walk','walk','point','surprised'][i]}))};
+            }else throw new Error('Idea-to-story API HTTP '+response.status+': '+JSON.stringify(generated));
+            production.script=production.story||production.script; production.ownerStory=production.script; production.voiceFile='voice.wav';
             fs.writeFileSync('production-smoke.json',JSON.stringify(production,null,2));
-            console.log('Saved production package for renderer smoke test. Live AI provider was tested separately above.');
-            console.log('QC API PASS: valid package accepted; changed story, missing owner story and invented subtitle rejected.');
-          })().catch(error=>{console.error(error);process.exit(1);});
+            console.log('IDEA-TO-STORY QC PASS: valid package accepted; short story, invalid duration and missing narration rejected.');
+          })().catch(e=>{console.error(e);process.exit(1);});
           NODE
       - name: Generate deterministic local audio fixture (CI only)
         run: |
