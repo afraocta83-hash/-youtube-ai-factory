@@ -17,10 +17,18 @@ export async function POST(req:Request){
       const seconds=scenes.reduce((n,s)=>n+(Number(s.seconds)||0),0);
       if(seconds<20||seconds>60) issues.push("Total durasi harus 20-60 detik.");
       if(scenes.some(s=>String(s.imagePrompt||"").trim().length<25)) issues.push("Ada prompt visual yang kurang jelas.");
-      if(scenes.some(s=>!String(s.narration||s.dialogue||"").trim())) issues.push("Setiap adegan wajib memiliki narasi atau dialog.");
+      if(scenes.some(s=>!String(s.narration||"").trim())) issues.push("Setiap adegan wajib memiliki kutipan narasi asli.");
+      let narrationCursor=0;
+      for(const [i,s] of scenes.entries()){
+        const narration=String(s.narration||"").trim();
+        const at=narration?story.indexOf(narration,narrationCursor):-1;
+        if(at<0) issues.push("Narasi adegan "+(i+1)+" bukan kutipan asli berurutan dari cerita owner.");
+        else narrationCursor=at+narration.length;
+        if(!narration.includes(String(s.subtitle||"").trim())) issues.push("Subtitle adegan "+(i+1)+" bukan kutipan dari narasi.");
+      }
       if(scenes.some(s=>!String(s.subtitle||"").trim())) issues.push("Setiap adegan wajib memiliki subtitle.");
       if(scenes.some(s=>!["idle","walk","run","surprised","point"].includes(String(s.action||"")))) issues.push("Ada aksi karakter yang tidak didukung renderer.");
-      if(p.ownerStory&&p.script!==p.ownerStory) issues.push("Naskah produksi berubah dari cerita yang disetujui.");
+      if(!p.ownerStory||p.script!==p.ownerStory||p.story!==p.ownerStory) issues.push("Naskah produksi berubah dari cerita final owner.");
       if(!p.title||String(p.title).length>100) warnings.push("Judul YouTube kosong atau terlalu panjang.");
       if(!p.description) warnings.push("Deskripsi YouTube belum tersedia.");
       if(!Array.isArray(p.factCheckNotes)||!p.factCheckNotes.length) warnings.push("Tidak ada klaim yang ditandai untuk pemeriksaan fakta; tetap periksa bila topik edukasi.");
