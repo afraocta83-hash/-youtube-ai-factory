@@ -1,3 +1,28 @@
+# LERRY — Free MP4 and autonomous-agent review 2026-11-27
+
+## New findings and corrective work
+- Reviewed free MP4 candidates: Automated Video Generator (MIT, local stock-footage + TTS + Remotion export) and OpenMontage (agentic production system with free/open footage, Piper, Remotion/HyperFrames and FFmpeg paths).
+- Kept the existing Lerry Remotion + FFmpeg renderer as the primary production engine. It already matches the locked 2D mascot direction and has a prior verified 1080x1920 H.264/30fps smoke render; replacing it with a stock-footage generator would regress the intended visual identity. OpenMontage's agentic skills remain a reference for future improvements, not a second runtime to install.
+- OpenHands is a candidate autonomous engineering agent, but it is a self-hosted agent server, not a free hosted worker. It requires persistent compute and an LLM connection/API key. It cannot be honestly described as installed or running from the current Vercel/GitHub setup without those resources.
+- Inspected latest available build-check run #89. It failed at TypeScript before Next build or MP4 smoke render. Exact errors were missing closing parentheses in app/api/render/route.ts and app/api/youtube/upload-session/route.ts around withAgentSpan(...fetch(...)).
+- Fixed both syntax errors in commits 91f15b36c9556528bc5f5b4da89521540852a28e and fedc0cd2fda27d1265006f6aca293068148e0161.
+- The GitHub connector in this session exposes workflow read/rerun actions but no workflow-dispatch action. The latest branch head was confirmed as fedc0cd2fda27d1265006f6aca293068148e0161; a new post-fix CI run has not yet been observed. Do not mark the fix or complete pipeline as verified until CI and a real owner-approved render pass.
+
+## Free-resource decision
+- Primary MP4 path: existing Remotion + FFmpeg + Edge TTS/Piper on GitHub Actions CPU.
+- Free alternative for stock-footage videos: itsPremkumar/Automated-Video-Generator; not adopted because its output style and project integration differ from Lerry's locked character-animation workflow.
+- Agentic production reference: OpenMontage; reuse only compatible skills/tools incrementally.
+- Autonomous coding agent candidate: OpenHands; deployment is blocked on an always-on host/compute and a configured LLM endpoint. No paid plan, GPU, or new API service is authorized.
+
+## Next acceptance gate
+1. Run TypeScript and Next production build on the latest branch head.
+2. Run Remotion/FFmpeg smoke render and inspect the resulting artifact.
+3. Test the actual dashboard → approved render → MP4 artifact path with live owner session.
+4. Confirm no hidden paid provider, watermark, or usage-based dependency.
+5. Keep main, Production, and YouTube publishing untouched without separate approval.
+
+---
+
 # LERRY — Agent performance add-ons 2026-11-27
 
 ## Added to the existing production branch
