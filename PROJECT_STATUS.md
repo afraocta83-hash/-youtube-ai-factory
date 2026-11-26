@@ -4,7 +4,7 @@ Last updated: 2026-11-26
 Current stage: Preview build passed; CI showcase passed; live external-service integration and owner-story render remain unverified
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Latest reviewed experiment commit: `4b105924402bfadddfb0e9f6efe8721a38b81657`
+Latest reviewed experiment commit: `49f70b983064117de8ff1112732d694ce601cb67`
 Main remains isolated; no merge or Production deployment has been made.
 
 ## Safety boundary
@@ -43,7 +43,9 @@ Main remains isolated; no merge or Production deployment has been made.
 - `supabase/schema.sql` exists, but has not been executed in Supabase. Database table, RLS and private bucket are therefore not yet verified.
 
 ## CI and Preview verification
-- Latest GitHub Actions run: [run #65](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45833196730), successful.
+- Core renderer CI: [run #65](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45833196730), successful on its earlier deterministic fixture.
+- Edge/Piper engine test: [run #2](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45846870145), successful on 2026-11-26. Both Indonesian audio files were generated, probed, fully decoded by FFmpeg and uploaded as artifact `lerry-indonesian-tts-test` (artifact ID `15131952752`, expires 2026-12-03).
+- Latest motion showcase run before CI resilience patch: [run #67](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45846855315), failed because Gemini returned HTTP 502 (temporary high demand) during live storyboard generation. TypeScript and Next.js build had passed; renderer steps were skipped. A follow-up workflow change now permits a clearly labeled offline fixture for renderer-only CI when the live provider is unavailable. The follow-up run is pending verification.
 - Passed: dependency audit, TypeScript, Next.js build, QC/storyboard smoke checks, deterministic local audio fixture, Remotion composition checks, five-action showcase render, FFmpeg MP4 validation and artifact upload.
 - Run #65's audio fixture is deterministic CI audio. It does not verify current live per-scene Gemini TTS or the dashboard-to-GitHub dispatch path.
 - Latest Vercel Preview commit `cdce0b7` compiled successfully, passed type checking and completed deployment; deployment state is `READY`.
@@ -52,13 +54,14 @@ Main remains isolated; no merge or Production deployment has been made.
 
 ## Render pipeline architecture
 - `.github/workflows/render-short.yml` accepts a production JSON payload through `workflow_dispatch`.
-- TTS runtime installs Edge TTS and Piper in GitHub Actions. Edge voice: `id-ID-ArdiNeural`; Piper fallback model: Indonesian `id_ID-news_tts-medium`. If Edge fails for a scene, the job attempts Piper for that scene. Kokoro is intentionally excluded.
+- TTS runtime installs Edge TTS and Piper in GitHub Actions. Edge voice: `id-ID-ArdiNeural`; Piper fallback model: Indonesian `id_ID-news_tts-medium`. If Edge generation or MP3-to-WAV conversion fails for a scene, the job attempts Piper for that scene. Kokoro is intentionally excluded.
+- Dedicated Edge/Piper generation, ffprobe and FFmpeg decode tests passed in Actions run #2. Full production workflow still requires an owner-story render.
 - `.github/workflows/test-tts-engines.yml` tests Edge and Piper audio generation, ffprobe metadata and full FFmpeg decode; it now runs when either TTS workflow or render workflow changes.
 - Workflow QC requires exact equality of owner story and script, 4–10 scenes, 15–60 seconds, image prompts, and narration/dialogue/subtitles quoted verbatim from the owner story.
 - Workflow generates per-scene WAV files using Edge TTS with Piper fallback, renders with Remotion, then validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
 - Output artifact: `lerry-animasi-short`, retained for 7 days.
 - `app/api/render/route.ts` validates a Supabase owner session, reads server-side `GITHUB_ACTIONS_TOKEN`, then dispatches the workflow on the experiment branch.
-- `app/api/produce/route.ts` requires `GEMINI_API_KEY`, generates storyboard/metadata, preserves exact owner story, and rejects invented spoken/subtitle text.
+- `app/api/produce/route.ts` prefers FreeLLM when `FREELLM_BASE_URL` is configured and falls back to Gemini when `GEMINI_API_KEY` exists. If neither is configured, live storyboard generation returns 503. The route preserves exact owner story and rejects invented spoken/subtitle text.
 - `src/remotion/SceneBackdrop.tsx` uses deterministic vector backdrops; it does not create unique AI scene artwork.
 - `src/remotion/CharacterRig.tsx` is a stylized code-drawn 2D rig, not production-grade 3D character animation.
 - Subtitle reveal is estimated from audio duration; phoneme alignment and lip-sync are not implemented.
