@@ -33,7 +33,15 @@ export async function POST(request:Request){
       method:"POST",headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},
       body:JSON.stringify({ref:BRANCH,inputs:{production_json:productionJson}}),signal:AbortSignal.timeout(12000)
     });
-    if(!response.ok){const detail=await response.text();return NextResponse.json({error:`GitHub menolak job render (${response.status}). Periksa izin token dan nama workflow. ${detail.slice(0,400)}`},{status:response.status===404?502:response.status});}
+    if(!response.ok){
+      const detail=await response.text();
+      const accepted=response.headers.get("x-accepted-github-permissions");
+      const requestId=response.headers.get("x-github-request-id");
+      if(response.status===403){
+        return NextResponse.json({error:"GitHub menolak token (403). Untuk Fine-grained PAT, aktifkan Repository permissions > Actions: Read and write dan pastikan akses repo -youtube-ai-factory diberikan. Simpan token baru ke Vercel Preview > GITHUB_ACTIONS_TOKEN pada branch experiment/openmontage-video-engine, lalu redeploy Preview. "+(accepted?"Izin yang diminta GitHub: "+accepted+". ":"")+(requestId?"Request ID: "+requestId+". ":"")+detail.slice(0,250)},{status:403});
+      }
+      return NextResponse.json({error:`GitHub menolak job render (${response.status}). Periksa akses repo, branch, dan workflow. ${detail.slice(0,400)}`},{status:response.status===404?502:response.status});
+    }
     return NextResponse.json({ok:true,branch:BRANCH,workflow:WORKFLOW,message:"Render berhasil dikirim setelah persetujuan owner."});
   }catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Tidak dapat memulai render."},{status:500});}
 }
