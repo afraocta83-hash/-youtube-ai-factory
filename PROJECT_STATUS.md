@@ -1,3 +1,27 @@
+# LERRY — CI and MP4 smoke acceptance 2026-11-27
+
+## Verified result
+- Build-check run #92 passed on commit 0187d02ead509868a613d9545d1b5012ea7697f7: https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45902067459
+- TypeScript passed.
+- Next.js production build passed.
+- Remotion generated out/lerry-smoke.mp4 (20.011 seconds).
+- ffprobe confirmed H.264, 1080x1920, 30 fps, and AAC audio.
+- FFmpeg full decode passed.
+- The exact MP4 was uploaded as artifact lerry-verified-mp4-smoke (artifact ID 15156587104; 3-day retention) and independently downloaded and re-checked.
+- The smoke MP4 uses a generated test tone and fixture scenes. It proves the local renderer and codec pipeline; it is not a finished owner-story Short and does not validate live Groq generation or the dashboard-triggered render flow.
+- The optional Promptfoo live Groq evaluation was skipped because GROQ_API_KEY is not available in the GitHub Actions job environment.
+
+## No-cost agent decision
+- No additional autonomous coding agent was installed. OpenHands and similar agents require persistent compute and an LLM endpoint; adding them would introduce a hosting/resource dependency and cannot currently be guaranteed at zero new cost.
+- Keep existing internal production agents and the existing Remotion/FFmpeg pipeline. Promptfoo and Langfuse remain optional existing integrations; do not add duplicate agent runtimes.
+
+## Remaining acceptance test
+- Run the actual owner-approved render-short.yml workflow with a real schema-valid story package, Edge TTS/Piper, and upload-ready artifact. This requires a workflow_dispatch action with GitHub Actions write permission; the currently available GitHub connector in this session does not expose workflow dispatch.
+- Live Groq, authenticated dashboard → render dispatch, and actual owner-story MP4 are not yet proven.
+- No merge to main, production deployment, or YouTube upload has occurred.
+
+---
+
 # LERRY — Free MP4 and autonomous-agent review 2026-11-27
 
 ## New findings and corrective work
