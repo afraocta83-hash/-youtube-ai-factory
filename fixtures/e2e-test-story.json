@@ -1,0 +1,65 @@
+{
+  "idea": "Bagaimana mobil bisa bergerak dan berhenti?",
+  "workingTitle": "Bagaimana Mobil Bisa Bergerak?",
+  "hook": "Pernah penasaran apa yang membuat mobil melaju?",
+  "story": "Raka melihat mobil ayahnya terparkir dan bertanya bagaimana benda sebesar itu bisa bergerak. Ayah menjelaskan bahwa mesin mengubah energi menjadi tenaga putar. Tenaga itu diteruskan melalui sistem penggerak ke roda. Saat ban mencengkeram jalan, mobil terdorong maju. Ketika pengemudi menekan rem, sistem pengereman memperlambat roda hingga mobil berhenti. Raka pun mengerti bahwa mobil bergerak karena kerja sama mesin, roda, ban, dan rem.",
+  "synopsis": "Penjelasan sederhana tentang hubungan mesin, sistem penggerak, roda, ban, dan rem.",
+  "title": "Bagaimana Mobil Bisa Bergerak? Kenali Mesin dan Rodanya",
+  "description": "Animasi singkat yang menjelaskan bagaimana mesin, roda, ban, dan rem bekerja sama membuat mobil bergerak dan berhenti.",
+  "hashtags": [
+    "#LerryAnimasi",
+    "#CaraKerjaMobil",
+    "#EdukasiAnak"
+  ],
+  "thumbnailPrompt": "Mobil kartun merah di jalan dengan roda terlihat jelas, latar cerah, komposisi vertikal.",
+  "factCheckNotes": [],
+  "sourceQueries": [
+    "cara kerja mesin mobil dan sistem penggerak kendaraan"
+  ],
+  "scenes": [
+    {
+      "number": 1,
+      "seconds": 5,
+      "visual": "Jalan kota cerah, mobil merah terparkir di samping Raka yang penasaran.",
+      "action": "surprised",
+      "narration": "Raka penasaran, bagaimana mobil besar ini bisa bergerak?",
+      "dialogue": "",
+      "sound": "suara kota lembut",
+      "imagePrompt": "Jalan kota cerah, mobil merah terparkir, pepohonan dan rumah sederhana, ilustrasi kartun vektor 2D.",
+      "subtitle": "Bagaimana mobil bisa bergerak?"
+    },
+    {
+      "number": 2,
+      "seconds": 5,
+      "visual": "Potongan sederhana ruang mesin di bengkel, roda gigi berputar.",
+      "action": "point",
+      "narration": "Mesin mengubah energi menjadi tenaga putar untuk menggerakkan mobil.",
+      "dialogue": "",
+      "sound": "dengung mesin lembut",
+      "imagePrompt": "Bengkel kartun 2D dengan meja kerja, mesin terbuka dan roda gigi besar berputar.",
+      "subtitle": "Mesin menghasilkan tenaga putar"
+    },
+    {
+      "number": 3,
+      "seconds": 5,
+      "visual": "Mobil merah melaju, roda berputar di atas jalan.",
+      "action": "run",
+      "narration": "Sistem penggerak meneruskan tenaga mesin menuju roda.",
+      "dialogue": "",
+      "sound": "suara kendaraan melaju",
+      "imagePrompt": "Jalan kota kartun 2D, mobil merah bergerak ke depan, gedung dan marka jalan.",
+      "subtitle": "Tenaga diteruskan ke roda"
+    },
+    {
+      "number": 4,
+      "seconds": 5,
+      "visual": "Mobil berhenti di zebra cross dengan aman.",
+      "action": "idle",
+      "narration": "Ban mencengkeram jalan, lalu rem membantu mobil melambat dan berhenti.",
+      "dialogue": "",
+      "sound": "suara rem lembut",
+      "imagePrompt": "Persimpangan kota kartun 2D, mobil merah berhenti sebelum zebra cross, suasana aman dan cerah.",
+      "subtitle": "Ban mencengkeram, rem menghentikan"
+    }
+  ]
+}
