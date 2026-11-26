@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - fix/lerry-end-to-end-production
+      - experiment/openmontage-video-engine
     paths:
       - 'app/**'
       - 'src/remotion/**'
