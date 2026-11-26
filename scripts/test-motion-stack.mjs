@@ -30,3 +30,4 @@ console.log("GSAP_SEEK_SMOKE_PASS", { midpoint });
 console.log("LOTTIE_RUNTIME_RESOLVE_PASS");
 console.log("MOTION_STACK_PACKAGE_TEST_PASS");
 // Keep this smoke script deterministic and independent from the production scene timeline.
+// TypeScript and frame-render validation run in the companion CI job.
