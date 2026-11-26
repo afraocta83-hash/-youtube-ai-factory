@@ -221,7 +221,7 @@ jobs:
               thumbnailExists:fs.existsSync('out/thumbnail.jpg'),
               youtubeMetadataExists:fs.existsSync('out/youtube-metadata.json')
             },
-            limitations:['QC ini memeriksa struktur, file, codec, decode dan frame representatif; pemeriksaan artistik subjektif tetap perlu ditinjau owner.','Visual adegan menggunakan komposisi vektor 2D yang tersedia; bukan gambar AI khusus per adegan.','Fakta eksternal tidak diverifikasi otomatis.']
+            limitations:['QC ini memeriksa struktur, file, codec, decode dan frame representatif; pemeriksaan artistik subjektif tetap perlu ditinjau owner.','Visual adegan menggunakan komposisi vektor 2D yang tersedia; bukan gambar AI khusus per adegan.','Audio berisi narasi TTS; sound cues dan musik latar belum dirender sebagai track terpisah.','Fakta eksternal tidak diverifikasi otomatis.']
           };
           if(Object.values(report.checks).some(v=>v!==true)) throw new Error('Production QC report contains failed checks: '+JSON.stringify(report.checks));
           fs.writeFileSync('out/production-qc.json',JSON.stringify(report,null,2));
