@@ -26,6 +26,15 @@ Detailed configuration reference: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
 - The last 10 production packages are stored in browser localStorage on the current device. No Supabase/database/OTP setup is required.
 - No paid image/video API is integrated. The renderer runs on standard GitHub-hosted CPU runners; public-repository Actions usage is free under GitHub's current policy.
 
+## Agent performance add-ons
+
+Two lightweight capabilities extend the existing Lerry pipeline without replacing its production engines:
+
+- **Promptfoo (MIT):** one-case, optional CI regression evaluation for storyboard JSON, required narration, scene count, durations, and character action values. It runs only when the `GROQ_API_KEY` Actions secret is configured.
+- **Langfuse + OpenTelemetry (MIT):** optional traces for storyboard provider calls, schema validation, storyboard QC, render dispatch, and YouTube upload-session creation. Enable with `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`; use the free Cloud tier or self-host.
+
+Mastra, LangGraph.js, CrewAI, Agno, and Trigger.dev are not added because they would duplicate the existing Langflow/Lerry orchestration or introduce extra runtimes/hosting. See [Agent Integration](docs/AGENT_INTEGRATION.md).
+
 ## Unified agent team
 
 The production studio exposes the integrated agent roster at `GET /api/agents` and displays each agent's readiness in the dashboard. The team is coordinated by the existing Lerry pipeline; no separate app or database is required.
