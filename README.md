@@ -26,6 +26,22 @@ Detailed configuration reference: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
 - The last 10 production packages are stored in browser localStorage on the current device. No Supabase/database/OTP setup is required.
 - No paid image/video API is integrated. The renderer runs on standard GitHub-hosted CPU runners; public-repository Actions usage is free under GitHub's current policy.
 
+## Unified agent team
+
+The production studio exposes the integrated agent roster at `GET /api/agents` and displays each agent's readiness in the dashboard. The team is coordinated by the existing Lerry pipeline; no separate app or database is required.
+
+- Production Orchestrator: internal pipeline control.
+- Storyboard Agent: Groq producer.
+- Narrator Agent: Edge TTS with Piper fallback.
+- Visual Agent: Remotion scene compositions and reusable character rig.
+- Video Agent: Remotion + FFmpeg on GitHub Actions.
+- Quality Control Agent: deterministic storyboard checks plus MP4/ffprobe/decode validation.
+- Publishing Agent: YouTube Data API integration remains gated and is not implemented yet.
+
+Langflow is an optional visual workflow editor. The core production pipeline does not depend on a separately hosted Langflow service. Its live flow adapter is not yet implemented. YouTube publishing requires a separate OAuth implementation and explicit owner approval for every upload; render approval is not upload approval.
+
+See [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for the integration boundary and remaining work.
+
 ## Current limitations
 - The current free renderer uses Remotion scene compositions and a reusable 2D character rig; it does not generate bespoke AI video footage. Character animation and scene visuals are template-driven.
 - Narration is generated with Edge TTS (Piper fallback); subtitles are burned per scene. Phoneme alignment and lip-sync are not implemented.
