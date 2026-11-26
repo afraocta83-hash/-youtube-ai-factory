@@ -191,6 +191,7 @@ jobs:
             aspectRatio:'9:16',
             visibility:'private'
           },null,2));
+          NODE
           ffmpeg -y -v error -ss 1 -i out/lerry-animasi-short.mp4 -frames:v 1 -q:v 2 out/thumbnail.jpg
           test -s out/thumbnail.jpg
           test -s out/youtube-metadata.json
