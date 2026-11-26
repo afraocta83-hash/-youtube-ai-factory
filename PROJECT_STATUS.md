@@ -1,3 +1,16 @@
+# LERRY — Integration follow-up 2026-11-27
+
+The initial integration note below predates the latest additions. Current state:
+- Langflow execution adapter is now implemented in `lib/agents/langflow.ts`. When `LANGFLOW_BASE_URL` and `LANGFLOW_FLOW_ID` are set, `/api/produce` invokes the Langflow Flow API first; it validates the result using the existing production schema. Groq is the fallback when Groq keys are configured.
+- YouTube OAuth and resumable upload endpoints are implemented. Studio includes connect/status/disconnect and an explicit per-upload approval flow. Default visibility is Private.
+- Required YouTube hosting secrets: `YOUTUBE_CLIENT_ID`, `YOUTUBE_CLIENT_SECRET`, `YOUTUBE_REDIRECT_URI`, `YOUTUBE_TOKEN_ENCRYPTION_KEY`.
+- Langflow still needs a configured Flow ID and an actual run that returns the required Lerry JSON schema. YouTube still needs Google Cloud OAuth setup and a live connect/upload test.
+- Latest observed build-check run for integration code: [run 45900828863](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45900828863), commit `35ac7d3e063e886066af477bc7f29a73bbb65f6f`; dependency installation was still running at last inspection. Earlier run `45900674970` passed TypeScript and Next.js production build, with Remotion smoke render still running.
+- The later Langflow and documentation commits have separate build-check runs; their final results have not yet been observed.
+- No Preview deploy, merge to `main`, Production deploy, or YouTube upload has been performed.
+
+---
+
 # LERRY — Unified Agent Integration 2026-11-27
 
 Working branch: `experiment/openmontage-video-engine`; `main` remains untouched.
