@@ -12,7 +12,7 @@ This repository turns a short owner idea into an Indonesian animated YouTube Sho
 - One Groq request per idea; strict JSON Schema; low reasoning effort; maximum completion budget 4,200 tokens.
 
 ## Owner setup
-1. Add `GROQ_API_KEY` as the primary hosting Preview secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403). Add `OWNER_PASSWORD` as a hosting Preview secret; keep it private.
+1. Add `GROQ_API_KEY` as the primary hosting Preview secret. Optional `GROQ_API_KEY2` and `GROQ_API_KEY3` act as backups when a key is rejected (HTTP 401/403).
 2. Keep `GITHUB_ACTIONS_TOKEN` as a server-side hosting secret with Actions: write permission.
 3. Add `AGNES_API_KEY` as a GitHub repository Actions secret (Settings → Secrets and variables → Actions). Get the free key from https://platform.agnes-ai.com. This key is used only inside the temporary render runner to call the Agnes video engine; it is never sent to the browser or stored in the app database.
 4. Open the Preview app and enter a short idea.
