@@ -1,5 +1,4 @@
 import { NextResponse } from "next/server";
-import { isOwnerRequest } from "../../../lib/owner-auth";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
@@ -8,8 +7,19 @@ const REPO=process.env.GITHUB_REPOSITORY_NAME||"-youtube-ai-factory";
 const WORKFLOW=process.env.GITHUB_RENDER_WORKFLOW||"render-short.yml";
 const BRANCH=process.env.GITHUB_RENDER_BRANCH||"experiment/openmontage-video-engine";
 
+const recentDispatches = new Map<string, number>();
+
 export async function POST(request:Request){
-  if(!isOwnerRequest(request)) return NextResponse.json({error:"Login owner diperlukan sebelum mengirim render."},{status:401});
+  const origin = request.headers.get("origin");
+  if (origin) {
+    try { if (new URL(origin).host !== new URL(request.url).host) return NextResponse.json({error:"Origin tidak diizinkan."},{status:403}); }
+    catch { return NextResponse.json({error:"Origin tidak valid."},{status:403}); }
+  }
+  const ip = request.headers.get("x-real-ip") || request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  const now = Date.now();
+  for (const [key, stamp] of recentDispatches) if (now - stamp > 10 * 60 * 1000) recentDispatches.delete(key);
+  const last = recentDispatches.get(ip);
+  if (last && now - last < 60 * 1000) return NextResponse.json({error:"Tunggu 1 menit sebelum mengirim render berikutnya."},{status:429});
   const token=process.env.GITHUB_ACTIONS_TOKEN;
   if(!token) return NextResponse.json({error:"GITHUB_ACTIONS_TOKEN belum dipasang sebagai environment variable rahasia server-side pada hosting Preview."},{status:503});
   try{
@@ -42,6 +52,7 @@ export async function POST(request:Request){
       }
       return NextResponse.json({error:`GitHub menolak job render (${response.status}). Periksa akses repo, branch, dan workflow. ${detail.slice(0,400)}`},{status:response.status===404?502:response.status});
     }
-    return NextResponse.json({ok:true,branch:BRANCH,workflow:WORKFLOW,message:"Render berhasil dikirim setelah persetujuan owner."});
+    recentDispatches.set(ip, now);
+    return NextResponse.json({ok:true,branch:BRANCH,workflow:WORKFLOW,message:"Render berhasil dikirim setelah persetujuan pengguna."});
   }catch(error){return NextResponse.json({error:error instanceof Error?error.message:"Tidak dapat memulai render."},{status:500});}
 }
