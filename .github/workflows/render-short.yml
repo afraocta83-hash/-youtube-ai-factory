@@ -113,39 +113,10 @@ jobs:
           p.durationSeconds=finalDuration;
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
           NODE
-      - name: Start free Agnes AI video engine
-        env:
-          AGNES_API_KEY: ${{ secrets.AGNES_API_KEY }}
+      - name: Render AI-directed scenes with local Remotion engine
         run: |
-          if [ -z "$AGNES_API_KEY" ]; then
-            echo "::error::GitHub Actions secret AGNES_API_KEY is missing. Create a free key at https://platform.agnes-ai.com and add it to repository Actions secrets."
-            exit 1
-          fi
-          mkdir -p "$RUNNER_TEMP/agnes-work" "$RUNNER_TEMP/agnes-config"
-          docker pull ghcr.io/lcy362/free-short-video:8.2.2
-          docker run -d --name agnes-engine -p 8765:8765 \\
-            -e AGNES_API_KEY="$AGNES_API_KEY" \\
-            -v "$RUNNER_TEMP/agnes-work:/app/.working_dir" \\
-            -v "$RUNNER_TEMP/agnes-config:/app/.agnes_config" \\
-            ghcr.io/lcy362/free-short-video:8.2.2
-          for i in $(seq 1 60); do
-            if curl -fsS http://127.0.0.1:8765/api/health >/dev/null; then
-              echo "Agnes video engine is healthy."
-              exit 0
-            fi
-            sleep 3
-          done
-          docker logs agnes-engine --tail 100
-          echo "::error::Agnes video engine failed to start."
-          exit 1
-      - name: Generate AI video clips and assemble LERRY MP4
-        env:
-          AGNES_API_KEY: ${{ secrets.AGNES_API_KEY }}
-          AGNES_TASK_TIMEOUT_SECONDS: "1500"
-        run: python scripts/render_agnes.py production.json
-      - name: Stop temporary Agnes engine
-        if: always()
-        run: docker rm -f agnes-engine >/dev/null 2>&1 || true
+          npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --codec=h264 --crf=20 --props=production.json
+          test -s out/lerry-animasi-short.mp4
       - name: Verify MP4, video and narration
         run: |
           test -s out/lerry-animasi-short.mp4
