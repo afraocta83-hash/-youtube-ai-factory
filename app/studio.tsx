@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 
 type Production = {
- workingTitle:string; hook:string; synopsis:string; script:string; ownerStory:string; durationSeconds:number;
+ idea:string; story:string; workingTitle:string; hook:string; synopsis:string; script:string; ownerStory:string; durationSeconds:number;
  scenes:{number:number;seconds:number;visual:string;narration:string;dialogue:string;sound:string;imagePrompt:string;subtitle:string;action?:string}[];
  title:string;description:string;hashtags:string[];thumbnailPrompt:string;factCheckNotes:string[];sourceQueries:string[];qcChecklist:string[];
 };
@@ -55,7 +55,7 @@ export default function Studio(){
  async function generate(){
   setError("");setRenderMessage("");setResult(null);setUsage(null);setBusy(true);
   try{
-   const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({story:prompt})});
+   const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idea:prompt})});
    const data=await res.json();if(!res.ok)throw new Error(data.error||"Gagal membuat paket produksi.");
    const production=data.production as Production;
    setResult(production);setUsage(data.usage||null);
@@ -82,26 +82,26 @@ export default function Studio(){
   finally{setRenderBusy(false);}
  }
  function copy(){if(result)navigator.clipboard?.writeText(JSON.stringify(result,null,2));}
- function restore(item:SavedProduction){setResult(item.production);setPrompt(item.production.ownerStory);setRenderMessage("");setError("");window.scrollTo({top:0,behavior:"smooth"});}
+ function restore(item:SavedProduction){setResult(item.production);setPrompt(item.production.idea||"");setRenderMessage("");setError("");window.scrollTo({top:0,behavior:"smooth"});}
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ GPT-OSS 120B</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Satu klik menjalankan storyboard, pemeriksaan naskah, TTS, render dan QC otomatis. LLM hanya dipanggil sekali; publikasi YouTube tetap menunggu persetujuan owner. Cerita final lo tidak boleh ditulis ulang.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ GPT-OSS 120B</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Lo cukup kasih ide. AI menyusun cerita, dialog, dan storyboard. Periksa hasilnya dulu; render baru berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
   {!authChecked?<p className="muted">Memeriksa sesi owner...</p>:!authenticated?<div className="ownerLogin">
    <h3>Login owner</h3><p className="muted">Masukkan password owner yang dipasang sebagai Secret <code>OWNER_PASSWORD</code> di Vercel Preview.</p>
    <label htmlFor="ownerPassword">Password owner</label><input id="ownerPassword" type="password" value={ownerPassword} onChange={e=>setOwnerPassword(e.target.value)} placeholder="Password owner" autoComplete="current-password"/>
    <div className="studioActions"><button onClick={login} disabled={authBusy||!ownerPassword}>{authBusy?"Memeriksa...":"Masuk ke studio →"}</button></div>
   </div>:<>
    <div className="studioActions"><span className="muted">Sesi owner aktif • riwayat tersimpan di perangkat ini</span><button className="secondary" onClick={logout}>Keluar</button></div>
-   <label htmlFor="storyPrompt">Cerita final owner</label>
-   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={12000} placeholder="Tempel cerita lengkap yang sudah lo tulis. AI tidak akan menambah atau mengubah alur cerita..." rows={5}/>
-   <div className="studioActions"><span className="muted">{prompt.length}/12.000 karakter</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"Menyusun storyboard & mengirim render...":"Produksi Shorts otomatis →"}</button></div>
-   {busy&&<p className="muted">Groq sedang menyusun 4-6 adegan dengan satu permintaan. Pemeriksaan teks dilakukan oleh kode setelahnya.</p>}
+   <label htmlFor="storyPrompt">Ide cerita</label>
+   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={500} placeholder="Contoh: Gimana mobil bisa berjalan? Jelaskan dengan animasi yang seru dan mudah dipahami anak-anak." rows={3}/>
+   <div className="studioActions"><span className="muted">{prompt.length}/500 karakter</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"AI sedang membuat cerita...":"Buat cerita & storyboard →"}</button></div>
+   {busy&&<p className="muted">AI sedang mengembangkan ide menjadi cerita, dialog, 4-6 adegan, dan metadata. Belum ada video yang dirender.</p>}
    {result&&<div className="productionResult">
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
     {usage&&<p className="muted">Pemakaian LLM: {usage.prompt_tokens??"—"} input • {usage.completion_tokens??"—"} output • {usage.total_tokens??"—"} total token</p>}
     <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
-    <h3>Naskah asli (terkunci)</h3><pre>{result.ownerStory}</pre>
+    <h3>Ide dari owner</h3><pre>{result.idea}</pre><h3>Cerita yang dibuat AI</h3><pre>{result.story||result.ownerStory}</pre>
     <h3>Storyboard ({result.scenes.length} adegan • ±{result.durationSeconds} detik)</h3>
     {result.scenes.map(s=><article className="scene" key={s.number}><strong>Adegan {s.number} • {s.seconds} detik</strong><p>{s.visual}</p><p><strong>Aksi:</strong> {s.action||"idle"}</p><p><strong>Narasi:</strong> {s.narration}</p><p><strong>Dialog:</strong> {s.dialogue}</p><p><strong>Subtitle:</strong> {s.subtitle}</p><p><strong>Arahan visual:</strong> {s.imagePrompt}</p><p><strong>Suara:</strong> {s.sound}</p></article>)}
     <h3>Metadata YouTube</h3><p><strong>{result.title}</strong></p><p>{result.description}</p><p>{result.hashtags.join(" ")}</p>
@@ -109,9 +109,9 @@ export default function Studio(){
     <h3>Klaim yang perlu diverifikasi owner</h3><ul>{result.factCheckNotes.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <h3>Saran kata kunci pencarian sumber (belum diverifikasi)</h3><ul>{result.sourceQueries.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
-    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Mengirim job render...":"Render ulang MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
+    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Memeriksa QC & mengirim render...":"Saya setujui — mulai render MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
-    <p className="muted">Render memakai Edge TTS dengan Piper fallback. Video tidak diunggah ke YouTube otomatis; publikasi tetap menunggu persetujuan owner.</p>
+    <p className="muted">Persetujuan tombol ini hanya memulai render. Setelah MP4 selesai, lo wajib menonton dan memeriksa hasilnya. Tidak ada upload YouTube otomatis.</p>
    </div>}
   </>}
   {error&&<p className="error" role="alert">{error}</p>}
