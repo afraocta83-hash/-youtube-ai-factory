@@ -48,54 +48,6 @@ jobs:
             echo "::error::GEMINI_API_KEY is required for the live TTS smoke test."
             exit 1
           fi
-      - name: Generate a real Gemini TTS smoke sample
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_TTS_MODEL: gemini-3.8-flash-tts
-        run: |
-          mkdir -p out
-          node <<'NODE'
-          (async () => {
-            const fs = require('node:fs');
-            const key = process.env.GEMINI_API_KEY;
-            if (!key) throw new Error('GEMINI_API_KEY missing.');
-            const model = process.env.GEMINI_TTS_MODEL;
-            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
-            const response = await fetch(url, {
-              method: 'POST',
-              headers: {'content-type':'application/json'},
-              body: JSON.stringify({
-                contents: [{parts:[{text:'Halo, ini tes suara Lerry Animasi.',speechMetadata:{style:'Say in Indonesian with a clear, friendly cartoon narrator voice.'}}]}],
-                generationConfig: {
-                  responseModalities: ['AUDIO'],
-                  speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
-                }
-              }),
-              signal: AbortSignal.timeout(55000)
-            });
-            const data = await response.json();
-            if (!response.ok) throw new Error('Gemini TTS failed: ' + (data.error?.message || response.status));
-            const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data);
-            if (!part) throw new Error('Gemini returned no audio payload.');
-            const raw = Buffer.from(part.inlineData.data, 'base64');
-            if (raw.length < 1024) throw new Error('Gemini audio payload is unexpectedly small.');
-            const mime = part.inlineData.mimeType || 'audio/pcm;rate=24000';
-            let audio = raw;
-            if (!mime.includes('wav')) {
-              const rate = Number((mime.match(/rate=(\\d+)/) || [])[1] || 24000);
-              const channels = Number((mime.match(/channels=(\\d+)/) || [])[1] || 1);
-              const header = Buffer.alloc(44);
-              header.write('RIFF',0); header.writeUInt32LE(36 + raw.length,4); header.write('WAVE',8);
-              header.write('fmt ',12); header.writeUInt32LE(16,16); header.writeUInt16LE(1,20);
-              header.writeUInt16LE(channels,22); header.writeUInt32LE(rate,24);
-              header.writeUInt32LE(rate * channels * 2,28); header.writeUInt16LE(channels * 2,32);
-              header.writeUInt16LE(16,34); header.write('data',36); header.writeUInt32LE(raw.length,40);
-              audio = Buffer.concat([header, raw]);
-            }
-            fs.writeFileSync('out/tts-smoke.wav', audio);
-            console.log('LIVE GEMINI TTS PASS', {model, mimeType:mime, bytes:audio.length});
-          })().catch(error => { console.error(error); process.exit(1); });
-          NODE
       - name: TypeScript check
         run: npm run typecheck
       - name: Build Next.js application
@@ -160,30 +112,72 @@ jobs:
               }
             }
             console.log('LIVE STORYBOARD API PASS',{model:generated.model,scenes:generated.production.scenes.length,durationSeconds:total,ownerStoryExact:true});
+            generated.production.voiceFile='voice.wav';
+            fs.writeFileSync('production-smoke.json',JSON.stringify(generated.production,null,2));
+            console.log('Saved validated production package for real story render.');
             console.log('QC API PASS: valid package accepted; changed story, missing owner story and invented subtitle rejected.');
           })().catch(error=>{console.error(error);process.exit(1);});
           NODE
+      - name: Generate a real Gemini TTS smoke sample
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          GEMINI_TTS_MODEL: gemini-3.8-flash-tts
+        run: |
+          mkdir -p out
+          node <<'NODE'
+          (async () => {
+            const fs = require('node:fs');
+            const key = process.env.GEMINI_API_KEY;
+            if (!key) throw new Error('GEMINI_API_KEY missing.');
+            const model = process.env.GEMINI_TTS_MODEL;
+            const production = JSON.parse(fs.readFileSync('production-smoke.json','utf8'));
+            const spoken = production.scenes.map(s => [s.narration,s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\\n');
+            if (!spoken.trim()) throw new Error('Validated storyboard contains no narration/dialogue.');
+            const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
+            const response = await fetch(url, {
+              method: 'POST',
+              headers: {'content-type':'application/json'},
+              body: JSON.stringify({
+                contents: [{parts:[{text:spoken,speechMetadata:{style:'Narator kartun Shorts Indonesia yang hangat, jelas, ekspresif, tempo alami, artikulasi bersih.'}}]}],
+                generationConfig: {
+                  responseModalities: ['AUDIO'],
+                  speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
+                }
+              }),
+              signal: AbortSignal.timeout(55000)
+            });
+            const data = await response.json();
+            if (!response.ok) throw new Error('Gemini TTS failed: ' + (data.error?.message || response.status));
+            const part = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData?.data);
+            if (!part) throw new Error('Gemini returned no audio payload.');
+            const raw = Buffer.from(part.inlineData.data, 'base64');
+            if (raw.length < 1024) throw new Error('Gemini audio payload is unexpectedly small.');
+            const mime = part.inlineData.mimeType || 'audio/pcm;rate=24000';
+            let audio = raw;
+            if (!mime.includes('wav')) {
+              const rate = Number((mime.match(/rate=(\\d+)/) || [])[1] || 24000);
+              const channels = Number((mime.match(/channels=(\\d+)/) || [])[1] || 1);
+              const header = Buffer.alloc(44);
+              header.write('RIFF',0); header.writeUInt32LE(36 + raw.length,4); header.write('WAVE',8);
+              header.write('fmt ',12); header.writeUInt32LE(16,16); header.writeUInt16LE(1,20);
+              header.writeUInt16LE(channels,22); header.writeUInt32LE(rate,24);
+              header.writeUInt32LE(rate * channels * 2,28); header.writeUInt16LE(channels * 2,32);
+              header.writeUInt16LE(16,34); header.write('data',36); header.writeUInt32LE(raw.length,40);
+              audio = Buffer.concat([header, raw]);
+            }
+            fs.writeFileSync('out/tts-smoke.wav', audio);
+            console.log('LIVE GEMINI TTS PASS', {model, mimeType:mime, bytes:audio.length});
+          })().catch(error => { console.error(error); process.exit(1); });
+          NODE
       - name: Verify Remotion compositions
         run: npx remotion compositions src/remotion/index.ts
-      - name: Prepare deterministic LerryShort smoke fixture
+      - name: Attach real generated story narration to the smoke render
         run: |
-          mkdir -p public out
-          node <<'NODE'
-          const fs=require('node:fs');
-          const story='Riko menemukan peta di loteng. Ia mengikuti tanda menuju taman. Di bawah pohon, ia menemukan kotak kecil. Riko membuka kotak dan tersenyum.';
-          const lines=['Riko menemukan peta di loteng.','Ia mengikuti tanda menuju taman.','Di bawah pohon, ia menemukan kotak kecil.','Riko membuka kotak dan tersenyum.'];
-          const production={workingTitle:'Riko dan Peta Rahasia',script:story,ownerStory:story,voiceFile:'voice.wav',scenes:lines.map((line,i)=>({number:i+1,seconds:4,visual:['Riko menemukan peta di loteng','taman dengan pohon besar','jalan kota menuju pasar','ruang rumah yang hangat'][i],action:['surprised','walk','point','idle'][i],narration:line,dialogue:'',subtitle:line}))};
-          fs.writeFileSync('production-smoke.json',JSON.stringify(production,null,2));
-          const sampleRate=24000,seconds=16,pcm=Buffer.alloc(sampleRate*seconds*2),header=Buffer.alloc(44);
-          header.write('RIFF',0);header.writeUInt32LE(36+pcm.length,4);header.write('WAVE',8);
-          header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);header.writeUInt16LE(1,22);
-          header.writeUInt32LE(sampleRate,24);header.writeUInt32LE(sampleRate*2,28);header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);
-          header.write('data',36);header.writeUInt32LE(pcm.length,40);
-          fs.writeFileSync('public/voice.wav',Buffer.concat([header,pcm]));
-          console.log('Prepared 16-second smoke fixture.');
-          NODE
+          test -s production-smoke.json
+          test -s out/tts-smoke.wav
+          mkdir -p public
           cp out/tts-smoke.wav public/voice.wav
-          echo 'Using the real Gemini TTS sample as the LerryShort soundtrack.'
+          echo "Using the validated generated storyboard and its real Gemini narration."
       - name: Render five-action showcase
         run: |
           mkdir -p out
