@@ -4,7 +4,7 @@ Last updated: 2026-11-26
 Current stage: Preview build passed; CI showcase passed; live external-service integration and owner-story render remain unverified
 Working branch: `experiment/openmontage-video-engine`
 Base branch: `main`
-Latest reviewed experiment commit: `cdce0b7f0602b20169b36f31aafb7626444e23cf`
+Latest reviewed experiment commit: `4b105924402bfadddfb0e9f6efe8721a38b81657`
 Main remains isolated; no merge or Production deployment has been made.
 
 ## Safety boundary
@@ -21,7 +21,7 @@ Main remains isolated; no merge or Production deployment has been made.
 - Added `docs/FREELLM_SETUP.md` with deployment and Vercel Preview configuration steps.
 - Upstream project reviewed: https://github.com/Devansh-365/freellm (MIT). It is gateway software, not a free shared API key.
 - **Not yet connected/tested:** no FreeLLM gateway URL or upstream provider credentials have been configured. The gateway must be deployed separately and supplied with provider credentials the owner controls. No public GitHub secrets were copied.
-- FreeLLM currently covers storyboard generation only. The GitHub Actions render workflow still separately requires a Gemini TTS secret for per-scene narration.
+- FreeLLM currently covers storyboard generation only. The render workflow now uses Edge TTS as the primary Indonesian narration engine and Piper as automatic fallback; neither requires a Gemini API key. The render-engine integration is committed but still awaits a successful Actions run and an owner-story render.
 - No Production deployment or merge to `main`.
 
 ## Current infrastructure — verified
@@ -52,8 +52,10 @@ Main remains isolated; no merge or Production deployment has been made.
 
 ## Render pipeline architecture
 - `.github/workflows/render-short.yml` accepts a production JSON payload through `workflow_dispatch`.
+- TTS runtime installs Edge TTS and Piper in GitHub Actions. Edge voice: `id-ID-ArdiNeural`; Piper fallback model: Indonesian `id_ID-news_tts-medium`. If Edge fails for a scene, the job attempts Piper for that scene. Kokoro is intentionally excluded.
+- `.github/workflows/test-tts-engines.yml` tests Edge and Piper audio generation, ffprobe metadata and full FFmpeg decode; it now runs when either TTS workflow or render workflow changes.
 - Workflow QC requires exact equality of owner story and script, 4–10 scenes, 15–60 seconds, image prompts, and narration/dialogue/subtitles quoted verbatim from the owner story.
-- Workflow calls Gemini TTS per scene using the GitHub Actions secret `GEMINI_API_KEY`, creates WAV files, renders with Remotion, then validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
+- Workflow generates per-scene WAV files using Edge TTS with Piper fallback, renders with Remotion, then validates H.264 1080×1920, 30 fps, 15–60 seconds, audio stream and full FFmpeg decode.
 - Output artifact: `lerry-animasi-short`, retained for 7 days.
 - `app/api/render/route.ts` validates a Supabase owner session, reads server-side `GITHUB_ACTIONS_TOKEN`, then dispatches the workflow on the experiment branch.
 - `app/api/produce/route.ts` requires `GEMINI_API_KEY`, generates storyboard/metadata, preserves exact owner story, and rejects invented spoken/subtitle text.
@@ -62,8 +64,8 @@ Main remains isolated; no merge or Production deployment has been made.
 - Subtitle reveal is estimated from audio duration; phoneme alignment and lip-sync are not implemented.
 
 ## Remaining blockers before acceptance
-1. Configure `GEMINI_API_KEY` for Preview only after owner confirms the intended key and accepts any possible API usage/cost. Without it, storyboard generation in Preview returns a service-unavailable response.
-2. Verify that GitHub repository secret `GEMINI_API_KEY` exists and is usable by the live render workflow. CI fixture audio does not prove this.
+1. Configure a valid FreeLLM gateway and its upstream provider credentials for Preview, or explicitly approve an alternative storyboard provider. The FreeLLM code path is not live until those values are configured.
+2. Verify the Edge/Piper TTS test workflow passes and render a user-approved owner story. TTS tests do not prove full dashboard-to-MP4 acceptance.
 3. Execute `supabase/schema.sql` in the intended Supabase project, then test email OTP login, RLS, save/read and private storage.
 4. Verify `GITHUB_ACTIONS_TOKEN` by a real dispatch using an authenticated owner session. Do not use a fake owner story as final acceptance.
 5. Use an owner-supplied final story for the first end-to-end render; inspect narration, timing, visual continuity, codec, dimensions, duration and full MP4 decode.
@@ -77,9 +79,9 @@ Main remains isolated; no merge or Production deployment has been made.
 - [x] Add the Supabase publishable key to the experiment Preview environment.
 - [x] Redeploy after the Preview key was added.
 - [x] Correct misleading static readiness labels in the dashboard.
-- [ ] Configure Preview Gemini API key with owner approval.
+- [ ] Connect and test the FreeLLM gateway for storyboard generation.
 - [ ] Execute Supabase schema and test auth/RLS/storage.
-- [ ] Verify authenticated GitHub Actions dispatch and live per-scene TTS.
+- [ ] Verify Edge/Piper Actions tests, authenticated GitHub Actions dispatch and live per-scene narration.
 - [ ] Render and inspect an owner-approved final story.
 - [ ] Obtain separate authorization before merge, Production deployment or YouTube publishing.
 
