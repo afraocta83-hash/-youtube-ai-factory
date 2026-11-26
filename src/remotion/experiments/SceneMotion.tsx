@@ -24,7 +24,7 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
   const cycle = frame % 90;
   const moving = action === "walk" || action === "run";
   const speed = action === "run" ? 2.8 : 7;
-  const stride = action === "run" ? 38 : 24;
+  const stride = action === "run" ? 20 : 13;
   const gait = moving ? Math.sin(frame / speed) : 0;
   const bob = Math.sin(frame / (action === "run" ? 2.8 : 7)) * (action === "idle" ? 3 : moving ? 9 : 5);
   const travel = action === "walk"
@@ -35,7 +35,7 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
   const lean = action === "run" ? 10 : action === "point" ? -3 : 0;
   const leftLeg = moving ? gait * stride : 0;
   const rightLeg = moving ? -gait * stride : 0;
-  const leftArm = action === "point" ? 8 : moving ? -gait * (action === "run" ? 48 : 30) : Math.sin(frame / 18) * 3;
+  const leftArm = action === "point" ? 8 : moving ? -gait * (action === "run" ? 36 : 22) : Math.sin(frame / 18) * 3;
   const rightArm = action === "point" ? -62 : moving ? gait * (action === "run" ? 48 : 30) : Math.sin(frame / 18 + 1) * 3;
   const mouthHeight = action === "surprised" ? 22 : 7;
   const eyeScale = action === "surprised" ? 1.35 : 1;
@@ -53,8 +53,8 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
             <path d="M220 445 Q160 470 150 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${leftArm} 220 445)`} />
             <path d="M378 445 Q440 470 450 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${rightArm} 378 445)`} />
           </g>
-          <path d="M220 585 L205 660 Q202 680 224 682 L270 682 L282 620" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 245 590)`} />
-          <path d="M320 620 L330 660 Q334 682 356 682 L394 682 Q412 678 400 656 L380 585" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 355 590)`} />
+          <path d="M245 590 L240 650 Q238 676 255 680 L282 680 L285 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 245 590)`} />
+          <path d="M315 590 L315 650 Q315 676 335 680 L362 680 L355 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 355 590)`} />
           <path d="M220 220 Q205 95 300 88 Q395 95 385 220 L370 390 Q300 430 230 390Z" fill="#ffd8b5" stroke="#27364a" strokeWidth="12" />
           <path d="M210 220 Q188 90 300 70 Q412 88 390 220 Q365 165 310 160 Q265 205 210 220Z" fill="#27364a" />
           <g transform={`translate(0 0) scale(1 ${eyeScale})`}>
