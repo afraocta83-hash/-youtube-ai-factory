@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       production_json:
-        description: "Paket produksi JSON dari dashboard (maks. 60 KB)"
+        description: "Paket produksi yang sudah diperiksa owner (maks. 60 KB)"
         required: true
         type: string
 
@@ -44,32 +44,28 @@ jobs:
           curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx.json" -o .cache/piper/id_ID-news_tts-medium.onnx.json
           test -s .cache/piper/id_ID-news_tts-medium.onnx
           test -s .cache/piper/id_ID-news_tts-medium.onnx.json
-      - name: Validate owner story and Shorts package
+      - name: Validate owner-approved package
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
         run: |
           node <<'NODE'
           const fs=require('fs');
           const p=JSON.parse(process.env.PRODUCTION_JSON);
-          if(!p.ownerStory||p.script!==p.ownerStory) throw new Error('Cerita owner tidak cocok persis.');
-          if(p.script.trim().length<40) throw new Error('Cerita owner terlalu pendek.');
-          if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>10) throw new Error('Storyboard harus 4-10 adegan.');
+          if(!p.ownerStory||p.script!==p.ownerStory) throw new Error('Cerita hasil AI tidak cocok dengan naskah produksi.');
+          if(p.script.trim().length<80) throw new Error('Cerita terlalu pendek.');
+          if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error('Storyboard harus 4-6 adegan.');
           let total=0;
           for(const [i,s] of p.scenes.entries()){
             const seconds=Number(s.seconds);
-            if(!Number.isFinite(seconds)||seconds<=0) throw new Error('Durasi adegan '+(i+1)+' tidak valid.');
+            if(!Number.isInteger(seconds)||seconds<2||seconds>20) throw new Error('Durasi adegan '+(i+1)+' tidak valid.');
             total+=seconds;
-            if(typeof s.imagePrompt!=='string'||s.imagePrompt.trim().length<20) throw new Error('Prompt visual adegan '+(i+1)+' kurang jelas.');
-            for(const field of ['narration','dialogue','subtitle']){
-              const line=typeof s[field]==='string'?s[field].trim():'';
-              if(line&&!p.ownerStory.includes(line)) throw new Error('Teks '+field+' adegan '+(i+1)+' bukan kutipan asli.');
-            }
+            if(typeof s.imagePrompt!=='string'||s.imagePrompt.trim().length<25) throw new Error('Prompt visual adegan '+(i+1)+' kurang jelas.');
+            if(!String(s.narration||s.dialogue||'').trim()) throw new Error('Narasi/dialog adegan '+(i+1)+' kosong.');
           }
           if(total<15||total>60) throw new Error('Durasi Shorts harus 15-60 detik.');
-          if(!p.scenes.some(s=>String(s.narration||s.dialogue||'').trim())) throw new Error('Narasi/dialog kosong.');
           fs.mkdirSync('public',{recursive:true});
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
-          console.log('PACKAGE QC PASS',{scenes:p.scenes.length,total,ownerStoryExact:true});
+          console.log('OWNER-APPROVED PACKAGE QC PASS',{scenes:p.scenes.length,total});
           NODE
       - name: Generate Indonesian narration with Edge TTS and Piper fallback
         env:
@@ -96,9 +92,7 @@ jobs:
               const convert=run('ffmpeg',['-y','-v','error','-i',mp3,'-ac','1','-ar','24000',wav]);
               edgeReady=convert.status===0&&fs.existsSync(wav)&&fs.statSync(wav).size>1000;
               if(!edgeReady) console.warn('EDGE AUDIO CONVERSION FAILED; switching to Piper for scene '+(i+1),convert.stderr||convert.error?.message||'invalid WAV output');
-            }else{
-              console.warn('EDGE TTS FAILED; switching to Piper for scene '+(i+1),edge.stderr||edge.error?.message||'no output');
-            }
+            }else console.warn('EDGE TTS FAILED; switching to Piper for scene '+(i+1),edge.stderr||edge.error?.message||'no output');
             if(!edgeReady){
               engine='piper-tts';
               try{fs.rmSync(wav,{force:true});}catch{}
@@ -110,17 +104,14 @@ jobs:
             if(probe.status!==0) fail('FFprobe adegan '+(i+1),probe);
             const duration=Number(probe.stdout.trim());
             if(!Number.isFinite(duration)||duration<=0) throw new Error('Durasi audio tidak valid pada adegan '+(i+1));
-            scene.voiceFile=stem+'.wav';
-            scene.voiceDurationSeconds=duration;
-            // Prevent per-scene narration from being clipped by the original storyboard timing.
+            scene.voiceFile=stem+'.wav';scene.voiceDurationSeconds=duration;
             scene.seconds=Math.max(Number(scene.seconds)||1,Math.ceil(duration+0.2));
             console.log('SCENE TTS PASS',{scene:i+1,engine,file:scene.voiceFile,seconds:Number(duration.toFixed(2)),sceneSeconds:scene.seconds,bytes:fs.statSync(wav).size});
           }
           const finalDuration=p.scenes.reduce((sum,scene)=>sum+Number(scene.seconds||0),0);
-          if(finalDuration<15||finalDuration>60) throw new Error('Durasi setelah menyesuaikan audio harus tetap 15-60 detik; revisi storyboard owner sebelum render.');
+          if(finalDuration<15||finalDuration>60) throw new Error('Durasi setelah menyesuaikan audio harus tetap 15-60 detik; revisi storyboard sebelum render.');
           p.durationSeconds=finalDuration;
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
-          console.log('PER-SCENE AUDIO READY; Edge primary, Piper fallback. Narration fit checked.');
           NODE
       - name: Render MP4 vertical 1080x1920
         run: npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --props=production.json --codec=h264 --crf=20
