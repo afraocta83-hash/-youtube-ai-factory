@@ -22,8 +22,28 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 22
-      - name: Install dependencies
-        run: npm install
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install project, TTS and FFmpeg dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libespeak-ng1
+          python -m pip install --upgrade pip
+          python -m pip install edge-tts piper-tts
+          npm install
+          command -v edge-tts
+          command -v piper
+          command -v ffmpeg
+      - name: Download Indonesian Piper fallback voice
+        run: |
+          BASE="https://huggingface.co/rhasspy/piper-voices/resolve/main/id/id_ID/news_tts/medium"
+          mkdir -p .cache/piper
+          curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx" -o .cache/piper/id_ID-news_tts-medium.onnx
+          curl --retry 3 --retry-delay 2 -fL "$BASE/id_ID-news_tts-medium.onnx.json" -o .cache/piper/id_ID-news_tts-medium.onnx.json
+          test -s .cache/piper/id_ID-news_tts-medium.onnx
+          test -s .cache/piper/id_ID-news_tts-medium.onnx.json
       - name: Validate owner story and Shorts package
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
@@ -51,69 +71,49 @@ jobs:
           fs.writeFileSync('production.json',JSON.stringify(p,null,2));
           console.log('PACKAGE QC PASS',{scenes:p.scenes.length,total,ownerStoryExact:true});
           NODE
-      - name: Generate per-scene Indonesian narration and subtitle timing
+      - name: Generate Indonesian narration with Edge TTS and Piper fallback
         env:
           PRODUCTION_JSON: ${{ inputs.production_json }}
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-          GEMINI_TTS_MODEL: gemini-3.8-flash-tts
         run: |
           node <<'NODE'
-          (async()=>{
-            const fs=require('fs');
-            const p=JSON.parse(process.env.PRODUCTION_JSON);
-            const key=process.env.GEMINI_API_KEY;
-            if(!key) throw new Error('GEMINI_API_KEY belum diset di GitHub Actions.');
-            const model=process.env.GEMINI_TTS_MODEL||'gemini-3.8-flash-tts';
-            for(let i=0;i<p.scenes.length;i++){
-              const scene=p.scenes[i];
-              const spoken=[scene.narration,scene.dialogue].filter(Boolean).join('. ').trim();
-              if(!spoken){scene.voiceFile=undefined;scene.voiceDurationSeconds=0;continue;}
-              const url='https://generativelanguage.googleapis.com/v1beta/models/'+encodeURIComponent(model)+':generateContent?key='+encodeURIComponent(key);
-              let response,data;
-              for(let attempt=0;attempt<4;attempt++){
-                response=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({
-                  contents:[{parts:[{text:spoken,speechMetadata:{style:'Narator kartun Shorts Bahasa Indonesia, ekspresif, hangat, jelas dan natural.'}}]}],
-                  generationConfig:{responseModalities:['AUDIO'],speechConfig:{voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}}
-                }),signal:AbortSignal.timeout(55000)});
-                data=await response.json();
-                if(response.ok) break;
-                if(response.status!==429||attempt===3) throw new Error('Gemini TTS adegan '+(i+1)+' gagal: '+(data.error?.message||response.status));
-                await new Promise(r=>setTimeout(r,2500*(attempt+1)));
-              }
-              const part=data?.candidates?.[0]?.content?.parts?.find(x=>x.inlineData?.data);
-              if(!part) throw new Error('Audio adegan '+(i+1)+' kosong.');
-              const raw=Buffer.from(part.inlineData.data,'base64');
-              const mime=part.inlineData.mimeType||'audio/pcm;rate=24000';
-              let audio=raw;
-              if(!mime.includes('wav')){
-                const rate=Number((mime.match(/rate=(\d+)/)||[])[1]||24000);
-                const header=Buffer.alloc(44);
-                header.write('RIFF',0);header.writeUInt32LE(36+raw.length,4);header.write('WAVE',8);
-                header.write('fmt ',12);header.writeUInt32LE(16,16);header.writeUInt16LE(1,20);
-                header.writeUInt16LE(1,22);header.writeUInt32LE(rate,24);header.writeUInt32LE(rate*2,28);
-                header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);header.write('data',36);header.writeUInt32LE(raw.length,40);
-                audio=Buffer.concat([header,raw]);
-                scene.voiceDurationSeconds=raw.length/(2*rate);
-              }else{
-                scene.voiceDurationSeconds=Math.max(0.1,(audio.length-44)/(audio.readUInt32LE(24)*audio.readUInt16LE(22)));
-              }
-              const file='scene-'+String(i+1).padStart(2,'0')+'.wav';
-              fs.writeFileSync('public/'+file,audio);
-              scene.voiceFile=file;
-              console.log('SCENE TTS PASS',{scene:i+1,file,seconds:Number(scene.voiceDurationSeconds.toFixed(2)),bytes:audio.length});
-              await new Promise(r=>setTimeout(r,700));
+          const fs=require('fs');
+          const cp=require('child_process');
+          const p=JSON.parse(process.env.PRODUCTION_JSON);
+          const model='.cache/piper/id_ID-news_tts-medium.onnx';
+          const run=(cmd,args,opts={})=>cp.spawnSync(cmd,args,{encoding:'utf8',...opts});
+          const fail=(label,r)=>{throw new Error(label+': '+(r.error?.message||r.stderr||r.stdout||r.status));};
+          for(let i=0;i<p.scenes.length;i++){
+            const scene=p.scenes[i];
+            const spoken=[scene.narration,scene.dialogue].filter(Boolean).join('. ').trim();
+            if(!spoken){scene.voiceFile=undefined;scene.voiceDurationSeconds=0;continue;}
+            const stem='scene-'+String(i+1).padStart(2,'0');
+            const mp3='/tmp/'+stem+'.mp3';
+            const wav='public/'+stem+'.wav';
+            let engine='edge-tts';
+            const edge=run('edge-tts',['--voice','id-ID-ArdiNeural','--rate=+0%','--text',spoken,'--write-media',mp3]);
+            if(edge.status===0&&fs.existsSync(mp3)&&fs.statSync(mp3).size>1000){
+              const convert=run('ffmpeg',['-y','-v','error','-i',mp3,'-ac','1','-ar','24000',wav]);
+              if(convert.status!==0) fail('Konversi Edge TTS adegan '+(i+1),convert);
+            }else{
+              console.warn('EDGE TTS FAILED; switching to Piper for scene '+(i+1),edge.stderr||edge.error?.message||'no output');
+              engine='piper-tts';
+              const piper=run('piper',['--model',model,'--output_file',wav],{input:spoken});
+              if(piper.status!==0) fail('Edge dan Piper gagal pada adegan '+(i+1),piper);
             }
-            fs.writeFileSync('production.json',JSON.stringify(p,null,2));
-            console.log('PER-SCENE AUDIO READY');
-          })().catch(e=>{console.error(e);process.exit(1)});
+            if(!fs.existsSync(wav)||fs.statSync(wav).size<1000) throw new Error('Audio kosong/tidak valid pada adegan '+(i+1));
+            const probe=run('ffprobe',['-v','error','-show_entries','format=duration','-of','default=noprint_wrappers=1:nokey=1',wav]);
+            if(probe.status!==0) fail('FFprobe adegan '+(i+1),probe);
+            const duration=Number(probe.stdout.trim());
+            if(!Number.isFinite(duration)||duration<=0) throw new Error('Durasi audio tidak valid pada adegan '+(i+1));
+            scene.voiceFile=stem+'.wav';
+            scene.voiceDurationSeconds=duration;
+            console.log('SCENE TTS PASS',{scene:i+1,engine,file:scene.voiceFile,seconds:Number(duration.toFixed(2)),bytes:fs.statSync(wav).size});
+          }
+          fs.writeFileSync('production.json',JSON.stringify(p,null,2));
+          console.log('PER-SCENE AUDIO READY; Edge primary, Piper fallback.');
           NODE
       - name: Render MP4 vertical 1080x1920
         run: npx remotion render src/remotion/index.ts LerryShort out/lerry-animasi-short.mp4 --props=production.json --codec=h264 --crf=20
-      - name: Install FFmpeg verification tools
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y ffmpeg
-          command -v ffprobe
       - name: Verify MP4, video and narration
         run: |
           test -s out/lerry-animasi-short.mp4
