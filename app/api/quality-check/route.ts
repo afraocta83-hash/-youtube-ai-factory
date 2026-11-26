@@ -18,8 +18,8 @@ export async function POST(req: Request) {
     const scenes: Scene[] = Array.isArray(p.scenes) ? p.scenes : [];
 
     if (script.trim().length < 40) issues.push("Cerita owner terlalu pendek atau kosong.");
-    if (ownerStory && script !== ownerStory) issues.push("Naskah hasil produksi tidak sama persis dengan cerita asli owner.");
-    if (!ownerStory) warnings.push("Cerita asli tidak dikirim ke QC; pemeriksaan keutuhan naskah dilewati.");
+    if (!ownerStory.trim()) issues.push("Cerita asli owner wajib dikirim; QC tidak boleh melewati pemeriksaan integritas naskah.");
+    else if (script !== ownerStory) issues.push("Naskah hasil produksi tidak sama persis dengan cerita asli owner.");
     if (scenes.length < 4 || scenes.length > 10) issues.push("Storyboard Shorts harus berisi 4-10 adegan.");
 
     const invalidDurations = scenes.some((scene) => !Number.isFinite(Number(scene.seconds)) || Number(scene.seconds) <= 0);
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
       warnings,
       checks: {
         scriptLength: script.length,
-        ownerStoryExactMatch: ownerStory ? script === ownerStory : null,
+        ownerStoryExactMatch: ownerStory ? script === ownerStory : false,
         sceneCount: scenes.length,
         totalSceneSeconds: seconds,
         visualPromptCount: prompts.filter((value) => value.trim().length >= 25).length,
