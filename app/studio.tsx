@@ -1,6 +1,7 @@
 "use client";
 import { useState } from "react";
 import SupabasePanel from "./supabase-panel";
+import { getSupabaseBrowserClient } from "../lib/supabase/client";
 
 type Production = {
  workingTitle:string; hook:string; synopsis:string; script:string; ownerStory:string; durationSeconds:number;
@@ -8,6 +9,7 @@ type Production = {
  title:string;description:string;hashtags:string[];thumbnailPrompt:string;factCheckNotes:string[];sourceQueries:string[];qcChecklist:string[];
 };
 export default function Studio(){
+ const supabase = getSupabaseBrowserClient();
  const [prompt,setPrompt]=useState("");
  const [busy,setBusy]=useState(false);
  const [renderBusy,setRenderBusy]=useState(false);
@@ -27,7 +29,10 @@ export default function Studio(){
   if(!result)return;
   setRenderBusy(true);setRenderMessage("");setError("");
   try{
-   const res=await fetch("/api/render",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({production:result})});
+   const sessionResult = await supabase?.auth.getSession();
+   const accessToken = sessionResult?.data.session?.access_token;
+   if (!accessToken) throw new Error("Login Supabase dulu sebelum render. Sesi owner diperlukan untuk melindungi antrean render.");
+   const res=await fetch("/api/render",{method:"POST",headers:{"Content-Type":"application/json","Authorization":`Bearer ${accessToken}`},body:JSON.stringify({production:result})});
    const data=await res.json();
    if(!res.ok)throw new Error(data.error||"Gagal memulai render.");
    setRenderMessage("Render berhasil dikirim ke GitHub Actions. Pantau proses dan unduh MP4 dari halaman Actions.");
