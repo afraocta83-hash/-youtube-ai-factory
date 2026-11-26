@@ -31,13 +31,13 @@ jobs:
       - name: Render a vector diagram smoke scene
         run: |
           manim -ql --disable_caching -r 320,320 tools/manim-smoke/scene.py ManimSmoke
-          test -s media/videos/scene/480p15/ManimSmoke.mp4
-          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration -of json media/videos/scene/480p15/ManimSmoke.mp4
-          ffmpeg -v error -i media/videos/scene/480p15/ManimSmoke.mp4 -f null -
+          test -s media/videos/scene/320p15/ManimSmoke.mp4
+          ffprobe -v error -show_entries stream=codec_name,width,height,r_frame_rate -show_entries format=duration -of json media/videos/scene/320p15/ManimSmoke.mp4
+          ffmpeg -v error -i media/videos/scene/320p15/ManimSmoke.mp4 -f null -
       - name: Upload Manim proof
         uses: actions/upload-artifact@v4
         with:
           name: manim-smoke-proof
-          path: media/videos/scene/480p15/ManimSmoke.mp4
+          path: media/videos/scene/320p15/ManimSmoke.mp4
           if-no-files-found: error
           retention-days: 7
