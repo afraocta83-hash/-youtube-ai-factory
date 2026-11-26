@@ -1,4 +1,5 @@
-import { NextResponse } from "next/server";\nimport { withAgentSpan } from "@/lib/agents/telemetry";
+import { NextResponse } from "next/server";
+import { withAgentSpan } from "@/lib/agents/telemetry";
 
 export const runtime = "nodejs";
 export const maxDuration = 15;
