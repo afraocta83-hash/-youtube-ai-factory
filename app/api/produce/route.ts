@@ -103,7 +103,8 @@ export async function POST(request: Request) {
         const narrationAt=ownerStory.indexOf(narrationText,narrationCursor);
         if(narrationAt<0) throw new Error(`Narasi adegan ${i+1} bukan kutipan asli berurutan dari cerita owner.`);
         narrationCursor=narrationAt+narrationText.length;
-      }\n      if(s.subtitle&&!String(s.narration||"").includes(s.subtitle.trim())) throw new Error(`Subtitle adegan ${i+1} harus diambil dari narasi adegan.`);
+      }
+      if(s.subtitle&&!String(s.narration||"").includes(s.subtitle.trim())) throw new Error(`Subtitle adegan ${i+1} harus diambil dari narasi adegan.`);
       if(s.dialogue&&!ownerStory.includes(s.dialogue.trim())) throw new Error(`Dialog adegan ${i+1} bukan kutipan asli dari cerita owner.`);
     }
     if(total<20||total>60) throw new Error("Durasi total storyboard harus 20-60 detik.");
