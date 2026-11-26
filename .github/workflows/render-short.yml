@@ -91,12 +91,17 @@ jobs:
             const wav='public/'+stem+'.wav';
             let engine='edge-tts';
             const edge=run('edge-tts',['--voice','id-ID-ArdiNeural','--rate=+0%','--text',spoken,'--write-media',mp3]);
-            if(edge.status===0&&fs.existsSync(mp3)&&fs.statSync(mp3).size>1000){
+            let edgeReady=edge.status===0&&fs.existsSync(mp3)&&fs.statSync(mp3).size>1000;
+            if(edgeReady){
               const convert=run('ffmpeg',['-y','-v','error','-i',mp3,'-ac','1','-ar','24000',wav]);
-              if(convert.status!==0) fail('Konversi Edge TTS adegan '+(i+1),convert);
+              edgeReady=convert.status===0&&fs.existsSync(wav)&&fs.statSync(wav).size>1000;
+              if(!edgeReady) console.warn('EDGE AUDIO CONVERSION FAILED; switching to Piper for scene '+(i+1),convert.stderr||convert.error?.message||'invalid WAV output');
             }else{
               console.warn('EDGE TTS FAILED; switching to Piper for scene '+(i+1),edge.stderr||edge.error?.message||'no output');
+            }
+            if(!edgeReady){
               engine='piper-tts';
+              try{fs.rmSync(wav,{force:true});}catch{}
               const piper=run('piper',['--model',model,'--output_file',wav],{input:spoken});
               if(piper.status!==0) fail('Edge dan Piper gagal pada adegan '+(i+1),piper);
             }
