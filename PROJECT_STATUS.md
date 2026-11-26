@@ -1,5 +1,23 @@
 # LERRY ANIMASI — Project Status
 
+Last updated: 2026-11-27
+Current stage: Idea-first pipeline implementation pushed to the experiment branch; Preview build and updated CI verification are pending.
+Latest change set:
+- `50d72def`: producer accepts a short idea and generates story, dialogue, storyboard and metadata.
+- `db66df0`: render API validates generated package and only runs after explicit owner approval.
+- `70988e84`: render workflow accepts AI-created story packages and keeps MP4 technical QC.
+- `54844b9f`: structural QC updated for AI-generated stories.
+- `f76cc0f4`: dashboard stops auto-rendering; owner must inspect draft and explicitly approve render.
+- `655724b5`: CI smoke tests updated for idea-to-story behavior.
+- Additional commits update homepage, README, AGENTS, production rules and project skill.
+Working branch: `experiment/openmontage-video-engine`
+Base branch: `main` (untouched; no merge or Production deployment).
+New flow: short owner idea → AI-generated story/dialogue/storyboard/metadata → owner review → explicit render approval → Edge TTS/Piper → Remotion/FFmpeg MP4 QC → owner watches final MP4 → separate YouTube approval/upload.
+Important: YouTube OAuth upload is not implemented. The current renderer still uses vector backdrops and a basic 2D character rig; it does not generate bespoke AI artwork per scene or full 3D animation.
+Verification status: changes have been pushed, but no green CI run or READY Preview for this change set has yet been confirmed. Live Groq generation and authenticated render dispatch remain unverified. Do not call the new pipeline production-ready.
+
+# LERRY ANIMASI — Project Status
+
 Last updated: 2026-11-26
 Current stage: Groq primary/backup key fallback deployed to Preview; CI renderer run #88 passed; live owner login, live Groq generation, and dashboard-to-render acceptance still pending
 Working branch: `experiment/openmontage-video-engine`
