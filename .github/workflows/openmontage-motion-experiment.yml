@@ -156,8 +156,10 @@ jobs:
           header.writeUInt32LE(sampleRate,24);header.writeUInt32LE(sampleRate*2,28);header.writeUInt16LE(2,32);header.writeUInt16LE(16,34);
           header.write('data',36);header.writeUInt32LE(pcm.length,40);
           fs.writeFileSync('public/voice.wav',Buffer.concat([header,pcm]));
-          console.log('Prepared 16-second smoke fixture with silent WAV audio.');
+          console.log('Prepared 16-second smoke fixture.');
           NODE
+          cp out/tts-smoke.wav public/voice.wav
+          echo 'Using the real Gemini TTS sample as the LerryShort soundtrack.'
       - name: Render five-action showcase
         run: |
           mkdir -p out
@@ -198,6 +200,14 @@ jobs:
           ffmpeg -v error -i out/tts-smoke.wav -f null -
           ffmpeg -v error -i out/openmontage-motion-showcase.mp4 -f null -
           ffmpeg -v error -i out/lerry-short-smoke.mp4 -f null -
+          ffmpeg -i out/lerry-short-smoke.mp4 -af volumedetect -f null - 2> out/short-audio-level.txt
+          node <<'NODE'
+          const fs=require('node:fs');
+          const log=fs.readFileSync('out/short-audio-level.txt','utf8');
+          const match=log.match(/mean_volume:\s*(-?[0-9.]+) dB/);
+          if(!match || Number(match[1]) <= -40) throw new Error('Short soundtrack is silent or too quiet.');
+          console.log('NON-SILENT SHORT AUDIO PASS',match[1]+' dB');
+          NODE
       - name: Upload experiment artifact
         uses: actions/upload-artifact@v4
         with:
