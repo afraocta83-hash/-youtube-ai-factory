@@ -47,7 +47,7 @@ jobs:
               }
             }
             if (total < 15 || total > 60) throw new Error('Durasi total wajib 15-60 detik.');
-            const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\\n');
+            const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\n');
             if (!spoken.trim()) throw new Error('Narasi/dialog kosong; TTS tidak dapat dibuat.');
             if (spoken.length > 8000) throw new Error('Teks suara lebih dari 8.000 karakter.');
             p.voiceFile = 'voice.wav';
@@ -67,14 +67,14 @@ jobs:
             const p = JSON.parse(process.env.PRODUCTION_JSON);
             const key = process.env.GEMINI_API_KEY;
             if (!key) throw new Error('GitHub Actions secret GEMINI_API_KEY belum diset. Tambahkan di Settings > Secrets and variables > Actions.');
-            const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\\n');
+            const spoken = p.scenes.map(s => [s.narration, s.dialogue].filter(Boolean).join('. ')).filter(Boolean).join('\n');
             const model = process.env.GEMINI_TTS_MODEL || 'gemini-2.5-flash-preview-tts';
             const url = 'https://generativelanguage.googleapis.com/v1beta/models/' + encodeURIComponent(model) + ':generateContent?key=' + encodeURIComponent(key);
             const response = await fetch(url, {
               method: 'POST',
               headers: {'content-type':'application/json'},
               body: JSON.stringify({
-                contents: [{parts:[{text:'Say in Indonesian with this direction: Narator kartun Shorts Indonesia, ekspresif, jelas, tempo hidup, artikulasi bersih.\\n\\n' + spoken}]}],
+                contents: [{parts:[{text:'Say in Indonesian with this direction: Narator kartun Shorts Indonesia, ekspresif, jelas, tempo hidup, artikulasi bersih.\n\n' + spoken}]}],
                 generationConfig: {
                   responseModalities: ['AUDIO'],
                   speechConfig: {voiceConfig:{prebuiltVoiceConfig:{voiceName:'Kore'}}}
@@ -90,7 +90,7 @@ jobs:
             const mime = part.inlineData.mimeType || 'audio/pcm;rate=24000';
             let audio = raw;
             if (!mime.includes('wav')) {
-              const rate = Number((mime.match(/rate=(\\d+)/) || [])[1] || 24000);
+              const rate = Number((mime.match(/rate=(\d+)/) || [])[1] || 24000);
               const header = Buffer.alloc(44);
               header.write('RIFF',0); header.writeUInt32LE(36 + raw.length,4); header.write('WAVE',8);
               header.write('fmt ',12); header.writeUInt32LE(16,16); header.writeUInt16LE(1,20);
