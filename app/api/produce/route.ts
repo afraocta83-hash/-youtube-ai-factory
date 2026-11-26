@@ -47,9 +47,14 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Login owner diperlukan sebelum memakai mesin produksi." }, { status: 401 });
   }
 
-  const apiKey = process.env.GROQ_API_KEY?.trim();
-  if (!apiKey) {
-    return NextResponse.json({ error: "GROQ_API_KEY belum dipasang sebagai Secret di Vercel Preview." }, { status: 503 });
+  // Use the primary key first, then optional server-side backups. Never expose key values.
+  const apiKeys = [...new Set([
+    process.env.GROQ_API_KEY,
+    process.env.GROQ_API_KEY2,
+    process.env.GROQ_API_KEY3
+  ].map((key) => key?.trim()).filter((key): key is string => Boolean(key)))];
+  if (apiKeys.length === 0) {
+    return NextResponse.json({ error: "Pasang minimal satu GROQ_API_KEY sebagai Secret di Vercel Preview." }, { status: 503 });
   }
 
   try {
@@ -74,33 +79,46 @@ export async function POST(request: Request) {
       story
     ].join("\n\n");
 
-    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${apiKey}`,
-        "Content-Type": "application/json"
+    const requestBody = JSON.stringify({
+      model,
+      messages: [{ role: "user", content: prompt }],
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "lerry_shorts_production",
+          strict: true,
+          schema: productionSchema
+        }
       },
-      body: JSON.stringify({
-        model,
-        messages: [{ role: "user", content: prompt }],
-        response_format: {
-          type: "json_schema",
-          json_schema: {
-            name: "lerry_shorts_production",
-            strict: true,
-            schema: productionSchema
-          }
-        },
-        reasoning_effort: "low",
-        include_reasoning: false,
-        temperature: 0.5,
-        max_completion_tokens: 3200,
-        stream: false
-      }),
-      signal: AbortSignal.timeout(55000)
+      reasoning_effort: "low",
+      include_reasoning: false,
+      temperature: 0.5,
+      max_completion_tokens: 3200,
+      stream: false
     });
 
-    const data = await response.json();
+    let response: Response | null = null;
+    let data: any = null;
+    for (const [index, apiKey] of apiKeys.entries()) {
+      response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${apiKey}`,
+          "Content-Type": "application/json"
+        },
+        body: requestBody,
+        signal: AbortSignal.timeout(55000)
+      });
+      data = await response.json();
+
+      // Retry another configured key only when this key is rejected. Do not
+      // multiply requests on rate limits, provider outages, or model errors.
+      if (response.ok || ![401, 403].includes(response.status) || index === apiKeys.length - 1) break;
+    }
+
+    if (!response) {
+      return NextResponse.json({ error: "Tidak ada key Groq yang dapat digunakan." }, { status: 503 });
+    }
     if (!response.ok) {
       const providerMessage = data?.error?.message || `Groq error ${response.status}`;
       return NextResponse.json({
