@@ -88,6 +88,7 @@ export async function POST(request: Request) {
 
     // Preserve exact owner input byte-for-byte in the canonical script field.
     production.script = prompt;
+    production.ownerStory = prompt;
     production.durationSeconds = totalSeconds;
     return NextResponse.json({ ok: true, model, ownerStoryPreserved: true, production });
   } catch (error) {
