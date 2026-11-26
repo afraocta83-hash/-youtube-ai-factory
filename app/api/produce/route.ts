@@ -84,7 +84,6 @@ export async function POST(request: Request) {
       raw=choice?.message?.content;
     }
     if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Provider AI tidak mengembalikan JSON produksi."},{status:502});
-    if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Groq tidak mengembalikan JSON produksi."},{status:502});
 
     const p=JSON.parse(raw);
     if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error("Storyboard harus berisi 4-6 adegan.");
