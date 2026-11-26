@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getYoutubeAccessToken } from "@/lib/youtube/oauth";
+import { getYoutubeAccessToken } from "@/lib/youtube/oauth";\nimport { withAgentSpan } from "@/lib/agents/telemetry";
 export const runtime = "nodejs";
 export const maxDuration = 30;
 
@@ -13,7 +13,7 @@ export async function POST(request: NextRequest) {
     const privacyStatus = body.privacyStatus === "public" ? "public" : body.privacyStatus === "unlisted" ? "unlisted" : "private";
     if (!title || title.length > 100) return NextResponse.json({ error: "Judul YouTube wajib diisi dan maksimal 100 karakter." }, { status: 400 });
     const token = await getYoutubeAccessToken();
-    const response = await fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
+    const response = await withAgentSpan("publishing.youtube-upload-session", { "agent.name":"YouTube Publishing Agent", "agent.engine":"YouTube Data API v3", "approval.owner":true, "youtube.privacy":privacyStatus }, () => fetch("https://www.googleapis.com/upload/youtube/v3/videos?uploadType=resumable&part=snippet,status", {
       method: "POST",
       headers: { Authorization: "Bearer " + token, "Content-Type": "application/json; charset=UTF-8", "X-Upload-Content-Type": "video/mp4" },
       body: JSON.stringify({ snippet: { title, description, tags, categoryId: "27", defaultLanguage: "id" }, status: { privacyStatus, selfDeclaredMadeForKids: false } }),
