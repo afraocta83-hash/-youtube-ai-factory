@@ -48,13 +48,13 @@ export const SceneMotion: React.FC<SceneMotionProps> = ({
       <svg viewBox="0 0 600 760" style={{ position: "absolute", width: "78%", height: "72%", left: "11%", top: "18%" }}>
         <ellipse cx="300" cy="680" rx="112" ry="20" fill="#1b2938" opacity=".14" />
         <g transform={`translate(${travel} ${bob}) rotate(${lean} 300 420)`}>
-          <path d="M250 590 L248 650 Q246 675 265 680 L290 680 L290 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 270 590)`} />
-          <path d="M310 590 L310 650 Q310 675 330 680 L355 680 L350 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 330 590)`} />
           <g>
             <path d="M220 420 Q300 390 380 420 L400 610 Q300 650 200 610Z" fill={accent} stroke="#27364a" strokeWidth="12" />
             <path d="M220 445 Q160 470 150 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${leftArm} 220 445)`} />
             <path d="M378 445 Q440 470 450 540" fill="none" stroke="#ffd8b5" strokeWidth="30" strokeLinecap="round" transform={`rotate(${rightArm} 378 445)`} />
           </g>
+          <path d="M235 590 L235 650 Q235 680 255 680 L280 680 L280 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${leftLeg} 257 590)`} />
+          <path d="M320 590 L320 650 Q320 680 340 680 L365 680 L365 590" fill="#27364a" stroke="#27364a" strokeWidth="12" strokeLinecap="round" transform={`rotate(${rightLeg} 343 590)`} />
           <path d="M220 220 Q205 95 300 88 Q395 95 385 220 L370 390 Q300 430 230 390Z" fill="#ffd8b5" stroke="#27364a" strokeWidth="12" />
           <path d="M210 220 Q188 90 300 70 Q412 88 390 220 Q365 165 310 160 Q265 205 210 220Z" fill="#27364a" />
           <g transform={`translate(0 0) scale(1 ${eyeScale})`}>
