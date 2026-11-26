@@ -72,7 +72,7 @@ export async function POST(request:Request){
     const response=await withAgentSpan("video.render-dispatch", { "agent.name":"Video Agent", "agent.engine":"GitHub Actions Remotion FFmpeg", "render.branch":BRANCH }, () => fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/dispatches`,{
       method:"POST",headers:{Authorization:`Bearer ${token}`,Accept:"application/vnd.github+json","X-GitHub-Api-Version":"2022-11-28","Content-Type":"application/json"},
       body:JSON.stringify({ref:BRANCH,inputs:{production_json:productionJson}}),signal:AbortSignal.timeout(12000)
-    });
+    }));
     if(!response.ok){
       const detail=await response.text();
       const accepted=response.headers.get("x-accepted-github-permissions");
