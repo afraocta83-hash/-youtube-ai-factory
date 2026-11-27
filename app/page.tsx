@@ -2,8 +2,6 @@ import Studio from "./studio";
 
 const modules = [
  {title:"Mesin cerita & storyboard",detail:"Mengembangkan ide menjadi cerita, dialog, storyboard, dan metadata untuk video Shorts.",status:"Produksi cerita otomatis"},
- {title:"Storyboard & visual",detail:"Menyusun cerita menjadi 4-6 adegan dengan arahan visual, durasi, judul, deskripsi, dan metadata.",status:"Pemeriksaan otomatis"},
- {title:"Voice & subtitle",detail:"Narasi Bahasa Indonesia dan subtitle disiapkan untuk setiap adegan.",status:"Audio & subtitle"},
  {title:"Render MP4 Shorts",detail:"Remotion dan GitHub Actions merender video vertikal H.264 1080 × 1920, 30 fps, durasi 15-60 detik.",status:"Showcase MP4 lulus QC"},
  {title:"Quality control",detail:"Kode memeriksa struktur cerita, jumlah adegan, durasi, audio, codec, resolusi, FPS dan decode.",status:"Validasi deterministik"},
  {title:"Riwayat lokal",detail:"Maksimal 10 storyboard terakhir disimpan di browser perangkat ini; tidak memakai database cloud.",status:"Tanpa Supabase"},
