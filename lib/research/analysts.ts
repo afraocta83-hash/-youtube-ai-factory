@@ -4,22 +4,22 @@ export type ClaimCheck = { claim: string; status: "supported" | "conflicting" | 
 export type ResearchReport = { topic: string; generatedAt: string; trend: { mode: string; videos: TrendVideo[]; note: string }; verification: ClaimCheck[]; opportunities: { title: string; score: number; rationale: string[]; evidenceCount: number }[]; limitations: string[] };
 
 const timeout = (ms: number) => AbortSignal.timeout(ms);
-const clean = (value: string) => value.replace(/<[^>]*>/g, " ").replace(/&amp;/g, "&").replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\\s+/g, " ").trim();
+const clean = (value: string) => value.replace(/<[^>]*>/g, " ").replace(/&amp;/g, "&").replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/\s+/g, " ").trim();
 
 async function searchWeb(query: string): Promise<ResearchSource[]> {
   const response = await fetch("https://html.duckduckgo.com/html/?q=" + encodeURIComponent(query), { headers: { "User-Agent": "Mozilla/5.0 (compatible; LerryResearch/1.0)" }, signal: timeout(12000), cache: "no-store" });
   if (!response.ok) throw new Error("Pencarian web tidak tersedia (" + response.status + ")");
   const html = await response.text();
   const results: ResearchSource[] = [];
-  const blocks = html.match(/<div class="result[^>]*>[\\s\\S]*?<\\/div>\\s*<\\/div>/gi) || [];
+  const blocks = html.match(/<div class="result[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
   for (const block of blocks.slice(0, 8)) {
     const href = block.match(/class="result__a"[^>]*href="([^"]+)"/i)?.[1] || block.match(/href="([^"]+)"[^>]*class="result__a"/i)?.[1];
-    const title = block.match(/class="result__a"[^>]*>([\\s\\S]*?)<\\/a>/i)?.[1];
-    const snippet = block.match(/class="result__snippet"[^>]*>([\\s\\S]*?)<\\/div>/i)?.[1] || "";
+    const title = block.match(/class="result__a"[^>]*>([\s\S]*?)<\/a>/i)?.[1];
+    const snippet = block.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || "";
     if (!href || !title) continue;
     let url = href.replace(/&amp;/g, "&");
     try { const parsed = new URL(url, "https://duckduckgo.com"); const redirected = parsed.searchParams.get("uddg"); if (redirected) url = redirected; } catch { continue; }
-    try { const parsed = new URL(url); if (!["http:", "https:"].includes(parsed.protocol)) continue; results.push({ title: clean(title), url, snippet: clean(snippet), domain: parsed.hostname.replace(/^www\\./, "") }); } catch { }
+    try { const parsed = new URL(url); if (!["http:", "https:"].includes(parsed.protocol)) continue; results.push({ title: clean(title), url, snippet: clean(snippet), domain: parsed.hostname.replace(/^www\./, "") }); } catch { }
   }
   return results;
 }
@@ -44,7 +44,7 @@ async function youtubeTrends(topic: string): Promise<{ videos: TrendVideo[]; mod
     const published = Date.parse(v.snippet?.publishedAt || "");
     const ageDays = Math.max(1, (now - (Number.isFinite(published) ? published : now)) / 86400000);
     const views = Number(v.statistics?.viewCount || 0);
-    const duration = String(v.contentDetails?.duration || "").match(/PT(?:(\\d+)H)?(?:(\\d+)M)?(?:(\\d+)S)?/);
+    const duration = String(v.contentDetails?.duration || "").match(/PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?/);
     const durationSeconds = duration ? Number(duration[1] || 0) * 3600 + Number(duration[2] || 0) * 60 + Number(duration[3] || 0) : 0;
     const viewsPerDay = Math.round(views / ageDays);
     return { title: v.snippet?.title || "", url: "https://www.youtube.com/watch?v=" + v.id, channel: v.snippet?.channelTitle || "", publishedAt: v.snippet?.publishedAt || "", views, viewsPerDay, durationSeconds, score: 0 };
