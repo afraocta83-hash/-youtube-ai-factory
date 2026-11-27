@@ -1,59 +1,47 @@
-# LERRY ANIMASI — Shorts Factory
+# LERRY ANIMASI — YouTube Shorts Production Studio
 
-This repository turns a short owner idea into an Indonesian animated YouTube Shorts production package.
+Lerry menyiapkan paket produksi Shorts dari cerita final yang diberikan owner. AI hanya membagi cerita menjadi 4–6 adegan, memberi arahan visual, durasi, subtitle kutipan, dan metadata. AI tidak boleh menulis ulang atau mengubah alur cerita owner.
 
-## Production contract
-- Owner supplies only a short idea/topic (5-500 characters).
-- Groq GPT-OSS 120B creates the story, hook, narration, dialogue, subtitles, 4-6 scene storyboard, visual prompts, sound cues, thumbnail prompt, and YouTube metadata.
-- Owner reviews the generated story, scenes, and metadata before approving MP4 rendering.
-- After rendering, owner must inspect the actual MP4. Upload is a separate action and requires a second explicit owner approval.
-- Output target: MP4 H.264, 1080x1920, 30 fps, 15-60 seconds.
-- Pipeline: Groq idea-to-story → deterministic package QC → explicit owner render approval → Edge TTS (Piper fallback) → local Remotion animation → MP4 QC → thumbnail and YouTube metadata packaging → GitHub Actions artifact.
-- One Groq request per idea; strict JSON Schema; low reasoning effort; maximum completion budget 4,200 tokens.
+## Alur produksi
 
-## Runtime configuration
-- The Preview runtime expects `GROQ_API_KEY` (optional backups: `GROQ_API_KEY2`, `GROQ_API_KEY3`) and server-side `GITHUB_ACTIONS_TOKEN` with Actions read/write permission. These are hosting secrets, never browser values.
-- No Agnes or other video-provider API key is required. The current render workflow uses Remotion on GitHub's standard CPU runner.
-- Normal use requires no GitHub or hosting dashboard work: enter an idea, review the story and storyboard, approve the render, then download the completed package from the studio.
-- The studio checks render progress and packages the MP4, thumbnail, and YouTube metadata. Inspect the complete video, connect YouTube OAuth, select the extracted MP4, and explicitly approve upload. Upload defaults to Private.
+1. Owner menempelkan cerita final (80–3.000 karakter).
+2. Groq menyusun storyboard dan metadata; owner memeriksa hasilnya.
+3. Owner menyetujui render secara terpisah.
+4. GitHub Actions menjalankan Edge TTS (Piper fallback), Remotion, dan FFmpeg.
+5. QC memeriksa MP4 H.264, 1080×1920, 30 fps, audio AAC, durasi, decode, thumbnail, frame adegan, dan metadata.
+6. Owner mengunduh ZIP, menonton MP4, lalu upload sendiri melalui YouTube Studio.
 
-Detailed configuration reference: [docs/GROQ_SETUP.md](docs/GROQ_SETUP.md)
+## Mode publikasi: manual
 
-## Free-first architecture
-- Groq is the only LLM provider required by the app. One primary key is sufficient; up to two optional backup keys are supported.
-- Edge TTS is primary; Piper is the fallback. Neither requires a paid TTS API key.
-- Remotion renders scene animation locally inside GitHub Actions; Edge TTS/Piper creates Indonesian narration and Remotion assembles the vertical MP4. No external video API key is required.
-- The last 10 production packages are stored in browser localStorage on the current device. No Supabase/database/OTP setup is required.
-- No paid image/video API is integrated. The renderer runs on standard GitHub-hosted CPU runners; public-repository Actions usage is free under GitHub's current policy.
+Lerry tidak meminta izin akun Google, tidak menggunakan YouTube OAuth, dan tidak mengunggah video ke channel. Tidak diperlukan YouTube Client ID, Client Secret, callback URL, token enkripsi, atau YouTube API untuk mode ini. Login Google/MFA tetap dikelola langsung oleh Google.
 
-## Agent performance add-ons
+Upload manual: buka https://studio.youtube.com/, pilih Create → Upload videos, lalu unggah `lerry-animasi-short.mp4`. Gunakan `thumbnail.jpg` dan `youtube-metadata.json` dari paket. Owner menentukan visibilitas dan waktu publikasi.
 
-Two lightweight capabilities extend the existing Lerry pipeline without replacing its production engines:
+## Konfigurasi runtime
 
-- **Promptfoo (MIT):** one-case, optional CI regression evaluation for storyboard JSON, required narration, scene count, durations, and character action values. It runs only when the `GROQ_API_KEY` Actions secret is configured.
-- **Langfuse + OpenTelemetry (MIT):** optional traces for storyboard provider calls, schema validation, storyboard QC, render dispatch, and YouTube upload-session creation. Enable with `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY`; use the free Cloud tier or self-host.
+- `GROQ_API_KEY`: wajib untuk membuat storyboard; `GROQ_API_KEY2` dan `GROQ_API_KEY3` opsional.
+- `GROQ_MODEL`: `openai/gpt-oss-120b`.
+- `GITHUB_ACTIONS_TOKEN`: token server-side dengan akses Actions read/write untuk menjalankan render pada branch kerja.
+- Tidak memakai Supabase atau database cloud. Riwayat storyboard disimpan lokal pada browser perangkat.
+- Tidak diperlukan Agnes API key, layanan video berbayar, GPU, atau YouTube OAuth.
 
-Mastra, LangGraph.js, CrewAI, Agno, and Trigger.dev are not added because they would duplicate the existing Langflow/Lerry orchestration or introduce extra runtimes/hosting. See [Agent Integration](docs/AGENT_INTEGRATION.md).
+## Output paket
 
-## Unified agent team
+- `lerry-animasi-short.mp4`
+- `thumbnail.jpg`
+- `youtube-metadata.json`
+- `mp4-metadata.json`
+- `production-qc.json`
+- Frame representatif dan contact sheet untuk inspeksi.
 
-The production studio exposes the integrated agent roster at `GET /api/agents` and displays each agent's readiness in the dashboard. The team is coordinated by the existing Lerry pipeline; no separate app or database is required.
+## Batasan yang harus diketahui
 
-- Production Orchestrator: internal pipeline control.
-- Storyboard Agent: Groq producer.
-- Narrator Agent: Edge TTS with Piper fallback.
-- Visual Agent: Remotion scene compositions and reusable character rig.
-- Video Agent: Remotion + FFmpeg on GitHub Actions.
-- Quality Control Agent: deterministic storyboard checks plus MP4/ffprobe/decode validation.
-- Publishing Agent: YouTube OAuth + resumable upload session; each upload requires a second explicit owner approval and defaults to Private.
+- Visual adalah animasi vektor 2D berbasis template Remotion, bukan footage generatif AI per adegan.
+- Audio saat ini berisi narasi TTS; musik dan efek suara terpisah belum dirender.
+- Fakta eksternal belum diverifikasi otomatis.
+- CI fixture membuktikan jalur paket storyboard → MP4; jalur Studio live tetap memerlukan pengujian pada Preview dengan kredensial runtime yang valid.
+- Jangan menyebut mesin sepenuhnya siap produksi sebelum cerita owner berhasil melewati Studio live, render, unduh, dan inspeksi visual.
 
-Langflow can act as the optional storyboard provider: when configured, Lerry invokes its Flow API and validates the returned production JSON; Groq is the fallback when configured. The core pipeline remains usable without a separately hosted Langflow service. YouTube publishing uses a separate OAuth connection and explicit owner approval for every upload; render approval is not upload approval. Langflow's live storyboard adapter is implemented but requires a configured Flow ID and a successful schema-compatible test.
+## Branch kerja
 
-See [docs/AGENT_INTEGRATION.md](docs/AGENT_INTEGRATION.md) for the integration boundary and remaining work.
-
-## Current limitations
-- The current free renderer uses Remotion scene compositions and a reusable 2D character rig; it does not generate bespoke AI video footage. Character animation and scene visuals are template-driven.
-- Narration is generated with Edge TTS (Piper fallback); subtitles are burned per scene. Phoneme alignment and lip-sync are not implemented.
-- Research/fact-check source retrieval is not automatic. Claims in educational/science stories still need manual verification.
-- The full live dashboard-to-MP4 flow still needs a successful end-to-end run on the deployed Preview. CI smoke tests validate the local Remotion MP4 path.
-- YouTube OAuth upload requires Google Cloud OAuth credentials and a successful live test. Langflow's live flow adapter is not implemented.
+`experiment/openmontage-video-engine`. Branch `main` dan deployment produksi tidak diubah.
