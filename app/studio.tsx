@@ -39,10 +39,15 @@ export default function Studio(){
     if(!active)return;
     if(!res.ok){setError(data.error||"Tidak dapat memeriksa status render.");if(timer)clearInterval(timer);return;}
     if(data.runUrl)setRenderRunUrl(data.runUrl);
-    if(data.state==="success"&&data.downloadUrl){
-     setArtifactUrl(data.downloadUrl);
-     setRenderMessage("MP4 selesai dan lolos QC. Paket video, thumbnail, dan metadata siap diunduh.");
-     emitOfficeActivity(["video","quality","observability","publishing"],"done","MP4, thumbnail, metadata, dan laporan QC siap ditinjau owner");
+    if(data.state==="success"){
+     if(data.downloadUrl){
+      setArtifactUrl(data.downloadUrl);
+      setRenderMessage("MP4 selesai dan lolos QC. Paket video, thumbnail, dan metadata siap diunduh.");
+      emitOfficeActivity(["video","quality","observability","publishing"],"done","MP4, thumbnail, metadata, dan laporan QC siap ditinjau owner");
+     }else{
+      setError("Render selesai, tetapi paket artefak belum ditemukan. Buka log GitHub Actions untuk pemeriksaan.");
+      emitOfficeActivity(["video","quality","observability"],"done","Render selesai; artefak belum tersedia untuk diunduh");
+     }
      if(timer)clearInterval(timer);
     }else if(data.state==="failed"){
      setError("Render gagal. Buka log GitHub untuk detail: "+(data.runUrl||""));
