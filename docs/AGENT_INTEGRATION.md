@@ -10,7 +10,7 @@ This repository keeps one production application and one production pipeline. Ag
 4. Visual Agent — Remotion scene compositions and the reusable character rig.
 5. Video Agent — Remotion render plus FFmpeg processing.
 6. Quality Control Agent — storyboard checks before dispatch and ffprobe/FFmpeg checks after render.
-7. Publishing Agent — YouTube Data API v3 OAuth and resumable upload endpoints; each upload requires a separate owner click and defaults to Private.
+7. Manual Publishing — owner downloads the approved MP4 package and uploads it directly in YouTube Studio. No OAuth or YouTube API is used.
 
 ## Agent status API
 
@@ -27,16 +27,7 @@ Optional hosting variables:
 
 The current production pipeline remains operational without these variables. The live adapter calls `POST /api/v1/run/{FLOW_ID}?stream=false` with the production prompt. The configured flow must return a JSON object matching the Lerry production schema (4-6 scenes, required narration/dialogue/visual fields, metadata). If Langflow is unavailable and Groq keys exist, the producer falls back to Groq.
 
-## YouTube Publishing
-
-OAuth and resumable-upload routes are implemented. Configure these hosting secrets to enable the Publishing Agent:
-- `YOUTUBE_CLIENT_ID`
-- `YOUTUBE_CLIENT_SECRET`
-- `YOUTUBE_REDIRECT_URI`
-
-The publishing agent must require an explicit owner approval for each upload. Rendering approval is not upload approval. Never publish automatically after an MP4 render.
-
-## Agent quality evaluation and observability
+## Manual YouTube upload\n\nThe studio provides a direct YouTube Studio link and packages the MP4, thumbnail, and metadata for manual upload. It does not connect to Google accounts, request OAuth scopes, store refresh tokens, or upload/publish videos. The owner reviews the MP4 and controls visibility and publication timing in YouTube Studio. MFA is managed in the Google Account security settings.\n\n## Agent quality evaluation and observability
 
 ### Promptfoo
 - `promptfooconfig.yaml` contains a one-case regression evaluation for the storyboard output contract: valid JSON, 4-6 scenes, scene fields, narration, allowed character actions, and 20-60 seconds total.
@@ -45,7 +36,7 @@ The publishing agent must require an explicit owner approval for each upload. Re
 
 ### Langfuse + OpenTelemetry
 - Optional tracing is initialized by the Next.js `instrumentation.ts` hook when both `LANGFUSE_PUBLIC_KEY` and `LANGFUSE_SECRET_KEY` are present.
-- Traced stages include Langflow storyboard generation, Groq fallback generation, storyboard schema validation, pre-render storyboard QC, GitHub Actions render dispatch, and owner-approved YouTube upload-session creation.
+- Traced stages include Langflow storyboard generation, Groq fallback generation, storyboard schema validation, pre-render storyboard QC, and GitHub Actions render dispatch.
 - Trace attributes intentionally record stage/provider/model/length/status metadata, not the full story prompt or private tokens.
 - Use Langfuse Cloud's free tier or self-host Langfuse. Without credentials, OpenTelemetry spans are no-op and the production pipeline continues normally.
 
@@ -72,5 +63,5 @@ Required optional hosting variables:
 
 - Visuals are currently template-driven Remotion animation, not bespoke AI-generated video footage.
 - Langflow invocation is implemented but requires a configured Flow ID and a successful live schema-compatible run.
-- YouTube OAuth/upload is not yet implemented.
+- YouTube upload is intentionally manual; OAuth/API publishing is out of scope.
 - A successful deployed end-to-end render must still be demonstrated before calling the whole production system accepted.
