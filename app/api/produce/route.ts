@@ -74,7 +74,7 @@ export async function POST(request: Request) {
     if (!raw) {
       let response: Response | null = null;
       for (const [i,key] of apiKeys.entries()) {
-        response=await withAgentSpan("storyboard.groq", { "agent.name": "Groq Storyboard Agent", "agent.provider": "groq", "llm.model": model, "input.length": ownerStory.length, "provider.key_index": i + 1 }, () => fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)}));
+        response=await withAgentSpan("storyboard.groq", { "agent.name": "Groq Storyboard Agent", "agent.provider": "groq", "llm.model": model, "input.length": idea.length, "provider.key_index": i + 1 }, () => fetch("https://api.groq.com/openai/v1/chat/completions",{method:"POST",headers:{Authorization:`Bearer ${key}`,"Content-Type":"application/json"},body:requestBody,signal:AbortSignal.timeout(55000)}));
         data=await response.json();
         if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
       }
