@@ -21,7 +21,7 @@ Upload manual: buka https://studio.youtube.com/, pilih Create → Upload videos,
 
 - `GROQ_API_KEY`: wajib untuk membuat storyboard; `GROQ_API_KEY2` dan `GROQ_API_KEY3` opsional.
 - `GROQ_MODEL`: `openai/gpt-oss-120b`.
-- `GITHUB_ACTIONS_TOKEN`: token server-side dengan akses Actions read/write untuk menjalankan render pada branch kerja.
+- `GITHUB_ACTIONS_TOKEN`: token server-side dengan akses Actions read/write untuk menjalankan render pada branch kerja.\n- `YOUTUBE_API_KEY`: opsional; Google YouTube Data API v3 menyediakan kuota gratis untuk pencarian Shorts dan statistik video. Tanpa key, analis tren memakai penemuan topik web tanpa mengarang views.
 - Tidak memakai Supabase atau database cloud. Riwayat storyboard disimpan lokal pada browser perangkat.
 - Tidak diperlukan Agnes API key, layanan video berbayar, GPU, atau YouTube OAuth.
 
