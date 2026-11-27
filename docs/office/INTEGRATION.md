@@ -1,41 +1,39 @@
-# 3D Office Integration — LERRY ANIMASI
+# Lerry Production Office
 
-## Locked visual source
-Use **The Roving Office** from https://github.com/atlassian-labs/roving-office as the visual source. The owner previously locked this office design. Do not substitute Agent Hive, Tiny Office, Hermes3D, or another visual office.
+## Current implementation
 
-Upstream licence: Apache-2.0. Preserve its LICENSE and NOTICE files when redistributing source. The upstream README explicitly excludes certain third-party brand marks/logos from the Apache licence grant; remove those marks or replace them with LERRY ANIMASI-neutral marks before redistributing a modified build. Source: upstream README and NOTICE.
+The home dashboard now opens the Lerry Production Office. Its visual language is an original, lightweight CSS isometric office inspired by the spatial office concept selected by the owner. It does not embed the upstream site, use upstream banners, logos, trademarks, characters, or third-party assets.
 
-## Existing project reality (checked 2026-11-27)
-The current branch `experiment/openmontage-video-engine` contains the LERRY ANIMASI Next.js app, but its current tree does **not** contain the previously described 3D office files. Earlier descriptions of a Canopy House–Spring integration and `yf:worker-event` listener were not accompanied by a repository commit or file paths. Do not claim that office was installed or that live worker events are connected.
+The office is designed to remain light on Android: no Three.js scene, remote iframe, external image requests, extra runtime, database, or paid service is required for the office view.
 
-The actual pipeline has these five technical workers:
-1. Lerry — Groq story producer and metadata.
-2. Nara — deterministic story/schema QC.
-3. Ari — Indonesian voice (Edge TTS, Piper fallback).
-4. Mika — Remotion animation.
-5. Bima — GitHub Actions render and FFmpeg media QA.
+## Single source of truth for staff
 
-The owner remains the publisher and final reviewer. There is no automatic YouTube publishing.
+`lib/agents/registry.ts` remains the source of truth for the nine project staff. `lib/office-agents.ts` maps those same IDs to departments, responsibilities and existing project routes. The office API is `GET /api/office/agents`; the dashboard reads it without exposing secrets.
 
-## Current code added
-- `lib/office-agents.ts`: canonical five-worker roster and status contract.
-- `app/api/office/agents/route.ts`: read-only JSON endpoint for the office UI at `/api/office/agents`.
-- All workers correctly report `standby` and `connected: false` until actual production events are wired. This avoids fake activity.
+| Staff | Existing project task | Route / integration |
+| --- | --- | --- |
+| Niko — Analis Tren | Shorts trend research and views/day signals | `POST /api/research` |
+| Sinta — Pemeriksa Fakta | Claim and source comparison | `POST /api/research` |
+| Dika — Analis Peluang Viral | Opportunity scoring from research evidence | `POST /api/research` |
+| Maya — Pengarah Narasi | Indonesian narration per scene | `POST /api/produce` → GitHub Actions TTS |
+| Bimo — Perancang Visual | Scene composition and 2D character animation | `POST /api/produce` → Remotion |
+| Raka — Editor Video | Vertical MP4 render dispatch | `POST /api/render` → `render-short.yml` |
+| Tara — Pemeriksa Kualitas | Storyboard QC and media QC | `POST /api/quality-check` → FFmpeg QA |
+| Oki — Pemantau Produksi | OpenTelemetry spans and optional Langfuse traces | `instrumentation.ts` / `lib/agents/telemetry.ts` |
+| Lina — Penyiap Publikasi | Metadata and owner-reviewed publishing package | Production metadata and render artifact |
 
-## Hosting investigation
-The Roving Office upstream is a Node HTTP server (`server.cjs`) that serves its Three.js client and its Agent Office Protocol (AOP) event receiver. It is not a static-only frontend. The main LERRY app is deployed on Vercel, which does not provide a persistent Node process for this upstream server.
+The original studio, research desk, review gate and manual YouTube publishing flow remain in the same application below the office dashboard. No production engine was replaced.
 
-A free Render web-service deployment was attempted in the Singapore region, but Render returned HTTP 402 requiring billing/payment information before service creation. No Render service was created and no payment was made. Do not ask for card details or enable a paid plan.
+## Activity truthfulness
 
-## Next implementation gates
-1. Host a self-contained Roving Office-compatible server using a genuinely no-cost runtime; keep the visual source self-hosted, not on therovingoffice.com.
-2. Preserve the selected building, interior, furniture, monitors and character assets; brighten the existing palette and optimize for Android.
-3. Connect the five workers to actual pipeline events through the upstream AOP receiver. Use an owner-only server-side token; never expose it in browser code or repository.
-4. Emit status transitions only when the corresponding real work starts, waits for review, completes or fails.
-5. Verify office on Android, verify AOP event delivery, and ensure no third-party logo/trademark assets are redistributed without permission.
+All nine staff are assigned to existing project tasks. The office API marks that assignment as connected, but reports activity as `standby` and `activityFeedConnected: false` until authenticated, real production events are wired to the UI. Capability readiness (`ready`, `optional`, `blocked`) is not a claim that a worker is currently running.
 
-## Security and approval
-- No API keys, write tokens, owner passwords or secrets in source.
-- No paid service or payment method without explicit approval.
-- No merge to `main` or Production deployment.
-- No render or YouTube upload without the owner's separate approval.
+The office must not animate workers as working, reviewing, completed or failed based only on a static roster. Future live activity needs authenticated server-side events from research, produce, QC and render stages. Secrets must never be sent to browser code.
+
+## Hosting and release constraints
+
+- Work only on `experiment/openmontage-video-engine`.
+- Keep the existing Vercel hosting and GitHub Actions render pipeline.
+- No paid hosting, card details, external agent service, or new API key.
+- Do not merge to `main` or deploy Production without separate owner approval.
+- Render and YouTube upload remain behind the existing owner approval gates.
