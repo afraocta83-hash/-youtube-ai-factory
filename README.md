@@ -45,3 +45,8 @@ Upload manual: buka https://studio.youtube.com/, pilih Create → Upload videos,
 ## Branch kerja
 
 `experiment/openmontage-video-engine`. Branch `main` dan deployment produksi tidak diubah.
+
+
+## Cloudflare AI scene backgrounds
+
+The render workflow can generate one background image per storyboard scene with Cloudflare Workers AI `@cf/black-forest-labs/flux-1-schnell`. Add these GitHub Actions repository secrets on the render branch: `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Create the token with Account > Workers AI > Read permission. The workflow generates background plates only; the locked Lerry mascot remains the existing Remotion vector rig composited above each background. If the secrets are absent, the renderer uses its existing vector backgrounds and does not call a paid image provider. Workers AI Free currently includes 10,000 Neurons/day; requests beyond the free allocation fail on Workers Free rather than automatically upgrading. Review Cloudflare's current pricing and model terms before use.
