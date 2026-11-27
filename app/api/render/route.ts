@@ -20,7 +20,8 @@ export async function GET(request:Request){
     const runsResponse=await fetch(`https://api.github.com/repos/${OWNER}/${REPO}/actions/workflows/${WORKFLOW}/runs?branch=${encodeURIComponent(BRANCH)}&event=workflow_dispatch&per_page=10`,{headers,cache:"no-store",signal:AbortSignal.timeout(10000)});
     if(!runsResponse.ok) return NextResponse.json({error:`Tidak dapat membaca status render GitHub (${runsResponse.status}).`},{status:502});
     const runs=await runsResponse.json();
-    const run=(runs.workflow_runs||[]).find((item:any)=>new Date(item.created_at).getTime()>=since-60000);
+    // Never match a previous render: the client timestamp is captured immediately before dispatch.
+    const run=(runs.workflow_runs||[]).find((item:any)=>new Date(item.created_at).getTime()>=since && item.head_branch===BRANCH);
     if(!run) return NextResponse.json({state:"queued",message:"Menunggu GitHub Actions memulai render."});
     const result:any={state:run.status==="completed"?(run.conclusion==="success"?"success":"failed"):"running",status:run.status,conclusion:run.conclusion,runUrl:run.html_url,runId:run.id};
     if(run.status==="completed"&&run.conclusion==="success"){
