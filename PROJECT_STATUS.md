@@ -357,3 +357,14 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - Render fixture #45934348691 at commit `ce9c303beac2162bc7558ebca20262b94e7b5610`: passed. This is the existing non-production fixture workflow, not an owner story render.
 - Latest styling/metadata commits `e3f1eb250cd8fb7383f84fb4427ec65a716af979` and `326f5815df152e45113562a488c5c0781e5ff4c0` have new Build Check runs queued/in progress; final results are not yet available at this update.
 - No Preview deployment or Android visual inspection has been completed. The new dashboard is committed to the experiment branch only.
+
+
+## Final CI and MP4 smoke verification — 2026-11-27
+
+- Latest Build Check: [run 45934640289](https://github.com/afraocta83-hash/-youtube-ai-factory/actions/runs/45934640289) completed successfully on commit `8e63813646a44f802eb8d2ecf3d801eed59255de`.
+- Confirmed passing steps: FFmpeg installation, dependency installation, TypeScript, Next.js production build, Remotion MP4 smoke render, and upload of the verified MP4 artifact. Optional Promptfoo/Groq evaluation was skipped by workflow configuration; it is not a failed required check.
+- Downloaded and inspected artifact `lerry-verified-mp4-smoke.zip` (artifact ID `15169168964`). It contains `lerry-smoke.mp4`.
+- Independent FFprobe verification: H.264 video, 1080x1920 portrait, 30 FPS; AAC stereo audio at 48 kHz; MP4 duration 20.011 seconds; file size 1,658,537 bytes.
+- Full FFmpeg decode test completed with no reported decode errors.
+- Result: the CI build and the existing Remotion smoke-render path are passing, and the generated smoke-test MP4 is structurally valid. This is a pipeline smoke fixture, not a complete owner-provided story run or proof that every external provider/agent is live.
+- No Vercel deployment, production merge, real story render, or YouTube upload was performed.
