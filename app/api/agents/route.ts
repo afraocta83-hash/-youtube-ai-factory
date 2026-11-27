@@ -9,7 +9,7 @@ export async function GET() {
   return NextResponse.json({
     ok: true,
     product: "LERRY ANIMASI",
-    pipeline: ["orchestrator", "storyboard", "narrator", "visual", "video", "quality", "manual-publishing"],
+    pipeline: ["orchestrator", "trend-research", "data-verification", "viral-opportunity", "storyboard", "narrator", "visual", "video", "quality", "manual-publishing"],
     summary: { total: agents.length, ready, optional: agents.filter((a) => a.status === "optional").length, blocked: agents.filter((a) => a.status === "blocked").length },
     agents
   }, { headers: { "Cache-Control": "no-store" } });
