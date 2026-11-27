@@ -8,7 +8,6 @@ type Production = {
  title:string;description:string;hashtags:string[];thumbnailPrompt:string;factCheckNotes:string[];sourceQueries:string[];qcChecklist:string[];
 };
 type SavedProduction = { id:string; title:string; createdAt:string; production:Production };
-type Usage = { prompt_tokens?:number; completion_tokens?:number; total_tokens?:number } | null;
 type Agent = { id:string; name:string; engine:string; status:"ready"|"optional"|"blocked"; detail:string; approvalRequired?:boolean };
 const HISTORY_KEY = "lerry-animasi-history-v1";
 
@@ -19,7 +18,6 @@ export default function Studio(){
  const [error,setError]=useState("");
  const [renderMessage,setRenderMessage]=useState("");
  const [result,setResult]=useState<Production|null>(null);
- const [usage,setUsage]=useState<Usage>(null);
  const [history,setHistory]=useState<SavedProduction[]>([]);
  const [renderSince,setRenderSince]=useState<number|null>(null);
  const [artifactUrl,setArtifactUrl]=useState("");
@@ -71,12 +69,12 @@ export default function Studio(){
   return data;
  }
  async function generate(){
-  setError("");setRenderMessage("");setResult(null);setUsage(null);setBusy(true);
+  setError("");setRenderMessage("");setResult(null);setBusy(true);
   try{
    const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idea:prompt})});
    const data=await res.json();if(!res.ok)throw new Error(data.error||"Gagal membuat paket produksi.");
    const production=data.production as Production;
-   setResult(production);setUsage(data.usage||null);
+   setResult(production);
    const saved:SavedProduction={id:crypto.randomUUID(),title:production.workingTitle||"Lerry Short",createdAt:new Date().toISOString(),production};
    const next=[saved,...history].slice(0,10);
    setHistory(next);localStorage.setItem(HISTORY_KEY,JSON.stringify(next));
