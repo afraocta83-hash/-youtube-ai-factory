@@ -1,4 +1,6 @@
-export type OfficeWorkerStatus = "standby" | "working" | "review" | "done" | "error";
+import { getAgentRegistry } from "@/lib/agents/registry";
+
+export type OfficeActivity = "standby" | "working" | "review" | "done" | "error";
 
 export type OfficeWorker = {
   id: string;
@@ -7,65 +9,42 @@ export type OfficeWorker = {
   department: string;
   responsibility: string;
   runtime: string;
-  status: OfficeWorkerStatus;
-  connected: boolean;
+  taskRoute: string;
+  capability: "ready" | "optional" | "blocked";
+  activity: OfficeActivity;
+  connectedToProject: boolean;
+  liveActivity: boolean;
 };
 
-/**
- * The office roster mirrors the production pipeline that actually exists.
- * Workers remain "standby" until real pipeline events are wired to the office.
- * Do not invent live activity or show a worker as connected merely because this
- * manifest exists.
- */
-export const OFFICE_WORKERS: OfficeWorker[] = [
-  {
-    id: "producer",
-    name: "Lerry",
-    role: "AI Producer",
-    department: "Creative",
-    responsibility: "Turns the owner's idea into the story, storyboard and YouTube metadata.",
-    runtime: "Groq GPT-OSS 120B",
-    status: "standby",
-    connected: false,
-  },
-  {
-    id: "quality-control",
-    name: "Nara",
-    role: "Story & QC Reviewer",
-    department: "Quality",
-    responsibility: "Checks story structure, required scene fields, duration and visual prompts.",
-    runtime: "Deterministic TypeScript checks",
-    status: "standby",
-    connected: false,
-  },
-  {
-    id: "voice",
-    name: "Ari",
-    role: "Voice Artist",
-    department: "Audio",
-    responsibility: "Generates Indonesian narration and fits scene audio timing.",
-    runtime: "Edge TTS with Piper fallback",
-    status: "standby",
-    connected: false,
-  },
-  {
-    id: "animator",
-    name: "Mika",
-    role: "Animator",
-    department: "Visual",
-    responsibility: "Builds the vertical animation from scene direction and the current character rig.",
-    runtime: "Remotion",
-    status: "standby",
-    connected: false,
-  },
-  {
-    id: "render",
-    name: "Bima",
-    role: "Render & Media QA",
-    department: "Production",
-    responsibility: "Renders MP4 and checks codec, dimensions, frame rate, audio and full decode.",
-    runtime: "GitHub Actions + FFmpeg",
-    status: "standby",
-    connected: false,
-  },
-];
+const ASSIGNMENTS: Record<string, { department: string; responsibility: string; taskRoute: string }> = {
+  "trend-research": { department: "Riset", responsibility: "Mencari topik Shorts yang sedang naik, membandingkan video dan menghitung laju views per hari.", taskRoute: "POST /api/research" },
+  "data-verification": { department: "Riset & Fakta", responsibility: "Memeriksa klaim cerita, membandingkan sumber, dan menandai bukti yang belum cukup.", taskRoute: "POST /api/research" },
+  "viral-opportunity": { department: "Strategi", responsibility: "Memberi skor peluang topik berdasarkan tren, velocity, dan bukti riset.", taskRoute: "POST /api/research" },
+  narrator: { department: "Audio", responsibility: "Menyiapkan narasi Bahasa Indonesia per adegan untuk TTS dan sinkronisasi subtitle.", taskRoute: "POST /api/produce → GitHub Actions TTS" },
+  visual: { department: "Visual", responsibility: "Menerjemahkan storyboard menjadi komposisi, latar, dan gerakan karakter animasi 2D.", taskRoute: "POST /api/produce → Remotion" },
+  video: { department: "Produksi", responsibility: "Mengirim pekerjaan render Shorts vertikal dan menghasilkan paket MP4.", taskRoute: "POST /api/render → render-short.yml" },
+  quality: { department: "Quality Control", responsibility: "Memeriksa storyboard sebelum render serta codec, resolusi, FPS, audio, durasi dan decode MP4.", taskRoute: "POST /api/quality-check → FFmpeg QA" },
+  observability: { department: "Monitoring", responsibility: "Mencatat jejak tahap produksi dan kegagalan melalui OpenTelemetry/Langfuse bila dikonfigurasi.", taskRoute: "instrumentation.ts → lib/agents/telemetry.ts" },
+  publishing: { department: "Publikasi", responsibility: "Menyiapkan judul, deskripsi, hashtag, thumbnail dan paket upload untuk diperiksa owner.", taskRoute: "Metadata produksi → paket artefak" },
+};
+
+/** One roster, derived from the production registry. Activity stays standby until real run events are connected. */
+export function getOfficeWorkers(): OfficeWorker[] {
+  return getAgentRegistry().flatMap((agent) => {
+    const assignment = ASSIGNMENTS[agent.id];
+    if (!assignment) return [];
+    return [{
+      id: agent.id,
+      name: agent.name,
+      role: agent.role,
+      department: assignment.department,
+      responsibility: assignment.responsibility,
+      runtime: agent.engine,
+      taskRoute: assignment.taskRoute,
+      capability: agent.status,
+      activity: "standby" as const,
+      connectedToProject: true,
+      liveActivity: false,
+    }];
+  });
+}
