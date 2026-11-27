@@ -1,9 +1,9 @@
 import Studio from "./studio";
 
 const modules = [
- {title:"LLM produser Groq",detail:"GPT-OSS 120B mengembangkan ide singkat menjadi cerita, dialog, storyboard, dan metadata. Tiga slot key server-side tersedia dengan fallback saat key ditolak.",status:"Groq server-side • key cadangan"},
- {title:"Storyboard & visual",detail:"Membuat cerita orisinal dari ide owner, lalu menyusunnya menjadi 4-6 adegan dengan prompt visual, durasi, judul, deskripsi, dan metadata.",status:"Satu panggilan LLM • QC otomatis"},
- {title:"Voice & subtitle",detail:"Edge TTS Bahasa Indonesia sebagai utama dan Piper offline sebagai fallback. Narasi dan subtitle disusun AI dari cerita yang dihasilkan.",status:"Mesin TTS lulus uji"},
+ {title:"Mesin cerita & storyboard",detail:"Mengembangkan ide menjadi cerita, dialog, storyboard, dan metadata untuk video Shorts.",status:"Produksi cerita otomatis"},
+ {title:"Storyboard & visual",detail:"Menyusun cerita menjadi 4-6 adegan dengan arahan visual, durasi, judul, deskripsi, dan metadata.",status:"Pemeriksaan otomatis"},
+ {title:"Voice & subtitle",detail:"Narasi Bahasa Indonesia dan subtitle disiapkan untuk setiap adegan.",status:"Audio & subtitle"},
  {title:"Render MP4 Shorts",detail:"Remotion dan GitHub Actions merender video vertikal H.264 1080 × 1920, 30 fps, durasi 15-60 detik.",status:"Showcase MP4 lulus QC"},
  {title:"Quality control",detail:"Kode memeriksa struktur cerita, jumlah adegan, durasi, audio, codec, resolusi, FPS dan decode.",status:"Validasi deterministik"},
  {title:"Riwayat lokal",detail:"Maksimal 10 storyboard terakhir disimpan di browser perangkat ini; tidak memakai database cloud.",status:"Tanpa Supabase"},
