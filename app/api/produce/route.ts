@@ -43,7 +43,7 @@ export async function POST(request: Request) {
   try {
     const body = await request.json();
     const idea = typeof body?.idea === "string" ? body.idea.trim() : "";
-    if (idea.length < 5 || idea.length > 500) return NextResponse.json({ error: "Masukkan ide singkat 5-500 karakter." }, { status: 400 });
+    if (!idea) return NextResponse.json({ error: "Masukkan ide terlebih dahulu." }, { status: 400 });
 
     const model = (process.env.GROQ_MODEL || MODEL_DEFAULT).trim();
     const prompt = [
@@ -111,7 +111,7 @@ export async function POST(request: Request) {
     p.idea=idea; p.script=p.story; p.ownerStory=p.story; p.durationSeconds=total;
     p.qcChecklist=["Cerita owner dipertahankan tanpa penulisan ulang.","Narasi adegan menggunakan kutipan asli dan urutan cerita dipertahankan.","Jumlah adegan 4-6 dan durasi 20-60 detik.","Konsistensi tokoh, properti, dan gaya visual diperiksa.","Video MP4 final harus lolos pemeriksaan codec, resolusi, FPS, audio, dan decode.","Owner memeriksa storyboard dan metadata sebelum render."];
     recentRequests.set(ip, now);
-    return NextResponse.json({ok:true,provider,model:provider==="groq"?model:"Langflow Flow",usage:data?.usage||null,production:p});
+    return NextResponse.json({ok:true,production:p});
   } catch(error) {
     return NextResponse.json({error:error instanceof Error?error.message:"Terjadi kesalahan saat membuat cerita."},{status:502});
   }
