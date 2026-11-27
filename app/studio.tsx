@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import ResearchDesk from "@/app/research-desk";
+import { emitOfficeActivity } from "@/lib/office-events";
 
 type Production = {
  idea:string; story:string; workingTitle:string; hook:string; synopsis:string; script:string; ownerStory:string; durationSeconds:number;
@@ -41,9 +42,11 @@ export default function Studio(){
     if(data.state==="success"&&data.downloadUrl){
      setArtifactUrl(data.downloadUrl);
      setRenderMessage("MP4 selesai dan lolos QC. Paket video, thumbnail, dan metadata siap diunduh.");
+     emitOfficeActivity(["video","quality","observability","publishing"],"done","MP4, thumbnail, metadata, dan laporan QC siap ditinjau owner");
      if(timer)clearInterval(timer);
     }else if(data.state==="failed"){
      setError("Render gagal. Buka log GitHub untuk detail: "+(data.runUrl||""));
+     emitOfficeActivity(["video","quality","observability"],"error","Render gagal; periksa log GitHub Actions");
      if(timer)clearInterval(timer);
     }else{
      setRenderMessage(data.message||"Render sedang berjalan. Status diperiksa otomatis.");
@@ -69,7 +72,7 @@ export default function Studio(){
   return data;
  }
  async function generate(){
-  setError("");setRenderMessage("");setResult(null);setBusy(true);
+  setError("");setRenderMessage("");setResult(null);setBusy(true);emitOfficeActivity(["narrator","visual"],"working","Menyusun cerita, narasi, dan storyboard");
   try{
    const res=await fetch("/api/produce",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({idea:prompt})});
    const data=await res.json();if(!res.ok)throw new Error(data.error||"Gagal membuat paket produksi.");
@@ -79,21 +82,26 @@ export default function Studio(){
    const next=[saved,...history].slice(0,10);
    setHistory(next);localStorage.setItem(HISTORY_KEY,JSON.stringify(next));
    setRenderMessage("Cerita dan storyboard siap diperiksa. Setujui untuk mulai render video MP4.");
-  }catch(e){setError(e instanceof Error?e.message:"Terjadi kesalahan.");}
+   emitOfficeActivity(["narrator","visual"],"done","Storyboard selesai dan menunggu persetujuan owner");
+  }catch(e){const message=e instanceof Error?e.message:"Terjadi kesalahan.";setError(message);emitOfficeActivity(["narrator","visual"],"error",message);}
   finally{setBusy(false);}
  }
  async function render(){
   if(!result)return;
   setRenderBusy(true);setRenderMessage("");setError("");setArtifactUrl("");setRenderRunUrl("");setRenderSince(null);
   try{
+   emitOfficeActivity(["quality"],"working","Memeriksa paket storyboard sebelum render");
    const qc=await fetch("/api/quality-check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(result)});
    const report=await qc.json();
    if(!qc.ok||!report.passed) throw new Error("QC belum lolos: "+[...(report.issues||[]),...(report.warnings||[])].join(" • "));
+   emitOfficeActivity(["quality"],"done","QC storyboard lulus");
    const startedAt=Date.now();
+   emitOfficeActivity(["video","observability"],"working","Mengirim job render ke GitHub Actions");
    await dispatchRender(result);
+   emitOfficeActivity(["video"],"working","Render TTS, Remotion, dan FFmpeg sedang berjalan");
    setRenderSince(startedAt);
    setRenderMessage("QC struktur lulus (skor "+report.score+"). Render dimulai; status dan paket unduhan akan muncul otomatis di sini.");
-  }catch(e){setError(e instanceof Error?e.message:"Render gagal dimulai.");}
+  }catch(e){const message=e instanceof Error?e.message:"Render gagal dimulai.";setError(message);emitOfficeActivity(["quality","video","observability"],"error",message);}
   finally{setRenderBusy(false);}
  }
  function copy(){if(result)navigator.clipboard?.writeText(JSON.stringify(result,null,2));}
