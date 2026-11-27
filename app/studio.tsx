@@ -1,5 +1,6 @@
 "use client";
-import { useEffect, useState } from "react";\nimport ResearchDesk from "@/app/research-desk";
+import { useEffect, useState } from "react";
+import ResearchDesk from "@/app/research-desk";
 
 type Production = {
  idea:string; story:string; workingTitle:string; hook:string; synopsis:string; script:string; ownerStory:string; durationSeconds:number;
@@ -114,7 +115,8 @@ export default function Studio(){
     </article>)}
    </div>
   </section>
-  <ResearchDesk />\n  <label htmlFor="storyPrompt">Cerita final dari owner</label>
+  <ResearchDesk />
+  <label htmlFor="storyPrompt">Cerita final dari owner</label>
   <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={3000} placeholder="Tempel cerita final 80–3000 karakter. AI hanya membagi cerita menjadi adegan dan membuat arahan visual; alur dan kalimat narasi tidak boleh diubah." rows={3}/>
   <div className="studioActions"><span className="muted">{prompt.length}/3000 karakter • minimal 80 karakter</span><button onClick={generate} disabled={busy||renderBusy||prompt.trim().length<80}>{busy?"AI sedang menyusun storyboard...":"Buat storyboard →"}</button></div>
   {busy&&<p className="muted">AI sedang membagi cerita owner menjadi 4-6 adegan, arahan visual, dan metadata. Cerita asli harus tetap utuh; belum ada video yang dirender.</p>}
