@@ -101,3 +101,15 @@ body:has(.office-shell){background:var(--paper);color:var(--ink)}
 .office-staff-grid{gap:8px;padding:12px 7% 12px}
 .office-workstation{min-height:105px}
 @media(max-width:620px){.office-room{min-height:680px}.office-staff-grid{gap:7px;padding:12px 5% 10px}.office-workstation{min-height:105px}}
+
+
+/* YouTube Data API connection status in the research desk. */
+.youtube-api-status{background:#f7f9fc;border:1px solid #e2e8f0;border-radius:12px;padding:14px;margin:14px 0 18px;color:#46536c}
+.youtube-api-status>div:first-child{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.youtube-api-status strong{font-size:12px}
+.youtube-api-status span{font-size:9px;font-weight:900;letter-spacing:.06em;padding:5px 8px;border-radius:7px;background:#fff0d8;color:#8a6827}
+.youtube-api-status span.connected{background:#e4f5e9;color:#287447}
+.youtube-api-status p{font-size:11px;line-height:1.5;margin:8px 0;color:#6c7890}
+.youtube-api-status small{display:block;font-size:10px;color:#8792a5;margin-top:8px;line-height:1.5}
+.youtube-api-status .studioActions{align-items:center;gap:12px}
+.youtube-api-status a{font-size:11px;color:#526b96;text-decoration:underline}
