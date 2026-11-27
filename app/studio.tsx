@@ -101,13 +101,12 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI LERRY</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan satu ide. AI menulis cerita, narasi, dialog, storyboard, dan metadata. Setelah lo periksa dan setujui, mesin merender video MP4.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
   <section className="agentTeam">
    <div className="studioActions"><h3>Tim Agent Lerry</h3><span className="muted">{agentSummary?agentSummary.ready+"/"+agentSummary.total+" siap":"Memeriksa agent..."}</span></div>
    <div className="grid">
-    {agents.map(agent=><article className="card" key={agent.id}>
-     <div className="studioActions"><strong>{agent.name}</strong><span className="status">{agent.status==="ready"?"SIAP":agent.status==="optional"?"OPSIONAL":"BELUM AKTIF"}</span></div>
+    {agents.filter(agent=>!["orchestrator","storyboard"].includes(agent.id)).map(agent=><article className="card" key={agent.id}>
+     <div className="studioActions"><strong>{agent.name}</strong><span className={`status ${agent.status}`}>{agent.status==="ready"?"SIAP":agent.status==="optional"?"OPSIONAL":"BELUM AKTIF"}</span></div>
      <p className="muted">{agent.detail}</p>
      {agent.approvalRequired&&<p className="muted">Persetujuan owner wajib untuk setiap upload.</p>}
     </article>)}
