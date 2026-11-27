@@ -42,6 +42,6 @@ YOUTUBE_API_KEY is a server-only environment variable used by lib/research/analy
 
 - Work only on `experiment/openmontage-video-engine`.
 - Keep the existing Vercel hosting and GitHub Actions render pipeline.
-- No paid hosting, card details, external agent service, or new API key.
+- No paid hosting, card details, external agent service, or paid provider. YOUTUBE_API_KEY is the required free Google API key for numeric trend research.
 - Do not merge to `main` or deploy Production without separate owner approval.
 - Render and YouTube upload remain behind the existing owner approval gates.
