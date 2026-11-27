@@ -113,7 +113,6 @@ export default function OfficeDashboard() {
                     key={worker.id}
                     onClick={() => setSelectedId(worker.id)}
                     aria-pressed={selectedId === worker.id}
-                    style={{ "--desk-index": index } as React.CSSProperties}
                   >
                     <span className={`office-avatar avatar-${index % 5}`}><b>{initials(worker.name)}</b></span>
                     <span className="office-desk" />
