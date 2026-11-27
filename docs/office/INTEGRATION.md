@@ -30,6 +30,14 @@ All nine staff are assigned to existing project tasks. The office API marks that
 
 The office must not animate workers as working, reviewing, completed or failed based only on a static roster. Future live activity needs authenticated server-side events from research, produce, QC and render stages. Secrets must never be sent to browser code.
 
+## Live office activity
+
+The office dashboard listens to real client-side production events emitted by the research desk and studio. Niko/Sinta/Dika change state while research runs; Maya/Bimo while story generation runs; Tara during pre-render QC; Raka/Oki during render dispatch and monitoring; Lina when a verified publication package is ready. These events are session-local to the active browser tab and reset on reload; they are not a persistent cross-device activity database. No worker is marked active without a real user-triggered task.
+
+## YouTube Data API v3
+
+YOUTUBE_API_KEY is a server-only environment variable used by lib/research/analysts.ts for public Shorts trend discovery, view counts, publication timestamps and estimated views/day. It does not authorize uploads and does not require YouTube OAuth. The connection test is GET /api/research/status; it checks the key against a one-item videos.list request for Indonesia without returning the key. The research desk exposes the status and Vercel environment settings link. Add the key to Vercel Preview, then redeploy the Preview. Restrict the Google API key to YouTube Data API v3 and do not expose it in client-side code.
+
 ## Hosting and release constraints
 
 - Work only on `experiment/openmontage-video-engine`.
