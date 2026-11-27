@@ -368,3 +368,28 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - Full FFmpeg decode test completed with no reported decode errors.
 - Result: the CI build and the existing Remotion smoke-render path are passing, and the generated smoke-test MP4 is structurally valid. This is a pipeline smoke fixture, not a complete owner-provided story run or proof that every external provider/agent is live.
 - No Vercel deployment, production merge, real story render, or YouTube upload was performed.
+
+
+---
+
+# Blocker repair — YouTube API and office activity — 2026-11-27
+
+## Implemented on experiment/openmontage-video-engine
+- Restored a clean .env.example entry for server-only YOUTUBE_API_KEY; removed the contradictory instruction that said not to configure YouTube API credentials. YouTube Data API v3 is used for public trend research only, not video upload.
+- Improved Shorts trend discovery: Indonesia region, Indonesian relevance, up to 50 search results, video details and statistics, filtering to <=60-second videos, estimated views/day and velocity sorting. API errors now distinguish invalid keys, disabled API and exhausted quota.
+- Added GET /api/research/status to test the configured key against YouTube Data API v3 without ever returning the secret.
+- Added a Research Desk status panel, connection-test action and direct Vercel environment settings link. Required variable name is YOUTUBE_API_KEY.
+- Added session-local office activity events emitted by real research, story generation, pre-render QC and render lifecycle actions. The office now reflects those events rather than inventing background activity. Events are intentionally session-local and reset on reload; no paid database was added.
+- Added setup and scope notes to docs/office/INTEGRATION.md.
+
+## Required owner configuration
+- Add YOUTUBE_API_KEY to Vercel Preview environment for experiment/openmontage-video-engine; set the value to the Google Cloud API key, not the variable name.
+- Enable YouTube Data API v3 in the same Google Cloud project and restrict the key to that API.
+- After the Preview deployment is Ready, use Research Desk -> "Tes koneksi API". A successful response confirms Google accepts the key; it does not upload videos.
+- Do not paste the key into ChatGPT or commit it to GitHub.
+
+## Verification gate
+- GitHub Build Check and render fixture were triggered by the source commits; final results must be checked before acceptance.
+- Live YouTube API connectivity cannot be proven until the owner adds the secret in Vercel Preview.
+- Live Groq generation, GitHub Actions dispatch and a real owner-story render remain separate acceptance gates.
+- No merge to main, Production deployment, OAuth upload setup or YouTube publishing was performed.
