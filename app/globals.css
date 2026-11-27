@@ -93,3 +93,11 @@ body:has(.office-shell){background:var(--paper);color:var(--ink)}
 .office-footer strong{color:#596780;letter-spacing:.12em}
 @media(max-width:900px){.office-layout{grid-template-columns:1fr}.office-room{min-height:475px}.office-staff-detail{min-height:300px}.office-pipeline{grid-template-columns:1fr 1fr;gap:10px}.office-pipeline-arrow{display:none}}
 @media(max-width:620px){.office-shell{padding:16px 12px 35px}.office-header{gap:12px}.office-nav{order:3;width:100%;justify-content:center}.office-connection{font-size:8px;padding:7px}.office-welcome{display:block;padding:25px 0 18px}.office-primary{margin-top:16px;width:100%}.office-metrics{grid-template-columns:1fr 1fr;gap:8px;margin-bottom:26px}.office-metrics article{padding:12px}.office-metrics strong{font-size:23px}.office-section-heading h2{font-size:20px}.office-room{min-height:490px}.office-staff-grid{gap:7px;padding:17px 5% 12px}.office-workstation{min-height:120px;padding-left:2px;padding-right:2px}.office-workstation strong{font-size:9px}.office-workstation small{font-size:8px}.office-window{height:78px;border-width:6px}.office-wall-sign{top:23px;font-size:8px}.office-pipeline{grid-template-columns:1fr 1fr}.office-approval-note{display:block}.office-approval-note span{display:block;margin-top:5px}.office-footer{display:block}.office-footer span{display:block;margin-top:5px}}
+
+/* Keep all nine desks inside the office floor on narrow screens. */
+.office-room{min-height:680px}
+.office-room-back{inset:0 0 55% 0}
+.office-room-floor{inset:45% 0 0}
+.office-staff-grid{gap:8px;padding:12px 7% 12px}
+.office-workstation{min-height:105px}
+@media(max-width:620px){.office-room{min-height:680px}.office-staff-grid{gap:7px;padding:12px 5% 10px}.office-workstation{min-height:105px}}
