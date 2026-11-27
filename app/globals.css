@@ -113,3 +113,6 @@ body:has(.office-shell){background:var(--paper);color:var(--ink)}
 .youtube-api-status small{display:block;font-size:10px;color:#8792a5;margin-top:8px;line-height:1.5}
 .youtube-api-status .studioActions{align-items:center;gap:12px}
 .youtube-api-status a{font-size:11px;color:#526b96;text-decoration:underline}
+
+.office-worker-activity{font-size:8px!important;font-weight:800;letter-spacing:.04em;color:#8b95a8!important}
+.office-workstation .office-worker-activity{min-height:10px}
