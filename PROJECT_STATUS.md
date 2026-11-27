@@ -320,3 +320,30 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - No new agent server, paid API, GPU, paid hosting, Supabase, or external rendering service was added.
 - The fixture workflow uses GitHub Actions and free Edge TTS; Piper remains the fallback.
 - `main`, production deployment and YouTube publishing remain untouched.
+
+
+---
+
+# Lerry Production Office dashboard — 2026-11-27
+
+## Implemented on `experiment/openmontage-video-engine`
+- Replaced the home landing screen with a new lightweight Lerry Production Office dashboard.
+- Added an original CSS-based isometric office floor with nine selectable staff workstations, staff profile details, departments, capability states, task routes, project summary and production workflow overview.
+- Removed all Roving Office banner, logo, brand and third-party artwork from the application UI. The office is an original lightweight implementation inspired by the selected spatial office reference; it does not embed the upstream site or load a remote iframe/Three.js runtime.
+- Reused the existing production studio below the office dashboard; the story generation, research desk, review gate, render dispatch and manual YouTube publishing flow were not replaced.
+- Reworked `lib/office-agents.ts` to derive the office roster from `lib/agents/registry.ts`. The nine staff are Niko, Sinta, Dika, Maya, Bimo, Raka, Tara, Oki and Lina, each mapped to an existing project route/task.
+- Updated `GET /api/office/agents` to expose project assignments, capability readiness and honest activity state without returning secrets.
+- Updated `docs/office/INTEGRATION.md` to record the actual implementation and staff-to-task mapping.
+
+## Activity and integration truth
+- All nine staff are mapped to existing project responsibilities and routes.
+- The dashboard reports assigned staff as connected to project task definitions.
+- Live activity feed is **not yet connected**. Staff remain in standby until authenticated real events are wired from research, production, QC and render stages. No fake "working" animations or status transitions are shown.
+- The existing studio is embedded in the new dashboard; no production engine or owner approval gate was intentionally changed.
+
+## Verification status
+- GitHub file writes completed on the experiment branch.
+- TypeScript, lint, Next.js build, mobile rendering and a live Preview have **not yet been run for this office change**.
+- Vercel API deployment was previously rate-limited; this code is not confirmed live.
+- Next: run the branch build-check workflow, fix any compile or responsive layout issue, then inspect the Preview on Android. Wire authenticated real activity events only after the static office dashboard passes those checks.
+- No merge to `main`, Production deployment, paid service, new secret, render dispatch or YouTube upload was performed.
