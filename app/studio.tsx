@@ -103,26 +103,26 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan satu ide. AI menulis cerita, narasi, dialog, storyboard, dan metadata. Setelah lo periksa dan setujui, mesin merender video MP4.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI LERRY</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan satu ide. AI menulis cerita, narasi, dialog, storyboard, dan metadata. Setelah lo periksa dan setujui, mesin merender video MP4.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
   <section className="agentTeam">
    <div className="studioActions"><h3>Tim Agent Lerry</h3><span className="muted">{agentSummary?agentSummary.ready+"/"+agentSummary.total+" siap":"Memeriksa agent..."}</span></div>
    <div className="grid">
     {agents.map(agent=><article className="card" key={agent.id}>
      <div className="studioActions"><strong>{agent.name}</strong><span className="status">{agent.status==="ready"?"SIAP":agent.status==="optional"?"OPSIONAL":"BELUM AKTIF"}</span></div>
-     <p>{agent.engine}</p><p className="muted">{agent.detail}</p>
+     <p className="muted">{agent.detail}</p>
      {agent.approvalRequired&&<p className="muted">Persetujuan owner wajib untuk setiap upload.</p>}
     </article>)}
    </div>
   </section>
   <ResearchDesk />
   <label htmlFor="storyPrompt">Ide video lo</label>
-  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={3000} placeholder="Contoh: Sejarah motor pertama di dunia, dari penemuan sampai digunakan manusia." rows={3}/>
-  <div className="studioActions"><span className="muted">{prompt.length}/500 karakter • cukup satu ide singkat</span><button onClick={generate} disabled={busy||renderBusy||prompt.trim().length<5}>{busy?"AI sedang membuat cerita & storyboard...":"Buat cerita + storyboard →"}</button></div>
+  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} placeholder="Contoh: Sejarah motor pertama di dunia, dari penemuan sampai digunakan manusia." rows={3}/>
+  <div className="studioActions"><span className="muted">{prompt.length} karakter • bebas panjang ide</span><button onClick={generate} disabled={busy||renderBusy||!prompt.trim()}>{busy?"Sedang membuat cerita & storyboard...":"Buat cerita + storyboard →"}</button></div>
   {busy&&<p className="muted">AI sedang menulis cerita orisinal, narasi, dialog, 4-6 adegan, arahan visual, dan metadata.</p>}
   {result&&<div className="productionResult">
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
-    {usage&&<p className="muted">Pemakaian LLM: {usage.prompt_tokens??"—"} input • {usage.completion_tokens??"—"} output • {usage.total_tokens??"—"} total token</p>}
+    
     <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
     <h3>Ide owner</h3><pre>{result.idea}</pre><h3>Cerita final buatan AI</h3><pre>{result.story||result.ownerStory}</pre>
     <h3>Storyboard ({result.scenes.length} adegan • ±{result.durationSeconds} detik)</h3>
