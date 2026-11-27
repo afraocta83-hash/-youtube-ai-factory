@@ -25,12 +25,8 @@ export default function Studio(){
  const [renderRunUrl,setRenderRunUrl]=useState("");
  const [agents,setAgents]=useState<Agent[]>([]);
  const [agentSummary,setAgentSummary]=useState<{total:number;ready:number;optional:number;blocked:number}|null>(null);
- const [youtubeConnected,setYoutubeConnected]=useState(false);
- const [youtubeFile,setYoutubeFile]=useState<File|null>(null);
- const [youtubeBusy,setYoutubeBusy]=useState(false);
- const [youtubeMessage,setYoutubeMessage]=useState("");
 
- useEffect(()=>{ let active=true; fetch("/api/agents",{cache:"no-store"}).then(r=>r.json()).then(data=>{if(active&&data.ok){setAgents(data.agents||[]);setAgentSummary(data.summary||null);}}).catch(()=>{}); fetch("/api/youtube/status",{cache:"no-store"}).then(r=>r.json()).then(data=>{if(active)setYoutubeConnected(Boolean(data.connected));}).catch(()=>{}); return()=>{active=false;}; },[]);
+ useEffect(()=>{ let active=true; fetch("/api/agents",{cache:"no-store"}).then(r=>r.json()).then(data=>{if(active&&data.ok){setAgents(data.agents||[]);setAgentSummary(data.summary||null);}}).catch(()=>{}); return()=>{active=false;}; },[]);
 
  useEffect(()=>{
   if(!renderSince)return;
@@ -67,21 +63,6 @@ export default function Studio(){
   }catch{localStorage.removeItem(HISTORY_KEY);}
  },[]);
 
- async function publishToYoutube(){
-  if(!youtubeFile||!result||!youtubeConnected)return;
-  if(youtubeFile.type!=="video/mp4"){setYoutubeMessage("Pilih file MP4 hasil render, bukan ZIP paket.");return;}
-  setYoutubeBusy(true);setYoutubeMessage("Menyiapkan sesi upload YouTube...");
-  try{
-   const session=await fetch("/api/youtube/upload-session",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({ownerApproved:true,title:result.title||result.workingTitle,description:result.description,tags:result.hashtags,privacyStatus:"private"})});
-   const data=await session.json();if(!session.ok)throw new Error(data.error||"Gagal membuat sesi upload.");
-   setYoutubeMessage("Mengunggah MP4 ke YouTube sebagai Private...");
-   const uploaded=await fetch(data.uploadUrl,{method:"PUT",headers:{"Content-Type":"video/mp4"},body:youtubeFile});
-   if(!uploaded.ok)throw new Error("Upload gagal ("+uploaded.status+"): "+(await uploaded.text()).slice(0,300));
-   const video=await uploaded.json();
-   setYoutubeMessage("Upload selesai. Video tersimpan sebagai Private: https://www.youtube.com/watch?v="+video.id);
-  }catch(e){setYoutubeMessage(e instanceof Error?e.message:"Upload YouTube gagal.");}
-  finally{setYoutubeBusy(false);}
- }
  async function dispatchRender(production:Production){
   const res=await fetch("/api/render",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({production})});
   const data=await res.json();
@@ -121,7 +102,7 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan cerita final. AI hanya membagi cerita menjadi storyboard, arahan visual, durasi, dan metadata tanpa mengubah alur atau narasi. Render berjalan setelah lo menyetujui. Upload YouTube tetap tahap terpisah.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan cerita final. AI hanya membagi cerita menjadi storyboard, arahan visual, durasi, dan metadata tanpa mengubah alur atau narasi. Render berjalan setelah lo menyetujui. Upload YouTube dilakukan manual oleh owner setelah memeriksa MP4.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
   <section className="agentTeam">
    <div className="studioActions"><h3>Tim Agent Lerry</h3><span className="muted">{agentSummary?agentSummary.ready+"/"+agentSummary.total+" siap":"Memeriksa agent..."}</span></div>
@@ -152,14 +133,7 @@ export default function Studio(){
     <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Memeriksa QC & mengirim render...":"Saya setujui — mulai render MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
     {artifactUrl&&<p><a href={artifactUrl} target="_blank" rel="noreferrer">Unduh paket MP4 + thumbnail + metadata ↗</a></p>}
-    <section className="youtubePublishing">
-     <h3>Publishing Agent · YouTube</h3>
-     <p className="muted">Upload dipisahkan dari persetujuan render. Video hanya dikirim setelah owner memilih file MP4 dan menekan tombol persetujuan upload. Visibilitas awal selalu Private.</p>
-     {!youtubeConnected?<p><a href="/api/youtube/connect">Hubungkan akun YouTube ↗</a></p>:<p className="muted">Akun YouTube terhubung. <button className="secondary" onClick={async()=>{await fetch("/api/youtube/status",{method:"DELETE"});setYoutubeConnected(false);setYoutubeMessage("Akun YouTube diputus dari studio.");}}>Putuskan akun</button></p>}
-     {youtubeConnected&&<><label htmlFor="youtubeMp4">Pilih MP4 final (ekstrak dari paket ZIP yang diunduh)</label><input id="youtubeMp4" type="file" accept="video/mp4,.mp4" onChange={e=>setYoutubeFile(e.target.files?.[0]||null)}/><button onClick={publishToYoutube} disabled={youtubeBusy||!youtubeFile}>{youtubeBusy?"Mengunggah...":"Saya setujui — upload MP4 ke YouTube sebagai Private"}</button></>}
-     {youtubeMessage&&<p className="muted" role="status">{youtubeMessage}</p>}
-    </section>
-    {renderRunUrl&&<p className="muted"><a href={renderRunUrl} target="_blank" rel="noreferrer">Lihat log render ↗</a></p>}
+    <section className="youtubePublishing"><h3>Upload manual ke YouTube</h3><p className="muted">Setelah paket diunduh, ekstrak ZIP, pilih file MP4, lalu unggah sendiri melalui YouTube Studio. Lerry tidak meminta akses akun Google dan tidak mengunggah video otomatis.</p><p><a href="https://studio.youtube.com/" target="_blank" rel="noreferrer">Buka YouTube Studio untuk upload ↗</a></p><p className="muted">Gunakan thumbnail.jpg dan salin judul, deskripsi, serta tag dari youtube-metadata.json. Periksa video sebelum mengatur visibilitas dan menerbitkannya.</p></section>\n    {renderRunUrl&&<p className="muted"><a href={renderRunUrl} target="_blank" rel="noreferrer">Lihat log render ↗</a></p>}
     <p className="muted">Render memakai animasi Remotion berbasis karakter 2D, narasi Indonesia, dan subtitle. Setelah paket selesai, periksa MP4 sebelum upload. Tidak ada upload YouTube otomatis.</p>
   </div>}
   {error&&<p className="error" role="alert">{error}</p>}
