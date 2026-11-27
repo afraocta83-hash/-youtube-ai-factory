@@ -347,3 +347,13 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - Vercel API deployment was previously rate-limited; this code is not confirmed live.
 - Next: run the branch build-check workflow, fix any compile or responsive layout issue, then inspect the Preview on Android. Wire authenticated real activity events only after the static office dashboard passes those checks.
 - No merge to `main`, Production deployment, paid service, new secret, render dispatch or YouTube upload was performed.
+
+
+## Verification update — office UI CI evidence
+
+- The first intermediate build check at commit `418d376e509125636bc8b476510688144c52d957` failed because the office API still imported the old static `OFFICE_WORKERS` export while the roster had been changed to a derived function. This was corrected in the next API commit.
+- Build Check #45934342502 at commit `bad7f89e3c6defc3d029f4a8d09f7d5efc641a7b`: TypeScript and Next.js production build passed.
+- Build Check #45934348645 at commit `ce9c303beac2162bc7558ebca20262b94e7b5610`: TypeScript and Next.js production build passed with the new dashboard mounted as the home page.
+- Render fixture #45934348691 at commit `ce9c303beac2162bc7558ebca20262b94e7b5610`: passed. This is the existing non-production fixture workflow, not an owner story render.
+- Latest styling/metadata commits `e3f1eb250cd8fb7383f84fb4427ec65a716af979` and `326f5815df152e45113562a488c5c0781e5ff4c0` have new Build Check runs queued/in progress; final results are not yet available at this update.
+- No Preview deployment or Android visual inspection has been completed. The new dashboard is committed to the experiment branch only.
