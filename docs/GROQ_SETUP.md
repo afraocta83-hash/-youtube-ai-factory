@@ -1,62 +1,52 @@
-# Groq setup for LERRY ANIMASI
+# Konfigurasi Groq untuk LERRY ANIMASI
 
-## Selected model
+## Model
 
 - Provider: Groq
 - Model: `openai/gpt-oss-120b`
-- API: OpenAI-compatible Chat Completions
 - Endpoint: `https://api.groq.com/openai/v1/chat/completions`
-- Output: strict JSON Schema
-- Reasoning: low effort, reasoning output excluded
-- Calls per story: one request; no AI retry loop
+- Output: JSON terstruktur untuk 4–6 adegan.
+- Satu permintaan model per storyboard; tidak ada loop retry AI.
 
-The model supports strict JSON Schema output. This makes storyboard objects predictable for the render pipeline; it does not guarantee that the story interpretation is factually or creatively correct. Server-side validation checks the owner story, exact spoken-text excerpts, scene count, duration, and visual prompt fields.
+Groq hanya membagi cerita final owner menjadi adegan, arahan visual, durasi, subtitle kutipan, dan metadata. Cerita/narasi owner harus dipertahankan. Validasi server menolak paket yang mengubah cerita atau memparafrase narasi.
 
-## Free tier and limits
+## Environment variables
 
-Groq publishes per-model rate limits. The currently documented baseline for GPT-OSS 120B is 30 requests/minute, 1,000 requests/day, 8,000 tokens/minute, and 200,000 tokens/day. Actual account limits may vary and should be checked in the Groq Console. Free availability and quotas can change.
+Buat API key di https://console.groq.com/keys lalu simpan sebagai secret di hosting Preview:
 
-## Configure hosting Preview (Netlify or Vercel)
+- `GROQ_API_KEY`: wajib.
+- `GROQ_API_KEY2`: opsional.
+- `GROQ_API_KEY3`: opsional.
+- `GROQ_MODEL`: `openai/gpt-oss-120b`.
+- `GITHUB_ACTIONS_TOKEN`: secret server-side dengan izin Actions read/write untuk repo dan branch `experiment/openmontage-video-engine`.
 
-Create one or more API keys at https://console.groq.com/keys and add these variables to the hosting project's environment-variable settings. For Netlify, use Site configuration → Environment variables and scope them to the deploy context/branch used for Preview. For Vercel, use Project → Settings → Environment Variables, target Preview, branch `experiment/openmontage-video-engine`:
+Jangan menaruh key di browser, chat, atau repository. Setelah mengubah environment variables, deploy ulang Preview agar nilai baru digunakan.
 
-- `GROQ_API_KEY`: Sensitive/Secret, primary key, required.
-- `GROQ_API_KEY2`: Sensitive/Secret, optional backup.
-- `GROQ_API_KEY3`: Sensitive/Secret, optional second backup.
+## Penyimpanan dan biaya
 
-The producer tries keys in order. It switches to the next configured key only when Groq rejects the current key with HTTP 401 or 403. It does not multiply requests when the provider is rate-limited or unavailable.
-- `GROQ_MODEL`: `openai/gpt-oss-120b`, plain configuration value.
-- `- `GITHUB_ACTIONS_TOKEN`: existing Sensitive/Secret with Actions: write permission.
+- Tidak menggunakan Supabase atau database cloud.
+- Riwayat maksimal 10 storyboard tersimpan di localStorage browser perangkat.
+- Groq, GitHub Actions, Edge TTS/Piper, Remotion, dan FFmpeg adalah komponen pipeline.
+- Render memakai GitHub-hosted CPU runner; tidak membutuhkan GPU atau Agnes API.
+- Kuota gratis penyedia dapat berubah.
 
-Redeploy the Preview after adding variables. Netlify and Vercel both require a new deploy for changed environment variables to take effect. Never paste API keys into chat or commit them to GitHub.
+## Pipeline produksi
 
-## Supabase and login removal
+1. Owner menempelkan cerita final (80–3.000 karakter).
+2. Groq menghasilkan paket storyboard/metadata sesuai schema.
+3. Owner memeriksa cerita, adegan, subtitle, dan metadata.
+4. Setelah owner menekan persetujuan render, GitHub Actions menjalankan Edge TTS (Piper fallback).
+5. Remotion membuat animasi vertikal dan FFmpeg menghasilkan MP4.
+6. QC memeriksa H.264, 1080×1920, 30 fps, AAC, durasi, full decode, thumbnail, dan frame representatif.
+7. Owner mengunduh ZIP, memeriksa MP4, lalu mengunggahnya sendiri ke https://studio.youtube.com/.
 
-The app has no owner login or Supabase dependency. Recent storyboards are stored locally in the browser on the current device (maximum 10). Local history does not sync across devices and can be lost if browser data is cleared. Render dispatch remains behind a manual approval button and has a basic per-IP cooldown; public access means the preview URL should not be widely shared until stronger abuse protection is added.
+## Upload YouTube manual
 
-## Token controls
+Mode publikasi Lerry adalah manual. Tidak diperlukan OAuth Client ID, Client Secret, Redirect URI, token enkripsi, YouTube Data API, atau kredensial Google di hosting. MFA tetap dikelola langsung di akun Google. Owner menentukan visibilitas dan waktu publikasi di YouTube Studio.
 
-- One model call per submitted story.
-- 4–6 scenes only.
-- Strict JSON Schema.
-- Low reasoning effort and reasoning output disabled.
-- Maximum completion budget: 3,200 tokens.
-- Deterministic server-side QC; no second LLM judge call.
-- Token usage is returned to the dashboard.
+## Batasan
 
-## Free production pipeline
-
-1. User submits an idea; no owner login is required.
-2. Groq creates storyboard + YouTube metadata.
-3. Server validates the story, scene count and Agnes-compatible clip durations.
-4. Edge TTS creates Indonesian narration; Piper is fallback.
-5. After explicit user approval, GitHub Actions starts a temporary Docker instance of the MIT-licensed Agnes Video Generator.
-6. Agnes creates each 4–12 second 720p scene clip; FFmpeg crops/upscales, burns subtitles, mixes Indonesian narration and joins the clips into a vertical MP4.
-7. FFmpeg/ffprobe validates H.264, 1080x1920, 30 fps, audio and duration.
-8. User downloads/reviews the artifact and separately approves any YouTube publishing.
-
-### Agnes AI key (required for video rendering)
-
-Create a free key at https://platform.agnes-ai.com. Add it to the GitHub repository (not Netlify) under Settings → Secrets and variables → Actions with the exact name `AGNES_API_KEY`. The render workflow injects it only into the temporary Agnes Docker container. Never commit the key or put it in a `NEXT_PUBLIC_` variable. The Agnes app is open-source MIT, but video generation depends on the provider's free shared queue; queue availability and free access can change. The temporary runner is destroyed after the render job. No Supabase or persistent Agnes server is used.
-
-Groq, Agnes, GitHub Actions, Microsoft Edge TTS/Piper and FFmpeg are external dependencies; free quotas and service availability can change.
+- Visual menggunakan komposisi vektor 2D berbasis template, bukan footage AI khusus per adegan.
+- Audio saat ini berisi narasi TTS; musik dan efek suara terpisah belum dirender.
+- Pemeriksaan fakta eksternal belum otomatis.
+- Jalur Studio live tetap perlu dites pada Preview menggunakan environment secrets yang valid.
