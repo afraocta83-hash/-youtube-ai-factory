@@ -36,6 +36,23 @@ export default function OfficeDashboard() {
   const [selectedId, setSelectedId] = useState("");
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [activityMessage, setActivityMessage] = useState("Belum ada pekerjaan aktif di sesi ini.");
+
+  useEffect(() => {
+    const handleActivity = (event: Event) => {
+      const detail = (event as CustomEvent<{workerIds:string[];activity:Worker["activity"];message:string}>).detail;
+      if (!detail) return;
+      setOffice((current) => current ? {
+        ...current,
+        activityFeedConnected: true,
+        workers: current.workers.map((worker) => detail.workerIds.includes(worker.id) ? { ...worker, activity: detail.activity } : worker),
+        summary: { ...current.summary, active: current.workers.filter((worker) => detail.workerIds.includes(worker.id) ? detail.activity === "working" || detail.activity === "review" : worker.activity === "working" || worker.activity === "review").length },
+      } : current);
+      setActivityMessage(detail.message);
+    };
+    window.addEventListener("lerry:office-activity", handleActivity);
+    return () => window.removeEventListener("lerry:office-activity", handleActivity);
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -137,11 +154,11 @@ export default function OfficeDashboard() {
               <div className="office-detail-block"><small>TUGAS PROJECT</small><p>{selected.responsibility}</p></div>
               <div className="office-detail-block"><small>JALUR KERJA</small><code>{selected.taskRoute}</code></div>
               <div className="office-detail-block"><small>MESIN / RUNTIME</small><p>{selected.runtime}</p></div>
-              <div className="office-detail-status"><span className="office-status-dot" /><div><strong>Standby</strong><small>Terhubung ke tugas project; menunggu pekerjaan nyata.</small></div></div>
+              <div className="office-detail-status"><span className="office-status-dot" /><div><strong>{selected.activity === "working" ? "Sedang bekerja" : selected.activity === "review" ? "Memeriksa hasil" : selected.activity === "done" ? "Selesai" : selected.activity === "error" ? "Ada kendala" : "Standby"}</strong><small>{activityMessage}</small></div></div>
             </> : <p className="office-muted">{loading ? "Memuat profil staff…" : "Pilih staff untuk melihat tugasnya."}</p>}
           </aside>
         </div>
-        <p className="office-footnote">Status kemampuan menunjukkan kesiapan konfigurasi. Animasi staff yang sedang bekerja baru akan aktif setelah event produksi nyata dihubungkan; kantor tidak menampilkan aktivitas palsu.</p>
+        <p className="office-footnote">{office?.activityFeedConnected ? "Aktivitas diperbarui dari pekerjaan yang benar-benar dijalankan di sesi browser ini. Status kembali standby saat halaman dimuat ulang." : "Kantor siap menerima event pekerjaan dari riset, storyboard, QC, dan render. Status tidak dibuat-buat."}</p>
       </section>
 
       <section className="office-section office-workflow">
