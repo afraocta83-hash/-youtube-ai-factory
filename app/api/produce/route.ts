@@ -78,13 +78,13 @@ export async function POST(request: Request) {
         data=await response.json();
         if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
       }
-      if(!response) return NextResponse.json({error:"Tidak ada provider AI yang dapat digunakan."},{status:503});
-      if(!response.ok) return NextResponse.json({error:response.status===429?"Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi.":`Mesin produksi cerita gagal: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
+      if(!response) return NextResponse.json({error:"Layanan produksi cerita tidak tersedia."},{status:503});
+      if(!response.ok) return NextResponse.json({error:response.status===429?"Layanan produksi sedang mencapai batas penggunaan. Coba lagi beberapa saat.":`Mesin produksi cerita gagal: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
       const choice=data?.choices?.[0];
       if(choice?.finish_reason==="length") return NextResponse.json({error:"Batas token tercapai. Coba ide yang lebih sederhana."},{status:502});
       raw=choice?.message?.content;
     }
-    if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Provider AI tidak mengembalikan JSON produksi."},{status:502});
+    if(typeof raw!=="string"||!raw.trim()) return NextResponse.json({error:"Mesin produksi tidak mengembalikan hasil yang valid."},{status:502});
 
     const p=await withAgentSpan("storyboard.validate", { "agent.name": "Storyboard QC Agent", "agent.scene_schema": "lerry-shorts-v1" }, async () => JSON.parse(raw!));
     if(!Array.isArray(p.scenes)||p.scenes.length<4||p.scenes.length>6) throw new Error("Storyboard harus berisi 4-6 adegan.");
