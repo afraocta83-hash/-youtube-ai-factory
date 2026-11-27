@@ -62,6 +62,33 @@ async function youtubeTrends(topic: string): Promise<{ videos: TrendVideo[]; mod
   return { videos: videos.slice(0, 15), mode: "youtube-data-api", note: "Metrik berasal dari YouTube Data API; views/day adalah estimasi sederhana dari total views dibagi umur video, bukan laju real-time." };
 }
 
+async function assessClaimsWithGroq(checks: ClaimCheck[]): Promise<ClaimCheck[]> {
+  if (!checks.length) return checks;
+  const keys = [...new Set([process.env.GROQ_API_KEY, process.env.GROQ_API_KEY2, process.env.GROQ_API_KEY3].map(x => x?.trim()).filter((x): x is string => Boolean(x)))];
+  if (!keys.length) return checks;
+  const prompt = {
+    task: "Nilai apakah cuplikan sumber secara langsung mendukung atau membantah klaim. Jangan gunakan pengetahuan luar. Snippet bukan bukti final.",
+    rules: ["supported hanya jika minimal dua domain independen memberi dukungan langsung dan konsisten.", "conflicting hanya jika minimal dua domain independen menunjukkan pertentangan langsung.", "Selain itu insufficient.", "Jangan menyimpulkan dari judul saja.", "Kembalikan JSON {checks:[{index,status,note}]}."],
+    checks: checks.map((c, index) => ({ index, claim: c.claim, sources: c.sources.map(s => ({ domain: s.domain, title: s.title, snippet: s.snippet })) }))
+  };
+  for (const key of keys) {
+    try {
+      const response = await fetch("https://api.groq.com/openai/v1/chat/completions", { method: "POST", headers: { Authorization: "Bearer " + key, "Content-Type": "application/json" }, body: JSON.stringify({ model: process.env.GROQ_MODEL || "openai/gpt-oss-120b", messages: [{ role: "user", content: JSON.stringify(prompt) }], response_format: { type: "json_object" }, temperature: 0, max_completion_tokens: 1000 }), signal: timeout(15000), cache: "no-store" });
+      if (!response.ok) continue;
+      const data = await response.json();
+      const parsed = JSON.parse(data.choices?.[0]?.message?.content || "{}");
+      if (!Array.isArray(parsed.checks)) continue;
+      return checks.map((check, index) => {
+        const item = parsed.checks.find((x: any) => Number(x.index) === index);
+        const domains = new Set(check.sources.map(s => s.domain));
+        const status = domains.size < 2 ? "insufficient" : ["supported", "conflicting", "insufficient"].includes(item?.status) ? item.status : "insufficient";
+        return { ...check, status, note: (typeof item?.note === "string" ? item.note : check.note) + " Penilaian AI hanya berdasarkan cuplikan pencarian; pemeriksaan halaman penuh tetap diperlukan." };
+      });
+    } catch { }
+  }
+  return checks;
+}
+
 export async function buildResearchReport(topic: string, claims: string[]): Promise<ResearchReport> {
   const [trend, topicSources] = await Promise.all([
     youtubeTrends(topic).catch(error => ({ videos: [] as TrendVideo[], mode: "unavailable", note: error instanceof Error ? error.message : "YouTube API tidak tersedia." })),
@@ -73,6 +100,6 @@ export async function buildResearchReport(topic: string, claims: string[]): Prom
     const domains = new Set(sources.map(s => s.domain));
     verification.push({ claim, status: domains.size >= 2 ? "insufficient" : "insufficient", sources: sources.slice(0, 5), note: domains.size >= 2 ? "Ditemukan beberapa domain; isi sumber belum dibaca penuh. Perlu pemeriksaan manusia sebelum klaim dianggap benar." : "Bukti independen belum cukup. Jangan perlakukan klaim sebagai fakta terverifikasi." });
   }
-  const opportunities = (trend.videos.length ? trend.videos.slice(0, 8).map(v => ({ title: v.title, score: v.score, rationale: ["Views/day: " + v.viewsPerDay.toLocaleString("id-ID"), "Channel: " + v.channel, "Durasi: " + v.durationSeconds + " detik"], evidenceCount: 1 })) : topicSources.slice(0, 8).map((s, i) => ({ title: s.title, score: Math.max(20, 65 - i * 5), rationale: ["Sinyal topik dari pencarian publik", "Belum tersedia metrik views/engagement YouTube"], evidenceCount: 1 })));
-  return { topic, generatedAt: new Date().toISOString(), trend, verification, opportunities, limitations: ["Skor peluang adalah heuristik untuk membantu riset, bukan prediksi viral atau jaminan views.", "Tanpa YOUTUBE_API_KEY, laporan tidak menampilkan metrik views YouTube.", "Pemeriksaan klaim mengumpulkan kandidat sumber; belum membaca dan membandingkan isi penuh sehingga status tetap perlu review manusia.", "Riset tidak mengubah cerita final owner dan tidak memasukkan fakta baru ke storyboard secara otomatis."] };
+  const assessedVerification = await assessClaimsWithGroq(verification);\n  const opportunities = (trend.videos.length ? trend.videos.slice(0, 8).map(v => ({ title: v.title, score: v.score, rationale: ["Views/day: " + v.viewsPerDay.toLocaleString("id-ID"), "Channel: " + v.channel, "Durasi: " + v.durationSeconds + " detik"], evidenceCount: 1 })) : topicSources.slice(0, 8).map((s, i) => ({ title: s.title, score: Math.max(20, 65 - i * 5), rationale: ["Sinyal topik dari pencarian publik", "Belum tersedia metrik views/engagement YouTube"], evidenceCount: 1 })));
+  return { topic, generatedAt: new Date().toISOString(), trend, verification: assessedVerification, opportunities, limitations: ["Skor peluang adalah heuristik untuk membantu riset, bukan prediksi viral atau jaminan views.", "Tanpa YOUTUBE_API_KEY, laporan tidak menampilkan metrik views YouTube.", "Pemeriksaan klaim mengumpulkan kandidat sumber; belum membaca dan membandingkan isi penuh sehingga status tetap perlu review manusia.", "Riset tidak mengubah cerita final owner dan tidak memasukkan fakta baru ke storyboard secara otomatis."] };
 }
