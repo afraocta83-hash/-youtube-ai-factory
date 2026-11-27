@@ -11,15 +11,22 @@ async function searchWeb(query: string): Promise<ResearchSource[]> {
   if (!response.ok) throw new Error("Pencarian web tidak tersedia (" + response.status + ")");
   const html = await response.text();
   const results: ResearchSource[] = [];
-  const blocks = html.match(/<div class="result[^>]*>[\s\S]*?<\/div>\s*<\/div>/gi) || [];
-  for (const block of blocks.slice(0, 8)) {
-    const href = block.match(/class="result__a"[^>]*href="([^"]+)"/i)?.[1] || block.match(/href="([^"]+)"[^>]*class="result__a"/i)?.[1];
-    const title = block.match(/class="result__a"[^>]*>([\s\S]*?)<\/a>/i)?.[1];
-    const snippet = block.match(/class="result__snippet"[^>]*>([\s\S]*?)<\/div>/i)?.[1] || "";
+  for (const match of html.matchAll(/<a\b([^>]*)>([\s\S]*?)<\/a>/gi)) {
+    const attrs = match[1];
+    if (!/class=["'][^"']*result__a/i.test(attrs)) continue;
+    const href = attrs.match(/href=["']([^"']+)["']/i)?.[1];
+    const title = match[2];
     if (!href || !title) continue;
     let url = href.replace(/&amp;/g, "&");
     try { const parsed = new URL(url, "https://duckduckgo.com"); const redirected = parsed.searchParams.get("uddg"); if (redirected) url = redirected; } catch { continue; }
-    try { const parsed = new URL(url); if (!["http:", "https:"].includes(parsed.protocol)) continue; results.push({ title: clean(title), url, snippet: clean(snippet), domain: parsed.hostname.replace(/^www\./, "") }); } catch { }
+    try {
+      const parsed = new URL(url);
+      if (!["http:", "https:"].includes(parsed.protocol)) continue;
+      const tail = html.slice((match.index || 0) + match[0].length, (match.index || 0) + match[0].length + 1600);
+      const snippet = tail.match(/class=["'][^"']*result__snippet[^"']*["'][^>]*>([\s\S]*?)<\/div>/i)?.[1] || "";
+      results.push({ title: clean(title), url, snippet: clean(snippet), domain: parsed.hostname.replace(/^www\./, "") });
+      if (results.length >= 8) break;
+    } catch { }
   }
   return results;
 }
