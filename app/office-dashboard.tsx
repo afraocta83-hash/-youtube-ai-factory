@@ -15,6 +15,7 @@ type Worker = {
   activity: "standby" | "working" | "review" | "done" | "error";
   connectedToProject: boolean;
   liveActivity: boolean;
+  activityMessage?: string;
 };
 
 type OfficeData = {
@@ -45,7 +46,7 @@ export default function OfficeDashboard() {
       setOffice((current) => current ? {
         ...current,
         activityFeedConnected: true,
-        workers: current.workers.map((worker) => detail.workerIds.includes(worker.id) ? { ...worker, activity: detail.activity } : worker),
+        workers: current.workers.map((worker) => detail.workerIds.includes(worker.id) ? { ...worker, activity: detail.activity, activityMessage: detail.message, liveActivity: true } : worker),
         summary: { ...current.summary, active: current.workers.filter((worker) => detail.workerIds.includes(worker.id) ? detail.activity === "working" || detail.activity === "review" : worker.activity === "working" || worker.activity === "review").length },
       } : current);
       setActivityMessage(detail.message);
@@ -135,6 +136,7 @@ export default function OfficeDashboard() {
                     <span className="office-desk" />
                     <strong>{worker.name.split("—")[0].trim()}</strong>
                     <small>{worker.department}</small>
+                    <small className="office-worker-activity">{worker.activity === "working" ? "SEDANG BEKERJA" : worker.activity === "review" ? "MEMERIKSA" : worker.activity === "done" ? "SELESAI" : worker.activity === "error" ? "KENDALA" : "STANDBY"}</small>
                     <em className={worker.capability}>{capabilityLabel(worker.capability)}</em>
                   </button>
                 ))}
@@ -154,7 +156,7 @@ export default function OfficeDashboard() {
               <div className="office-detail-block"><small>TUGAS PROJECT</small><p>{selected.responsibility}</p></div>
               <div className="office-detail-block"><small>JALUR KERJA</small><code>{selected.taskRoute}</code></div>
               <div className="office-detail-block"><small>MESIN / RUNTIME</small><p>{selected.runtime}</p></div>
-              <div className="office-detail-status"><span className="office-status-dot" /><div><strong>{selected.activity === "working" ? "Sedang bekerja" : selected.activity === "review" ? "Memeriksa hasil" : selected.activity === "done" ? "Selesai" : selected.activity === "error" ? "Ada kendala" : "Standby"}</strong><small>{activityMessage}</small></div></div>
+              <div className="office-detail-status"><span className="office-status-dot" /><div><strong>{selected.activity === "working" ? "Sedang bekerja" : selected.activity === "review" ? "Memeriksa hasil" : selected.activity === "done" ? "Selesai" : selected.activity === "error" ? "Ada kendala" : "Standby"}</strong><small>{selected.activityMessage || activityMessage}</small></div></div>
             </> : <p className="office-muted">{loading ? "Memuat profil staff…" : "Pilih staff untuk melihat tugasnya."}</p>}
           </aside>
         </div>
