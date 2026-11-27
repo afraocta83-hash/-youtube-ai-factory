@@ -31,21 +31,30 @@ async function searchWeb(query: string): Promise<ResearchSource[]> {
   return results;
 }
 
+function youtubeErrorMessage(payload: any, status: number): string {
+  const reason = String(payload?.error?.errors?.[0]?.reason || "");
+  if (status === 400 || status === 401 || reason === "keyInvalid") return "YOUTUBE_API_KEY tidak valid. Periksa kembali key di Vercel.";
+  if (reason === "accessNotConfigured" || reason === "serviceDisabled") return "YouTube Data API v3 belum diaktifkan pada Google Cloud project pemilik API key.";
+  if (reason === "quotaExceeded" || reason === "dailyLimitExceeded") return "Kuota harian YouTube Data API habis. Kuota akan pulih sesuai reset harian Google.";
+  if (status === 403) return "Google menolak akses YouTube Data API. Periksa pembatasan API key dan pastikan YouTube Data API v3 diizinkan.";
+  return "YouTube Data API gagal (" + status + "). " + String(payload?.error?.message || "Periksa konfigurasi Google Cloud.");
+}
+
 async function youtubeTrends(topic: string): Promise<{ videos: TrendVideo[]; mode: string; note: string }> {
   const key = process.env.YOUTUBE_API_KEY?.trim();
-  if (!key) return { videos: [], mode: "web-discovery-only", note: "YOUTUBE_API_KEY belum dipasang. Tidak ada metrik video/views yang dikarang; hasil tren YouTube numerik akan aktif setelah API key gratis dikonfigurasi." };
+  if (!key) return { videos: [], mode: "web-discovery-only", note: "YOUTUBE_API_KEY belum dipasang di Vercel. Hasil riset belum memiliki metrik views YouTube." };
   const searchUrl = new URL("https://www.googleapis.com/youtube/v3/search");
-  searchUrl.search = new URLSearchParams({ part: "snippet", q: topic + " #shorts", type: "video", videoDuration: "short", order: "date", maxResults: "25", key }).toString();
+  searchUrl.search = new URLSearchParams({ part: "snippet", q: topic + " #shorts", type: "video", videoDuration: "short", order: "date", regionCode: "ID", relevanceLanguage: "id", maxResults: "50", key }).toString();
   const searchResponse = await fetch(searchUrl, { signal: timeout(12000), cache: "no-store" });
-  if (!searchResponse.ok) throw new Error("YouTube Data API search gagal: " + searchResponse.status);
   const searchData = await searchResponse.json();
+  if (!searchResponse.ok) throw new Error(youtubeErrorMessage(searchData, searchResponse.status));
   const ids = (searchData.items || []).map((x: any) => x.id?.videoId).filter(Boolean);
-  if (!ids.length) return { videos: [], mode: "youtube-data-api", note: "Belum ada video yang cocok untuk topik ini." };
+  if (!ids.length) return { videos: [], mode: "youtube-data-api", note: "API aktif, tetapi belum menemukan video Shorts yang cocok untuk topik ini." };
   const detailsUrl = new URL("https://www.googleapis.com/youtube/v3/videos");
   detailsUrl.search = new URLSearchParams({ part: "snippet,statistics,contentDetails", id: ids.join(","), key }).toString();
   const detailsResponse = await fetch(detailsUrl, { signal: timeout(12000), cache: "no-store" });
-  if (!detailsResponse.ok) throw new Error("YouTube Data API videos gagal: " + detailsResponse.status);
   const details = await detailsResponse.json();
+  if (!detailsResponse.ok) throw new Error(youtubeErrorMessage(details, detailsResponse.status));
   const now = Date.now();
   const videos: TrendVideo[] = (details.items || []).map((v: any) => {
     const published = Date.parse(v.snippet?.publishedAt || "");
@@ -59,7 +68,7 @@ async function youtubeTrends(topic: string): Promise<{ videos: TrendVideo[]; mod
   const maxVelocity = Math.max(1, ...videos.map(v => v.viewsPerDay));
   videos.forEach(v => { v.score = Math.round(100 * v.viewsPerDay / maxVelocity); });
   videos.sort((a, b) => b.viewsPerDay - a.viewsPerDay);
-  return { videos: videos.slice(0, 15), mode: "youtube-data-api", note: "Metrik berasal dari YouTube Data API; views/day adalah estimasi sederhana dari total views dibagi umur video, bukan laju real-time." };
+  return { videos: videos.slice(0, 20), mode: "youtube-data-api-v3", note: "Data diambil dari YouTube Data API v3 untuk wilayah Indonesia. Views/hari adalah estimasi total views dibagi umur video (minimal 1 hari), bukan pertumbuhan real-time. Hasil dibatasi video berdurasi maksimal 60 detik." };
 }
 
 async function assessClaimsWithGroq(checks: ClaimCheck[]): Promise<ClaimCheck[]> {
@@ -98,9 +107,9 @@ export async function buildResearchReport(topic: string, claims: string[]): Prom
   for (const claim of claims.slice(0, 5)) {
     const sources = await searchWeb(claim).catch(() => [] as ResearchSource[]);
     const domains = new Set(sources.map(s => s.domain));
-    verification.push({ claim, status: domains.size >= 2 ? "insufficient" : "insufficient", sources: sources.slice(0, 5), note: domains.size >= 2 ? "Ditemukan beberapa domain; isi sumber belum dibaca penuh. Perlu pemeriksaan manusia sebelum klaim dianggap benar." : "Bukti independen belum cukup. Jangan perlakukan klaim sebagai fakta terverifikasi." });
+    verification.push({ claim, status: "insufficient", sources: sources.slice(0, 5), note: domains.size >= 2 ? "Ditemukan beberapa domain; isi sumber belum dibaca penuh. Perlu pemeriksaan manusia sebelum klaim dianggap benar." : "Bukti independen belum cukup. Jangan perlakukan klaim sebagai fakta terverifikasi." });
   }
   const assessedVerification = await assessClaimsWithGroq(verification);
   const opportunities = (trend.videos.length ? trend.videos.slice(0, 8).map(v => ({ title: v.title, score: v.score, rationale: ["Views/day: " + v.viewsPerDay.toLocaleString("id-ID"), "Channel: " + v.channel, "Durasi: " + v.durationSeconds + " detik"], evidenceCount: 1 })) : topicSources.slice(0, 8).map((s, i) => ({ title: s.title, score: Math.max(20, 65 - i * 5), rationale: ["Sinyal topik dari pencarian publik", "Belum tersedia metrik views/engagement YouTube"], evidenceCount: 1 })));
-  return { topic, generatedAt: new Date().toISOString(), trend, verification: assessedVerification, opportunities, limitations: ["Skor peluang adalah heuristik untuk membantu riset, bukan prediksi viral atau jaminan views.", "Tanpa YOUTUBE_API_KEY, laporan tidak menampilkan metrik views YouTube.", "Pemeriksaan klaim mengumpulkan kandidat sumber; belum membaca dan membandingkan isi penuh sehingga status tetap perlu review manusia.", "Riset tidak mengubah cerita final owner dan tidak memasukkan fakta baru ke storyboard secara otomatis."] };
+  return { topic, generatedAt: new Date().toISOString(), trend, verification: assessedVerification, opportunities, limitations: ["Skor peluang adalah heuristik untuk membantu riset, bukan prediksi viral atau jaminan views.", "Views/hari dihitung dari total views dibagi umur video; bukan data pertumbuhan real-time.", "Pemeriksaan klaim mengumpulkan kandidat sumber dan cuplikan; isi sumber belum dibaca penuh sehingga status perlu review manusia.", "Riset tidak mengubah cerita final dan tidak memasukkan fakta baru ke storyboard secara otomatis."] };
 }
