@@ -28,7 +28,16 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install FFmpeg for media smoke test
-        run: sudo apt-get update && sudo apt-get install -y ffmpeg
+        run: |
+          # The hosted Ubuntu image may ship a Microsoft apt source that returns 403.
+          # FFmpeg comes from Ubuntu; remove only that unreachable source before updating apt.
+          for source in /etc/apt/sources.list.d/*; do
+            if [ -f "$source" ] && grep -q "packages.microsoft.com" "$source"; then
+              sudo rm -f "$source"
+            fi
+          done
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg
       - uses: actions/setup-node@v4
         with:
           node-version: 22
