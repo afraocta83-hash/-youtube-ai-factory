@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   if (last && now - last < 15 * 1000) return NextResponse.json({error:"Tunggu 15 detik sebelum membuat cerita berikutnya."},{status:429});
   const apiKeys = [...new Set([process.env.GROQ_API_KEY,process.env.GROQ_API_KEY2,process.env.GROQ_API_KEY3].map(k=>k?.trim()).filter((k):k is string=>Boolean(k)))];
   const langflowConfigured = Boolean(process.env.LANGFLOW_BASE_URL && process.env.LANGFLOW_FLOW_ID);
-  if (!apiKeys.length && !langflowConfigured) return NextResponse.json({ error: "Pasang GROQ_API_KEY atau konfigurasi LANGFLOW_BASE_URL dan LANGFLOW_FLOW_ID." }, { status: 503 });
+  if (!apiKeys.length && !langflowConfigured) return NextResponse.json({ error: "Mesin produksi cerita belum dikonfigurasi." }, { status: 503 });
 
   try {
     const body = await request.json();
@@ -79,7 +79,7 @@ export async function POST(request: Request) {
         if(response.ok||![401,403].includes(response.status)||i===apiKeys.length-1) break;
       }
       if(!response) return NextResponse.json({error:"Tidak ada provider AI yang dapat digunakan."},{status:503});
-      if(!response.ok) return NextResponse.json({error:response.status===429?"Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi.":`Groq gagal membuat cerita: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
+      if(!response.ok) return NextResponse.json({error:response.status===429?"Kuota gratis Groq sedang mencapai batas. Tunggu reset kuota lalu coba lagi.":`Mesin produksi cerita gagal: ${data?.error?.message||response.status}`},{status:response.status===429?429:502});
       const choice=data?.choices?.[0];
       if(choice?.finish_reason==="length") return NextResponse.json({error:"Batas token tercapai. Coba ide yang lebih sederhana."},{status:502});
       raw=choice?.message?.content;
