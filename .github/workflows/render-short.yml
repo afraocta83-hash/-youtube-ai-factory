@@ -7,6 +7,9 @@ on:
       - experiment/openmontage-video-engine
     paths:
       - 'app/**'
+      - 'lib/**'
+      - 'package.json'
+      - 'tsconfig.json'
       - 'src/remotion/**'
       - '.github/workflows/render-short.yml'
       - 'fixtures/e2e-test-story.json'
