@@ -282,7 +282,8 @@ jobs:
             status:'PASS',
             pipeline:'owner-approved-package -> Cloudflare FLUX.1 Schnell (when configured) -> Edge TTS/Piper -> Remotion -> FFmpeg -> MP4 QC',
             generatedAt:new Date().toISOString(),
-            story:{title:p.workingTitle,characters:p.ownerStory.length,scenes:p.scenes.length},\n            visualGeneration:p.visualGeneration||{provider:'vector-fallback',generated:0,requested:p.scenes.length},
+            story:{title:p.workingTitle,characters:p.ownerStory.length,scenes:p.scenes.length},
+            visualGeneration:p.visualGeneration||{provider:'vector-fallback',generated:0,requested:p.scenes.length},
             output:{file:'lerry-animasi-short.mp4',bytes:fs.statSync('out/lerry-animasi-short.mp4').size,durationSeconds:Number(meta.format.duration),width:video.width,height:video.height,fps:(()=>{const [n,d]=video.r_frame_rate.split('/').map(Number);return n/d;})(),videoCodec:video.codec_name,pixelFormat:video.pix_fmt,audioCodec:audio.codec_name},
             checks:{
               ownerStoryPreserved:p.script===p.ownerStory,
