@@ -191,7 +191,7 @@ jobs:
                 if(payload.success===false||payload.errors?.length) throw new Error('Cloudflare model error: '+JSON.stringify(payload.errors||payload).slice(0,700));
                 let encoded=payload.result?.image||payload.result;
                 if(typeof encoded!=='string'||!encoded.length) throw new Error('Cloudflare response did not contain a base64 image.');
-                encoded=encoded.replace(/^data:image\\/[^;]+;base64,/,'');
+                if(encoded.startsWith('data:')) encoded=encoded.slice(encoded.indexOf(',')+1);
                 bytes=Buffer.from(encoded,'base64');
               }
               if(bytes.length<5000) throw new Error('Generated scene image is unexpectedly small ('+bytes.length+' bytes).');
