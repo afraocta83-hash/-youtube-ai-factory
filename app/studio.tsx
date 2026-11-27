@@ -80,7 +80,7 @@ export default function Studio(){
    const saved:SavedProduction={id:crypto.randomUUID(),title:production.workingTitle||"Lerry Short",createdAt:new Date().toISOString(),production};
    const next=[saved,...history].slice(0,10);
    setHistory(next);localStorage.setItem(HISTORY_KEY,JSON.stringify(next));
-   setRenderMessage("Draft cerita dan storyboard siap diperiksa. Belum ada render atau upload yang dijalankan.");
+   setRenderMessage("Cerita dan storyboard siap diperiksa. Setujui untuk mulai render video MP4.");
   }catch(e){setError(e instanceof Error?e.message:"Terjadi kesalahan.");}
   finally{setBusy(false);}
  }
@@ -103,7 +103,7 @@ export default function Studio(){
  function clearHistory(){setHistory([]);localStorage.removeItem(HISTORY_KEY);}
 
  return <section className="card studio">
-  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan cerita final. AI hanya membagi cerita menjadi storyboard, arahan visual, durasi, dan metadata tanpa mengubah alur atau narasi. Render berjalan setelah lo menyetujui. Upload YouTube dilakukan manual oleh owner setelah memeriksa MP4.</p></div></div>
+  <div className="studioHead"><div><span className="status">TIM PRODUKSI AI • GROQ + REMOTION</span><h2 style={{marginTop:12}}>Mesin produksi Lerry</h2><p>Masukkan satu ide. AI menulis cerita, narasi, dialog, storyboard, dan metadata. Setelah lo periksa dan setujui, mesin merender video MP4.</p></div></div>
   <div className="studioActions"><span className="muted">Riwayat tersimpan di perangkat ini</span></div>
   <section className="agentTeam">
    <div className="studioActions"><h3>Tim Agent Lerry</h3><span className="muted">{agentSummary?agentSummary.ready+"/"+agentSummary.total+" siap":"Memeriksa agent..."}</span></div>
@@ -116,15 +116,15 @@ export default function Studio(){
    </div>
   </section>
   <ResearchDesk />
-  <label htmlFor="storyPrompt">Cerita final dari owner</label>
-  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={3000} placeholder="Tempel cerita final 80–3000 karakter. AI hanya membagi cerita menjadi adegan dan membuat arahan visual; alur dan kalimat narasi tidak boleh diubah." rows={3}/>
-  <div className="studioActions"><span className="muted">{prompt.length}/3000 karakter • minimal 80 karakter</span><button onClick={generate} disabled={busy||renderBusy||prompt.trim().length<80}>{busy?"AI sedang menyusun storyboard...":"Buat storyboard →"}</button></div>
-  {busy&&<p className="muted">AI sedang membagi cerita owner menjadi 4-6 adegan, arahan visual, dan metadata. Cerita asli harus tetap utuh; belum ada video yang dirender.</p>}
+  <label htmlFor="storyPrompt">Ide video lo</label>
+  <textarea id="storyPrompt" value={prompt} onChange={e=>setPrompt(e.target.value)} maxLength={3000} placeholder="Contoh: Sejarah motor pertama di dunia, dari penemuan sampai digunakan manusia." rows={3}/>
+  <div className="studioActions"><span className="muted">{prompt.length}/500 karakter • cukup satu ide singkat</span><button onClick={generate} disabled={busy||renderBusy||prompt.trim().length<5}>{busy?"AI sedang membuat cerita & storyboard...":"Buat cerita + storyboard →"}</button></div>
+  {busy&&<p className="muted">AI sedang menulis cerita orisinal, narasi, dialog, 4-6 adegan, arahan visual, dan metadata.</p>}
   {result&&<div className="productionResult">
     <div className="studioActions"><h2>{result.workingTitle}</h2><button className="secondary" onClick={copy}>Salin paket JSON</button></div>
     {usage&&<p className="muted">Pemakaian LLM: {usage.prompt_tokens??"—"} input • {usage.completion_tokens??"—"} output • {usage.total_tokens??"—"} total token</p>}
     <p><strong>Hook:</strong> {result.hook}</p><p>{result.synopsis}</p>
-    <h3>Cerita final</h3><pre>{result.idea}</pre><h3>Cerita final owner (dikunci)</h3><pre>{result.story||result.ownerStory}</pre>
+    <h3>Ide owner</h3><pre>{result.idea}</pre><h3>Cerita final buatan AI</h3><pre>{result.story||result.ownerStory}</pre>
     <h3>Storyboard ({result.scenes.length} adegan • ±{result.durationSeconds} detik)</h3>
     {result.scenes.map(s=><article className="scene" key={s.number}><strong>Adegan {s.number} • {s.seconds} detik</strong><p>{s.visual}</p><p><strong>Aksi:</strong> {s.action||"idle"}</p><p><strong>Narasi:</strong> {s.narration}</p><p><strong>Dialog:</strong> {s.dialogue}</p><p><strong>Subtitle:</strong> {s.subtitle}</p><p><strong>Arahan visual:</strong> {s.imagePrompt}</p><p><strong>Suara:</strong> {s.sound}</p></article>)}
     <h3>Metadata YouTube</h3><p><strong>{result.title}</strong></p><p>{result.description}</p><p>{result.hashtags.join(" ")}</p>
@@ -132,7 +132,7 @@ export default function Studio(){
     <h3>Klaim yang perlu diverifikasi</h3><ul>{result.factCheckNotes.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <h3>Saran kata kunci pencarian sumber (belum diverifikasi)</h3><ul>{result.sourceQueries.map((x,i)=><li key={i}>{x}</li>)}</ul>
     <h3>Checklist QC</h3><ul>{result.qcChecklist.map((x,i)=><li key={i}>{x}</li>)}</ul>
-    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Memeriksa QC & mengirim render...":"Saya setujui — mulai render MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
+    <div className="studioActions"><button onClick={render} disabled={renderBusy}>{renderBusy?"Memeriksa QC & mengirim render...":"Render Video MP4 →"}</button><a href="https://github.com/afraocta83-hash/-youtube-ai-factory/actions/workflows/render-short.yml" target="_blank" rel="noreferrer">Buka status GitHub Actions ↗</a></div>
     {renderMessage&&<p className="muted" role="status">{renderMessage}</p>}
     {artifactUrl&&<p><a href={artifactUrl} target="_blank" rel="noreferrer">Unduh paket MP4 + thumbnail + metadata ↗</a></p>}
     <section className="youtubePublishing"><h3>Upload manual ke YouTube</h3><p className="muted">Setelah paket diunduh, ekstrak ZIP, pilih file MP4, lalu unggah sendiri melalui YouTube Studio. Lerry tidak meminta akses akun Google dan tidak mengunggah video otomatis.</p><p><a href="https://studio.youtube.com/" target="_blank" rel="noreferrer">Buka YouTube Studio untuk upload ↗</a></p><p className="muted">Gunakan thumbnail.jpg dan salin judul, deskripsi, serta tag dari youtube-metadata.json. Periksa video sebelum mengatur visibilitas dan menerbitkannya.</p></section>
