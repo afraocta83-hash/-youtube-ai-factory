@@ -47,10 +47,11 @@ def authorize(value: Optional[str], expected: str):
 
 
 def public_job(row):
+    artifacts = json.loads(row["result_json"]).get("clips", []) if row["result_json"] else []
+    clips = [{key: (f"{PUBLIC_URL}{value}" if PUBLIC_URL and isinstance(value, str) and value.startswith("/") else value) for key, value in item.items()} for item in artifacts if isinstance(item, dict)]
     return {
         "id": row["id"], "status": row["status"], "progress": row["progress"],
-        "message": row["message"], "error": row["error"],
-        "clips": [f"{PUBLIC_URL}{item}" if PUBLIC_URL else item for item in json.loads(row["result_json"]).get("clips", [])] if row["result_json"] else []
+        "message": row["message"], "error": row["error"], "clips": clips
     }
 
 
