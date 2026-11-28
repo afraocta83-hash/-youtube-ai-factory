@@ -1,53 +1,60 @@
-# LERRY ANIMASI — YouTube Shorts Production Studio
+# LERRY CLIPPER — YouTube Shorts Studio
 
-Lerry menyiapkan paket produksi Shorts dari cerita final yang diberikan owner. AI hanya membagi cerita menjadi 4–6 adegan, memberi arahan visual, durasi, subtitle kutipan, dan metadata. AI tidak boleh menulis ulang atau mengubah alur cerita owner.
+Lerry has pivoted from story-first animation production to a link-to-clips workflow. The owner pastes a source video URL, confirms the right to use it, and submits one job. Lerry is designed to identify useful moments, create vertical Shorts, enhance captions and picture quality, run QC, and wait for owner review before publication.
 
-## Alur produksi
+## Owner workflow
 
-1. Owner menempelkan cerita final (80–3.000 karakter).
-2. Groq menyusun storyboard dan metadata; owner memeriksa hasilnya.
-3. Owner menyetujui render secara terpisah.
-4. GitHub Actions menjalankan Edge TTS (Piper fallback), Remotion, dan FFmpeg.
-5. QC memeriksa MP4 H.264, 1080×1920, 30 fps, audio AAC, durasi, decode, thumbnail, frame adegan, dan metadata.
-6. Owner mengunduh ZIP, menonton MP4, lalu upload sendiri melalui YouTube Studio.
+1. Open the studio and paste a YouTube HTTPS link.
+2. Confirm that you own the video or have permission to download, edit, and publish it.
+3. Submit once; the Master queue records the job.
+4. The Worker analyzes the source, selects candidate moments, and renders vertical clips.
+5. Review MP4s, thumbnails, metadata, and QC results.
+6. Publish only after a separate owner approval. Lerry does not auto-publish.
 
-## Mode publikasi: manual
+Target output: 9:16 vertical, 1080p when the source supports it, 15–60 seconds per clip, H.264 MP4, readable dynamic subtitles, natural visual correction, thumbnail, metadata, and QC report.
 
-Lerry tidak meminta izin akun Google, tidak menggunakan YouTube OAuth, dan tidak mengunggah video ke channel. Tidak diperlukan YouTube Client ID, Client Secret, callback URL, token enkripsi, atau YouTube API untuk mode ini. Login Google/MFA tetap dikelola langsung oleh Google.
+## Two-VPS architecture
 
-Upload manual: buka https://studio.youtube.com/, pilih Create → Upload videos, lalu unggah `lerry-animasi-short.mp4`. Gunakan `thumbnail.jpg` dan `youtube-metadata.json` dari paket. Owner menentukan visibilitas dan waktu publikasi.
+- **VPS 1 — Master:** FastAPI, persistent SQLite queue, job status, metadata, and worker coordination.
+- **VPS 2 — Worker:** authorized source acquisition, transcription/highlight selection, FFmpeg crop/reframe, subtitle rendering, visual/audio enhancement, thumbnail generation, and QC.
+- VPS resources are not pooled. The two machines communicate through authenticated HTTPS APIs. Keep render concurrency low on 2 GB RAM machines.
 
-## Konfigurasi runtime
+## Current implementation status
 
-- `GROQ_API_KEY`: wajib untuk membuat storyboard; `GROQ_API_KEY2` dan `GROQ_API_KEY3` opsional.
-- `GROQ_MODEL`: `openai/gpt-oss-120b`.
-- `GITHUB_ACTIONS_TOKEN`: token server-side dengan akses Actions read/write untuk menjalankan render pada branch kerja.
-- `YOUTUBE_API_KEY`: opsional; Google YouTube Data API v3 menyediakan kuota gratis untuk pencarian Shorts dan statistik video. Tanpa key, analis tren memakai penemuan topik web tanpa mengarang views.
-- Tidak memakai Supabase atau database cloud. Riwayat storyboard disimpan lokal pada browser perangkat.
-- Tidak diperlukan Agnes API key, layanan video berbayar, GPU, atau YouTube OAuth.
+Implemented on `experiment/openmontage-video-engine`:
+- Mobile-first Clipper intake page is the default home route.
+- Server-side Next.js proxy at `/api/clipper/jobs`; Master credentials are not exposed to browser JavaScript.
+- YouTube HTTPS URL validation and explicit rights confirmation.
+- FastAPI + SQLite Master queue with owner job creation/status endpoints and separate worker claim/update credentials.
+- CI now includes Python syntax validation for the Master service.
 
-## Output paket
+Not yet implemented or verified:
+- VPS deployment and HTTPS connection.
+- Worker media-processing pipeline (transcription, highlight ranking, FFmpeg clips, subtitles, enhancement, thumbnails, QC).
+- Real-source end-to-end test and final downloadable MP4 artifacts.
+- YouTube publishing remains out of scope until owner review and separate approval.
 
-- `lerry-animasi-short.mp4`
-- `thumbnail.jpg`
-- `youtube-metadata.json`
-- `mp4-metadata.json`
-- `production-qc.json`
-- Frame representatif dan contact sheet untuk inspeksi.
+## Runtime configuration
 
-## Batasan yang harus diketahui
+Next.js host secrets:
+- `CLIPPER_MASTER_URL`: HTTPS base URL of VPS 1 Master.
+- `CLIPPER_API_TOKEN`: long random server-side token shared with Master.
 
-- Latar adegan dapat dibuat per scene dengan Cloudflare Workers AI FLUX.1 Schnell jika secrets tersedia; karakter Lerry tetap memakai rig vektor yang terkunci. Tanpa konfigurasi Cloudflare, renderer memakai latar vektor.
-- Audio saat ini berisi narasi TTS; musik dan efek suara terpisah belum dirender.
-- Fakta eksternal belum diverifikasi otomatis.
-- CI fixture membuktikan jalur paket storyboard → MP4; jalur Studio live tetap memerlukan pengujian pada Preview dengan kredensial runtime yang valid.
-- Jangan menyebut mesin sepenuhnya siap produksi sebelum cerita owner berhasil melewati Studio live, render, unduh, dan inspeksi visual.
+VPS 1 Master environment:
+- `CLIPPER_API_TOKEN`: same owner-to-Master token.
+- `CLIPPER_WORKER_TOKEN`: a different long random token used only by VPS 2 Worker.
+- `CLIPPER_DB_PATH`: persistent SQLite path, e.g. `./data/clipper.sqlite3`.
 
-## Branch kerja
+Master setup: [services/master/README.md](services/master/README.md).
+Architecture and acceptance gates: [docs/LERRY_CLIPPER_ARCHITECTURE.md](docs/LERRY_CLIPPER_ARCHITECTURE.md).
 
-`experiment/openmontage-video-engine`. Branch `main` dan deployment produksi tidak diubah.
+## Cost and rights policy
 
+- Free-first only. No paid API, paid hosting, billing activation, or paid credits are added by this branch.
+- Only process media the owner owns or is authorized to use. A public URL is not proof of reuse rights; respect platform terms and access controls.
+- No automatic upload. Every final MP4 must be reviewed by the owner.
+- Do not claim a job is completed until real media output and QC evidence exist.
 
-## Cloudflare AI scene backgrounds
+## Branch safety
 
-The render workflow can generate one background image per storyboard scene with Cloudflare Workers AI `@cf/black-forest-labs/flux-1-schnell`. Add these GitHub Actions repository secrets on the render branch: `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN`. Create the token with Account > Workers AI > Read permission. The workflow generates background plates only; the locked Lerry mascot remains the existing Remotion vector rig composited above each background. If the secrets are absent, the renderer uses its existing vector backgrounds and does not call a paid image provider. Workers AI Free currently includes 10,000 Neurons/day; requests beyond the free allocation fail on Workers Free rather than automatically upgrading. Review Cloudflare's current pricing and model terms before use.
+All current Clipper work is isolated to `experiment/openmontage-video-engine`. Do not merge to `main`, deploy Production, or publish to YouTube without separate owner approval.
