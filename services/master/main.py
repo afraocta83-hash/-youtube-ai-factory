@@ -1,5 +1,6 @@
 import json
 import os
+import re
 import shutil
 import sqlite3
 import uuid
@@ -8,7 +9,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException, UploadFile, File
-from fastapi.staticfiles import StaticFiles
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, HttpUrl
 
 DB_PATH = Path(os.getenv("CLIPPER_DB_PATH", "./data/clipper.sqlite3"))
@@ -16,7 +17,6 @@ ARTIFACT_DIR = Path(os.getenv("CLIPPER_ARTIFACT_DIR", "./artifacts"))
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 MASTER_TOKEN = os.getenv("CLIPPER_API_TOKEN", "")
 WORKER_TOKEN = os.getenv("CLIPPER_WORKER_TOKEN", "")
-PUBLIC_URL = os.getenv("CLIPPER_PUBLIC_URL", "").rstrip("/")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Lerry Clipper Master", version="0.1.0")
@@ -48,7 +48,7 @@ def authorize(value: Optional[str], expected: str):
 
 def public_job(row):
     artifacts = json.loads(row["result_json"]).get("clips", []) if row["result_json"] else []
-    clips = [{key: (f"{PUBLIC_URL}{value}" if PUBLIC_URL and isinstance(value, str) and value.startswith("/") else value) for key, value in item.items()} for item in artifacts if isinstance(item, dict)]
+    clips = [{key: value for key, value in item.items()} for item in artifacts if isinstance(item, dict)]
     return {
         "id": row["id"], "status": row["status"], "progress": row["progress"],
         "message": row["message"], "error": row["error"], "clips": clips
@@ -193,4 +193,14 @@ async def upload_artifact(
     return {"ok": True, "name": safe_name, "size": size, "url": f"/artifacts/{job_id}/{safe_name}"}
 
 
-app.mount("/artifacts", StaticFiles(directory=str(ARTIFACT_DIR)), name="artifacts")
+@app.get("/artifacts/{job_id}/{filename}")
+def get_artifact(job_id: str, filename: str, authorization: Optional[str] = Header(default=None)):
+    authorize(authorization, MASTER_TOKEN)
+    if not re.fullmatch(r"[a-f0-9-]{36}", job_id, re.IGNORECASE):
+        raise HTTPException(status_code=400, detail="Invalid job ID")
+    if not re.fullmatch(r"[A-Za-z0-9._-]{1,180}", filename):
+        raise HTTPException(status_code=400, detail="Invalid artifact filename")
+    target = ARTIFACT_DIR / job_id / filename
+    if not target.is_file():
+        raise HTTPException(status_code=404, detail="Artifact not found")
+    return FileResponse(target, filename=filename)
