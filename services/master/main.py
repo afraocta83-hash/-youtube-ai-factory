@@ -8,6 +8,7 @@ from pathlib import Path
 from typing import Optional
 
 from fastapi import FastAPI, Header, HTTPException, UploadFile, File
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, HttpUrl
 
 DB_PATH = Path(os.getenv("CLIPPER_DB_PATH", "./data/clipper.sqlite3"))
@@ -15,6 +16,7 @@ ARTIFACT_DIR = Path(os.getenv("CLIPPER_ARTIFACT_DIR", "./artifacts"))
 ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 MASTER_TOKEN = os.getenv("CLIPPER_API_TOKEN", "")
 WORKER_TOKEN = os.getenv("CLIPPER_WORKER_TOKEN", "")
+PUBLIC_URL = os.getenv("CLIPPER_PUBLIC_URL", "").rstrip("/")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
 
 app = FastAPI(title="Lerry Clipper Master", version="0.1.0")
@@ -48,7 +50,7 @@ def public_job(row):
     return {
         "id": row["id"], "status": row["status"], "progress": row["progress"],
         "message": row["message"], "error": row["error"],
-        "clips": json.loads(row["result_json"]).get("clips", []) if row["result_json"] else []
+        "clips": [f"{PUBLIC_URL}{item}" if PUBLIC_URL else item for item in json.loads(row["result_json"]).get("clips", [])] if row["result_json"] else []
     }
 
 
@@ -188,3 +190,6 @@ async def upload_artifact(
     finally:
         await file.close()
     return {"ok": True, "name": safe_name, "size": size, "url": f"/artifacts/{job_id}/{safe_name}"}
+
+
+app.mount("/artifacts", StaticFiles(directory=str(ARTIFACT_DIR)), name="artifacts")
