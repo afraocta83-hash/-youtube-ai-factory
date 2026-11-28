@@ -10,6 +10,7 @@ on:
       - "lib/**"
       - "src/remotion/**"
       - "scripts/**"
+      - "services/**"
       - "promptfooconfig.yaml"
       - "package.json"
       - "package-lock.json"
@@ -43,6 +44,8 @@ jobs:
           node-version: 22
       - name: Install dependencies
         run: npm install
+      - name: Python service syntax check
+        run: python -m compileall -q services/master
       - name: TypeScript
         run: npm run typecheck
       - name: Next.js production build
