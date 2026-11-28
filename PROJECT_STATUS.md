@@ -431,3 +431,12 @@ Implement the Worker on VPS 2 with a low-memory, low-concurrency pipeline: permi
 - Added Dockerfiles for Master and Worker plus a persistent Master Docker Compose template.
 - Added Worker Python syntax validation to CI.
 - Limitations: highlight ranking is heuristic (not semantic), framing is center-crop (not face-aware), subtitles are sentence-level (not karaoke), and no real source render or VPS deployment has yet been verified. Public artifact URLs currently need access-control hardening before private media is used in production.
+
+
+## QC and artifact-access update — 2026-11-28
+
+- Worker now runs FFprobe checks for H.264 video, 1080×1920 output, AAC audio, 15–60 second duration, non-empty file, and a full FFmpeg decode pass before delivery.
+- Worker writes and uploads `qc-report.json` plus clip metadata.
+- Master artifact retrieval now requires the Master API credential; the Next.js server streams files through a server-side proxy rather than exposing the Master credential to the browser.
+- The dashboard shows each clip's thumbnail, MP4 link, and subtitle file link.
+- These checks are code-level implementation only. They have not yet been proven against a real source video or deployed VPS pair.
