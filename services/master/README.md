@@ -23,3 +23,21 @@ Place the service behind HTTPS before exposing it publicly. Configure the same `
 - `POST /worker/jobs/{id}/status` — Worker updates progress and result state.
 
 The queue is persistent, but it does not itself download or edit media. The Worker pipeline (authorized source acquisition, transcription, highlight ranking, FFmpeg render and QC) is the next implementation milestone. Do not report a job as completed until real MP4 artifacts and QC evidence exist.
+
+
+## Docker deployment on VPS 1
+
+Copy `services/docker-compose.master.yml` to the parent `services` folder on VPS 1, and create a local `.env` file (never commit it):
+```env
+CLIPPER_API_TOKEN=generate-a-long-random-secret
+CLIPPER_WORKER_TOKEN=generate-a-different-long-random-secret
+CLIPPER_PUBLIC_URL=https://your-master-domain.example
+```
+
+Build from the repository root:
+```bash
+docker compose -f services/docker-compose.master.yml --env-file services/.env up -d --build
+docker compose -f services/docker-compose.master.yml logs -f
+```
+
+Put a TLS reverse proxy in front of localhost port 8000 before connecting the public dashboard. Keep the SQLite and artifact volume persistent and backed up. Never expose the worker credential to the browser. The example binds port 8000 to localhost only; it is not a complete HTTPS setup.
