@@ -45,7 +45,7 @@ jobs:
       - name: Install dependencies
         run: npm install
       - name: Python service syntax check
-        run: python -m compileall -q services/master
+        run: python -m compileall -q services/master services/worker
       - name: TypeScript
         run: npm run typecheck
       - name: Next.js production build
