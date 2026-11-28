@@ -2,7 +2,7 @@
 
 import { FormEvent, CSSProperties, useEffect, useState } from "react";
 
-type Job = { id: string; status: string; progress?: number; message?: string; clips?: string[]; error?: string };
+type Job = { id: string; status: string; progress?: number; message?: string; clips?: {video:string;thumbnail:string;subtitles:string}[]; error?: string };
 
 const panel: CSSProperties = { background:"#fff", border:"1px solid #e4e9f2", borderRadius:18, padding:20, boxShadow:"0 8px 28px #2636530b" };
 const button: React.CSSProperties = { border:0, borderRadius:11, padding:"13px 18px", background:"#35486e", color:"#fff", fontWeight:800, cursor:"pointer" };
@@ -68,7 +68,7 @@ export default function ClipperPage() {
       <p style={{color:"#71809a",lineHeight:1.6}}>{job.message || "Menunggu pembaruan dari mesin produksi."}</p>
       <div style={{height:8,background:"#edf1f7",borderRadius:20,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,job.progress||0))}%`,background:"#6b8acb",transition:"width .3s"}} /></div>
       {job.error && <p style={{color:"#a33"}}>{job.error}</p>}
-      {job.clips?.map((clip,i)=><p key={clip}><a href={clip} target="_blank" rel="noreferrer">Buka hasil klip {i+1}</a></p>)}
+      {job.clips?.map((clip,i)=><article key={clip.video} style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0",borderTop:"1px solid #edf0f5"}}>{clip.thumbnail && <img src={clip.thumbnail} alt={`Thumbnail klip ${i+1}`} style={{width:76,aspectRatio:"9/16",objectFit:"cover",borderRadius:9,background:"#edf1f7"}} />}<div><strong>Klip {i+1}</strong><p style={{margin:"6px 0"}}><a href={clip.video} target="_blank" rel="noreferrer">Tonton / unduh MP4</a></p>{clip.subtitles && <a href={clip.subtitles} target="_blank" rel="noreferrer" style={{fontSize:12}}>Unduh subtitle</a>}</div></article>)}
       {job.status==="completed" && <p style={{fontWeight:800,color:"#28734b"}}>Hasil siap diperiksa. Upload tetap menunggu persetujuan owner.</p>}
     </section>}
     <section style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginTop:18}}>
