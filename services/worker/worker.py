@@ -148,6 +148,29 @@ def render_clip(source: Path, rows: list[dict], start: float, end: float, index:
     return output, thumb
 
 
+def qc_clip(path: Path) -> dict:
+    probe = json.loads(run([
+        "ffprobe", "-v", "error", "-show_entries",
+        "stream=codec_type,codec_name,width,height", "-show_entries",
+        "format=duration", "-of", "json", str(path)
+    ]))
+    video = next((stream for stream in probe.get("streams", []) if stream.get("codec_type") == "video"), None)
+    audio = next((stream for stream in probe.get("streams", []) if stream.get("codec_type") == "audio"), None)
+    duration = float(probe.get("format", {}).get("duration", 0))
+    checks = {
+        "video_h264": bool(video and video.get("codec_name") == "h264"),
+        "vertical_1080x1920": bool(video and video.get("width") == 1080 and video.get("height") == 1920),
+        "audio_aac": bool(audio and audio.get("codec_name") == "aac"),
+        "duration_15_to_60_seconds": 15 <= duration <= 60,
+        "file_nonempty": path.is_file() and path.stat().st_size > 10000,
+    }
+    run(["ffmpeg", "-v", "error", "-i", str(path), "-f", "null", "-"], timeout=600)
+    checks["decode_integrity"] = True
+    if not all(checks.values()):
+        raise RuntimeError(f"QC gagal untuk {path.name}: {checks}")
+    return {"file": path.name, "duration_seconds": round(duration, 2), "checks": checks, "passed": True}
+
+
 def process(job: dict):
     job_id, url = job["id"], job["source_url"]
     folder = OUTPUT_DIR / job_id
@@ -167,10 +190,12 @@ def process(job: dict):
         if not candidates:
             raise RuntimeError("Belum ada kandidat klip yang memenuhi ambang kualitas.")
         urls = []
-        metadata = {"source": url, "language": language, "clips": []}
+        metadata = {"source": url, "language": language, "clips": [], "qc": []}
         for index, (start, end, rows) in enumerate(candidates, 1):
             update(job_id, "processing", min(85, 25 + index * 12), f"Merender klip {index} dari {len(candidates)}.")
             video, thumb = render_clip(source, rows, start, end, index, folder)
+            qc = qc_clip(video)
+            metadata["qc"].append(qc)
             video_url = upload(job_id, video)
             thumb_url = upload(job_id, thumb)
             srt_url = upload(job_id, folder / f"clip-{index:02}.srt")
@@ -182,7 +207,10 @@ def process(job: dict):
         metadata_path = folder / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
         upload(job_id, metadata_path)
-        update(job_id, "completed", 100, f"Selesai: {len(urls)} klip lolos pemeriksaan dasar. Tinjau sebelum publikasi.", clips=urls)
+        qc_path = folder / "qc-report.json"
+        qc_path.write_text(json.dumps({"passed": all(item["passed"] for item in metadata["qc"]), "clips": metadata["qc"]}, ensure_ascii=False, indent=2), encoding="utf-8")
+        upload(job_id, qc_path)
+        update(job_id, "completed", 100, f"Selesai: {len(urls)} klip lolos QC teknis. Tinjau sebelum publikasi.", clips=urls)
     except Exception as exc:
         update(job_id, "failed", 0, "Produksi gagal. Periksa pesan error sebelum mencoba ulang.", error=str(exc)[:1200])
         raise
