@@ -174,7 +174,7 @@ def process(job: dict):
             video_url = upload(job_id, video)
             thumb_url = upload(job_id, thumb)
             srt_url = upload(job_id, folder / f"clip-{index:02}.srt")
-            urls.append(video_url)
+            urls.append({"video": video_url, "thumbnail": thumb_url, "subtitles": srt_url})
             metadata["clips"].append({
                 "index": index, "start_seconds": round(start, 2), "end_seconds": round(end, 2),
                 "duration_seconds": round(end-start, 2), "video": video_url, "thumbnail": thumb_url, "subtitles": srt_url
