@@ -31,7 +31,6 @@ Copy `services/docker-compose.master.yml` to the parent `services` folder on VPS
 ```env
 CLIPPER_API_TOKEN=generate-a-long-random-secret
 CLIPPER_WORKER_TOKEN=generate-a-different-long-random-secret
-CLIPPER_PUBLIC_URL=https://your-master-domain.example
 ```
 
 Build from the repository root:
