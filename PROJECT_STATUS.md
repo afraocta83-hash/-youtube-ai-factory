@@ -393,3 +393,30 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 - Live YouTube API connectivity cannot be proven until the owner adds the secret in Vercel Preview.
 - Live Groq generation, GitHub Actions dispatch and a real owner-story render remain separate acceptance gates.
 - No merge to main, Production deployment, OAuth upload setup or YouTube publishing was performed.
+
+
+# LERRY CLIPPER — pivot and first implementation 2026-11-28
+
+## Product pivot
+- Owner changed the product from story/animation generation to a source-video clipping studio.
+- Target owner workflow: paste one YouTube URL, confirm rights, submit once, review generated clips before any publishing.
+- Target architecture: VPS 1 Master (FastAPI + SQLite queue) and VPS 2 Worker (authorized source acquisition, transcription/highlight ranking, FFmpeg, subtitles, enhancement, thumbnails and QC). The two VPS are separate machines; resources are not pooled.
+
+## Implemented on `experiment/openmontage-video-engine`
+- Added mobile-first `/clipper` URL intake and job-status UI.
+- Added `POST/GET /api/clipper/jobs` server-side proxy. Master URL and API token are server-only; browser does not receive the credential.
+- Added YouTube HTTPS URL validation and an explicit rights/permission confirmation gate.
+- Added `services/master/main.py`: FastAPI + SQLite persistent job queue, authenticated owner job creation/status, separate worker-token claim/update endpoints, and health endpoint.
+- Added minimal Master requirements and setup documentation.
+- Extended build-check to syntax-check `services/master` Python files.
+
+## Current blockers / not yet verified
+- VPS Master and Worker are not deployed or connected. Next.js host still needs server-side `CLIPPER_MASTER_URL` and `CLIPPER_API_TOKEN`.
+- Master host needs `CLIPPER_API_TOKEN` and a separate `CLIPPER_WORKER_TOKEN`, HTTPS reverse proxy, and persistent disk for SQLite.
+- Worker service is not implemented yet. Queue can persist jobs and expose claim/update endpoints, but no media download, transcription, highlight detection, clip rendering, subtitle burn-in, visual/audio enhancement, thumbnail generation or QC is complete.
+- No source has been downloaded or rendered. No output clip or real end-to-end run is claimed.
+- CI must complete on the latest commit before the frontend/backend scaffold is considered build-verified.
+- Do not merge to `main`, deploy Production, or publish to YouTube without separate owner approval.
+
+## Next engineering milestone
+Implement the Worker on VPS 2 with a low-memory, low-concurrency pipeline: permitted source acquisition, audio extraction/transcription, highlight candidate generation, 9:16 FFmpeg render with natural color correction and readable dynamic subtitles, thumbnail, and deterministic MP4 QC. Transfer artifacts back to Master and expose them only after QC passes.
