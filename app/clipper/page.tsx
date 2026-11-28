@@ -30,7 +30,7 @@ export default function ClipperPage() {
     return () => { active=false; clearInterval(timer); };
   },[job?.id,job?.status]);
 
-  async function submit(event:FormEvent<HTMLFormElement>) {
+  function artifactUrl(path: string) {\n    const filename = path.split("/").pop() || "";\n    return `/api/clipper/artifacts?job=${encodeURIComponent(job?.id || "")}&file=${encodeURIComponent(filename)}`;\n  }\n\n  async function submit(event:FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setJob(null);
     try {
       const response = await fetch("/api/clipper/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,rights_confirmed:rights})});
@@ -68,7 +68,7 @@ export default function ClipperPage() {
       <p style={{color:"#71809a",lineHeight:1.6}}>{job.message || "Menunggu pembaruan dari mesin produksi."}</p>
       <div style={{height:8,background:"#edf1f7",borderRadius:20,overflow:"hidden"}}><div style={{height:"100%",width:`${Math.max(0,Math.min(100,job.progress||0))}%`,background:"#6b8acb",transition:"width .3s"}} /></div>
       {job.error && <p style={{color:"#a33"}}>{job.error}</p>}
-      {job.clips?.map((clip,i)=><article key={clip.video} style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0",borderTop:"1px solid #edf0f5"}}>{clip.thumbnail && <img src={clip.thumbnail} alt={`Thumbnail klip ${i+1}`} style={{width:76,aspectRatio:"9/16",objectFit:"cover",borderRadius:9,background:"#edf1f7"}} />}<div><strong>Klip {i+1}</strong><p style={{margin:"6px 0"}}><a href={clip.video} target="_blank" rel="noreferrer">Tonton / unduh MP4</a></p>{clip.subtitles && <a href={clip.subtitles} target="_blank" rel="noreferrer" style={{fontSize:12}}>Unduh subtitle</a>}</div></article>)}
+      {job.clips?.map((clip,i)=><article key={clip.video} style={{display:"flex",gap:14,alignItems:"center",padding:"12px 0",borderTop:"1px solid #edf0f5"}}>{clip.thumbnail && <img src={artifactUrl(clip.thumbnail)} alt={`Thumbnail klip ${i+1}`} style={{width:76,aspectRatio:"9/16",objectFit:"cover",borderRadius:9,background:"#edf1f7"}} />}<div><strong>Klip {i+1}</strong><p style={{margin:"6px 0"}}><a href={artifactUrl(clip.video)} target="_blank" rel="noreferrer">Tonton / unduh MP4</a></p>{clip.subtitles && <a href={artifactUrl(clip.subtitles)} target="_blank" rel="noreferrer" style={{fontSize:12}}>Unduh subtitle</a>}</div></article>)}
       {job.status==="completed" && <p style={{fontWeight:800,color:"#28734b"}}>Hasil siap diperiksa. Upload tetap menunggu persetujuan owner.</p>}
     </section>}
     <section style={{display:"grid",gridTemplateColumns:"repeat(auto-fit,minmax(190px,1fr))",gap:12,marginTop:18}}>
