@@ -1,14 +1,18 @@
+import json
 import os
+import shutil
 import sqlite3
 import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, Header, HTTPException
+from fastapi import FastAPI, Header, HTTPException, UploadFile, File
 from pydantic import BaseModel, HttpUrl
 
 DB_PATH = Path(os.getenv("CLIPPER_DB_PATH", "./data/clipper.sqlite3"))
+ARTIFACT_DIR = Path(os.getenv("CLIPPER_ARTIFACT_DIR", "./artifacts"))
+ARTIFACT_DIR.mkdir(parents=True, exist_ok=True)
 MASTER_TOKEN = os.getenv("CLIPPER_API_TOKEN", "")
 WORKER_TOKEN = os.getenv("CLIPPER_WORKER_TOKEN", "")
 DB_PATH.parent.mkdir(parents=True, exist_ok=True)
@@ -43,7 +47,8 @@ def authorize(value: Optional[str], expected: str):
 def public_job(row):
     return {
         "id": row["id"], "status": row["status"], "progress": row["progress"],
-        "message": row["message"], "error": row["error"]
+        "message": row["message"], "error": row["error"],
+        "clips": json.loads(row["result_json"]).get("clips", []) if row["result_json"] else []
     }
 
 
@@ -146,3 +151,40 @@ def update_job(job_id: str, payload: WorkerUpdate, authorization: Optional[str] 
         return {"ok": True}
     finally:
         db.close()
+
+
+@app.post("/worker/jobs/{job_id}/artifacts")
+async def upload_artifact(
+    job_id: str,
+    file: UploadFile = File(...),
+    authorization: Optional[str] = Header(default=None)
+):
+    authorize(authorization, WORKER_TOKEN)
+    safe_name = Path(file.filename or "artifact.mp4").name
+    if not safe_name or len(safe_name) > 180 or any(ch not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for ch in safe_name):
+        raise HTTPException(status_code=400, detail="Invalid artifact filename")
+    if Path(safe_name).suffix.lower() not in {".mp4", ".jpg", ".jpeg", ".png", ".json", ".srt", ".txt"}:
+        raise HTTPException(status_code=400, detail="Artifact type is not allowed")
+    db = connect()
+    try:
+        row = db.execute("SELECT id FROM jobs WHERE id=?", (job_id,)).fetchone()
+        if row is None:
+            raise HTTPException(status_code=404, detail="Job not found")
+    finally:
+        db.close()
+    target_dir = ARTIFACT_DIR / job_id
+    target_dir.mkdir(parents=True, exist_ok=True)
+    target = target_dir / safe_name
+    size = 0
+    try:
+        with target.open("wb") as output:
+            while chunk := await file.read(1024 * 1024):
+                size += len(chunk)
+                if size > 500 * 1024 * 1024:
+                    output.close()
+                    target.unlink(missing_ok=True)
+                    raise HTTPException(status_code=413, detail="Artifact exceeds 500 MB limit")
+                output.write(chunk)
+    finally:
+        await file.close()
+    return {"ok": True, "name": safe_name, "size": size, "url": f"/artifacts/{job_id}/{safe_name}"}
