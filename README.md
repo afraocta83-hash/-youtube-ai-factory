@@ -30,7 +30,7 @@ Implemented on `experiment/openmontage-video-engine`:
 
 Not yet implemented or verified:
 - VPS deployment and HTTPS connection.
-- Worker media-processing pipeline (transcription, highlight ranking, FFmpeg clips, subtitles, enhancement, thumbnails, QC).
+- Worker code is implemented: authorized-source acquisition, Faster-Whisper tiny transcription, speech-density highlight heuristic, FFmpeg vertical clips, subtitles, natural correction, thumbnails, FFprobe + decode QC, and artifact upload.\n- VPS Master and Worker deployment, secrets, HTTPS, persistent storage, and real-source end-to-end verification.
 - Real-source end-to-end test and final downloadable MP4 artifacts.
 - YouTube publishing remains out of scope until owner review and separate approval.
 
