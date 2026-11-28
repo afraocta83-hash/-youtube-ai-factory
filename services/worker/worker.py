@@ -27,10 +27,10 @@ def run(command: list[str], timeout: int = 3600) -> str:
     return result.stdout.strip()
 
 
-def update(job_id: str, status: str, progress: int, message: str, error: str | None = None, clips: list[str] | None = None):
+def update(job_id: str, status: str, progress: int, message: str, error: str | None = None, clips: list[dict] | None = None, qc_report: str | None = None, metadata_ref: str | None = None):
     payload: dict[str, Any] = {"status": status, "progress": progress, "message": message, "error": error}
     if clips is not None:
-        payload["result_json"] = json.dumps({"clips": clips})
+        payload["result_json"] = json.dumps({"clips": clips, "qc_report": qc_report, "metadata": metadata_ref})
     response = SESSION.post(f"{MASTER_URL}/worker/jobs/{job_id}/status", headers=HEADERS, json=payload, timeout=30)
     response.raise_for_status()
 
@@ -206,11 +206,11 @@ def process(job: dict):
             })
         metadata_path = folder / "metadata.json"
         metadata_path.write_text(json.dumps(metadata, ensure_ascii=False, indent=2), encoding="utf-8")
-        upload(job_id, metadata_path)
+        metadata_url = upload(job_id, metadata_path)
         qc_path = folder / "qc-report.json"
         qc_path.write_text(json.dumps({"passed": all(item["passed"] for item in metadata["qc"]), "clips": metadata["qc"]}, ensure_ascii=False, indent=2), encoding="utf-8")
-        upload(job_id, qc_path)
-        update(job_id, "completed", 100, f"Selesai: {len(urls)} klip lolos QC teknis. Tinjau sebelum publikasi.", clips=urls)
+        qc_url = upload(job_id, qc_path)
+        update(job_id, "completed", 100, f"Selesai: {len(urls)} klip lolos QC teknis. Tinjau sebelum publikasi.", clips=urls, qc_report=qc_url, metadata_ref=metadata_url)
     except Exception as exc:
         update(job_id, "failed", 0, "Produksi gagal. Periksa pesan error sebelum mencoba ulang.", error=str(exc)[:1200])
         raise
