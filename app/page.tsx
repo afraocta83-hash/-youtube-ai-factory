@@ -1,5 +1,5 @@
-import OfficeDashboard from "./office-dashboard";
+import ClipperPage from "./clipper/page";
 
 export default function Home() {
-  return <OfficeDashboard />;
+  return <ClipperPage />;
 }
