@@ -51,7 +51,9 @@ def public_job(row):
     clips = [{key: value for key, value in item.items()} for item in artifacts if isinstance(item, dict)]
     return {
         "id": row["id"], "status": row["status"], "progress": row["progress"],
-        "message": row["message"], "error": row["error"], "clips": clips,\n        "qc_report": json.loads(row["result_json"]).get("qc_report") if row["result_json"] else None,\n        "metadata": json.loads(row["result_json"]).get("metadata") if row["result_json"] else None
+        "message": row["message"], "error": row["error"], "clips": clips,
+        "qc_report": json.loads(row["result_json"]).get("qc_report") if row["result_json"] else None,
+        "metadata": json.loads(row["result_json"]).get("metadata") if row["result_json"] else None
     }
 
 
