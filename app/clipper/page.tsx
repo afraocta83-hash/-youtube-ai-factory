@@ -30,7 +30,12 @@ export default function ClipperPage() {
     return () => { active=false; clearInterval(timer); };
   },[job?.id,job?.status]);
 
-  function artifactUrl(path: string) {\n    const filename = path.split("/").pop() || "";\n    return `/api/clipper/artifacts?job=${encodeURIComponent(job?.id || "")}&file=${encodeURIComponent(filename)}`;\n  }\n\n  async function submit(event:FormEvent<HTMLFormElement>) {
+  function artifactUrl(path: string) {
+    const filename = path.split("/").pop() || "";
+    return `/api/clipper/artifacts?job=${encodeURIComponent(job?.id || "")}&file=${encodeURIComponent(filename)}`;
+  }
+
+  async function submit(event:FormEvent<HTMLFormElement>) {
     event.preventDefault(); setBusy(true); setError(""); setJob(null);
     try {
       const response = await fetch("/api/clipper/jobs",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url,rights_confirmed:rights})});
