@@ -1,10 +1,10 @@
 "use client";
 
-import { FormEvent, useEffect, useState } from "react";
+import { FormEvent, CSSProperties, useEffect, useState } from "react";
 
 type Job = { id: string; status: string; progress?: number; message?: string; clips?: string[]; error?: string };
 
-const panel: React.CSSProperties = { background:"#fff", border:"1px solid #e4e9f2", borderRadius:18, padding:20, boxShadow:"0 8px 28px #2636530b" };
+const panel: CSSProperties = { background:"#fff", border:"1px solid #e4e9f2", borderRadius:18, padding:20, boxShadow:"0 8px 28px #2636530b" };
 const button: React.CSSProperties = { border:0, borderRadius:11, padding:"13px 18px", background:"#35486e", color:"#fff", fontWeight:800, cursor:"pointer" };
 
 export default function ClipperPage() {
@@ -58,7 +58,7 @@ export default function ClipperPage() {
         <input type="checkbox" checked={rights} onChange={e=>setRights(e.target.checked)} style={{marginTop:3}} />
         Saya memiliki hak atas video ini atau izin yang diperlukan untuk mengunduh, mengedit, dan memublikasikan klipnya.
       </label>
-      <button type="submit" disabled={busy || !rights} style={{...button,opacity:busy||!rights?.55:1}}>{busy ? "Mengirim ke antrean…" : "Mulai proses klip"}</button>
+      <button type="submit" disabled={busy || !rights} style={{...button,opacity:(busy || !rights) ? 0.55 : 1}}>{busy ? "Mengirim ke antrean…" : "Mulai proses klip"}</button>
       <p style={{fontSize:11,color:"#8994a8",marginBottom:0}}>Target output: 9:16 • 1080p jika sumber mendukung • 15–60 detik • MP4 + thumbnail + metadata + QC</p>
     </form>
     {error && <p role="alert" style={{background:"#fff1f1",color:"#a33",padding:13,borderRadius:10,marginTop:16}}>{error}</p>}
