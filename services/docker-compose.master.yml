@@ -1,0 +1,20 @@
+services:
+  clipper-master:
+    build:
+      context: ./master
+      dockerfile: Dockerfile
+    container_name: lerry-clipper-master
+    restart: unless-stopped
+    environment:
+      CLIPPER_API_TOKEN: ${CLIPPER_API_TOKEN:?Set CLIPPER_API_TOKEN}
+      CLIPPER_WORKER_TOKEN: ${CLIPPER_WORKER_TOKEN:?Set CLIPPER_WORKER_TOKEN}
+      CLIPPER_PUBLIC_URL: ${CLIPPER_PUBLIC_URL:?Set public HTTPS URL}
+      CLIPPER_DB_PATH: /data/clipper.sqlite3
+      CLIPPER_ARTIFACT_DIR: /data/artifacts
+    volumes:
+      - clipper-master-data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+
+volumes:
+  clipper-master-data:
