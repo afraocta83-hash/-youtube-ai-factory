@@ -420,3 +420,14 @@ Implementation branch `fix/lerry-end-to-end-production` was merged into `experim
 
 ## Next engineering milestone
 Implement the Worker on VPS 2 with a low-memory, low-concurrency pipeline: permitted source acquisition, audio extraction/transcription, highlight candidate generation, 9:16 FFmpeg render with natural color correction and readable dynamic subtitles, thumbnail, and deterministic MP4 QC. Transfer artifacts back to Master and expose them only after QC passes.
+
+
+## Worker implementation update — 2026-11-28
+
+- Added VPS 2 Worker service with authenticated polling/claim and job status updates.
+- Added authorized-source acquisition through yt-dlp, audio extraction, Faster-Whisper tiny CPU/int8 transcription, and a speech-density heuristic for selecting up to five candidate windows.
+- Added FFmpeg 9:16 H.264 rendering, modest brightness/contrast/saturation/sharpening, loudness normalization, sentence-level subtitles, thumbnails, and artifact upload to Master.
+- Added Master multipart artifact upload with a 500 MB per-file cap and static artifact serving; job status now exposes MP4, thumbnail, and subtitle URLs.
+- Added Dockerfiles for Master and Worker plus a persistent Master Docker Compose template.
+- Added Worker Python syntax validation to CI.
+- Limitations: highlight ranking is heuristic (not semantic), framing is center-crop (not face-aware), subtitles are sentence-level (not karaoke), and no real source render or VPS deployment has yet been verified. Public artifact URLs currently need access-control hardening before private media is used in production.
